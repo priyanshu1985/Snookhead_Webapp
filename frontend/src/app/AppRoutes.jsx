@@ -6,6 +6,7 @@ import Bookings from "../pages/bookings/Bookings";
 import AddQueue from "../pages/bookings/AddQueue";
 import UpcomingReservation from "../pages/bookings/UpcomingReservation";
 import Billing from "../pages/billing/Billing";
+import FoodOrder from "../pages/food/FoodOrder";
 
 const AppRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const AppRoutes = () => {
           element={<UpcomingReservation />}
         />
         <Route path="/billing" element={<Billing />} />
+        <Route path="/food-orders" element={<FoodOrder />} />
       </Route>
     </Routes>
   );

@@ -1,0 +1,113 @@
+/* =========================
+   FOOD ORDER PAGE
+========================= */
+
+.food-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* LAYOUT */
+.food-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* FOOD LIST */
+.food-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.food-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.food-card h6 {
+  margin-bottom: 6px;
+}
+
+.food-card p {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.food-card button {
+  background: #ff8c1a;
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* ORDER SUMMARY */
+.order-summary {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  height: fit-content;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: #eee;
+}
+
+.empty {
+  font-size: 14px;
+  color: #999;
+}
+
+/* PRICE */
+.price-box {
+  border-top: 1px solid #eee;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.price-box div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.price-box .total {
+  font-size: 16px;
+}
+
+/* PAY */
+.pay-btn {
+  width: 100%;
+  margin-top: 12px;
+  background: #ff8c1a;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  border-radius: 24px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .food-layout {
+    grid-template-columns: 1fr;
+  }
+}
