@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks";
-import "../../styles/custom.css";
+import "../../styles/auth.css";
 
 const Register = () => {
   const { register, user, loading } = useAuth();
@@ -58,91 +58,119 @@ const Register = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-form">
-        <div className="login-header">
-          <h2>Create Account</h2>
-          <p>Join Snooker Management System</p>
+    <div className="auth-container">
+      <div className="auth-background">
+        <div className="auth-header">
+          <div className="brand-logo">
+            <i className="fas fa-circle"></i>
+            <span className="brand-name">SNOKEHEAD</span>
+          </div>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <div className="auth-card">
+          <div className="auth-card-content">
+            <h1 className="auth-title">Sign up</h1>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Enter your full name"
-              required
-            />
+            {error && <div className="auth-error">{error}</div>}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="form-field">
+                <label htmlFor="name">Full Name</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-user input-icon"></i>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="Enter your full name"
+                    className="auth-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="email">Email</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-envelope input-icon"></i>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="Enter your email"
+                    className="auth-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-lock input-icon"></i>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="Enter your password"
+                    className="auth-input"
+                    minLength="6"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-lock input-icon"></i>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="Confirm your password"
+                    className="auth-input"
+                    minLength="6"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="auth-button"
+                disabled={isLoading || loading}
+              >
+                {isLoading || loading
+                  ? "Creating Account..."
+                  : "Create Account"}
+              </button>
+            </form>
+
+            <div className="auth-footer">
+              <p>
+                Already have an Account?{" "}
+                <Link to="/login" className="signup-link">
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Enter your password"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Confirm your password"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isLoading || loading}
-          >
-            {isLoading || loading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
-
-        <div className="login-footer">
-          <p>
-            Already have an account?{" "}
-            <Link to="/login" className="link">
-              Sign in here
-            </Link>
-          </p>
         </div>
+
+        <div className="home-indicator"></div>
       </div>
     </div>
   );

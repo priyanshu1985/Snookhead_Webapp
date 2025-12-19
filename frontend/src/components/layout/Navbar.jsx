@@ -1,73 +1,62 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    // Toggle sidebar for mobile
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+    if (sidebar) {
+      sidebar.classList.toggle("open");
+    }
+    if (overlay) {
+      overlay.classList.toggle("active");
+    }
+  };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/dashboard" className="brand-link">
-          <h2>Snooker Club</h2>
-        </Link>
-      </div>
-
-      <div className="navbar-menu">
+    <nav className="top-navbar horizontal-navbar">
+      <div className="navbar-nav">
         <Link
           to="/dashboard"
-          className={`nav-link ${
+          className={`nav-item ${
             location.pathname === "/dashboard" ? "active" : ""
           }`}
         >
-          Dashboard
-        </Link>
-        <Link
-          to="/tables"
-          className={`nav-link ${
-            location.pathname.includes("/tables") ? "active" : ""
-          }`}
-        >
-          Tables
+          <i className="fas fa-home"></i>
+          <span>Home</span>
         </Link>
         <Link
           to="/bookings"
-          className={`nav-link ${
+          className={`nav-item ${
             location.pathname === "/bookings" ? "active" : ""
           }`}
         >
-          Bookings
-        </Link>
-        <Link
-          to="/members"
-          className={`nav-link ${
-            location.pathname === "/members" ? "active" : ""
-          }`}
-        >
-          Members
+          <i className="fas fa-clock"></i>
+          <span>Queue</span>
         </Link>
         <Link
           to="/billing"
-          className={`nav-link ${
+          className={`nav-item ${
             location.pathname === "/billing" ? "active" : ""
           }`}
         >
-          Billing
+          <i className="fas fa-receipt"></i>
+          <span>Billing</span>
         </Link>
         <Link
-          to="/reports"
-          className={`nav-link ${
-            location.pathname === "/reports" ? "active" : ""
+          to="/food-scanner"
+          className={`nav-item ${
+            location.pathname === "/food-scanner" ? "active" : ""
           }`}
         >
-          Reports
+          <i className="fas fa-qrcode"></i>
+          <span>Food & Scanner</span>
         </Link>
-      </div>
-
-      <div className="navbar-actions">
-        <div className="user-menu">
-          <span className="user-name">Admin</span>
-          <button className="logout-btn">Logout</button>
-        </div>
       </div>
     </nav>
   );

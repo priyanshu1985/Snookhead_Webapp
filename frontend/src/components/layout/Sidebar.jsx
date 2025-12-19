@@ -1,46 +1,55 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks";
+import "../../styles/sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const menuItems = [
     {
-      path: "/dashboard",
-      icon: "📊",
-      label: "Dashboard",
-      active: location.pathname === "/dashboard",
+      path: "/owners-panel",
+      icon: "👤",
+      label: "Owners panel",
+      active: location.pathname === "/owners-panel",
     },
     {
-      path: "/tables",
-      icon: "🎱",
-      label: "Tables",
-      active: location.pathname.includes("/tables"),
+      path: "/setup-menu",
+      icon: "⚙️",
+      label: "Set up menu",
+      active: location.pathname === "/setup-menu",
     },
     {
-      path: "/bookings",
-      icon: "📅",
-      label: "Bookings",
-      active: location.pathname === "/bookings",
+      path: "/inventory",
+      icon: "📦",
+      label: "Inventory tracking",
+      active: location.pathname === "/inventory",
     },
     {
-      path: "/members",
-      icon: "👥",
-      label: "Members",
-      active: location.pathname === "/members",
+      path: "/subscription",
+      icon: "⬆️",
+      label: "Upgrade subscription",
+      active: location.pathname === "/subscription",
     },
     {
-      path: "/billing",
-      icon: "💳",
-      label: "Billing",
-      active: location.pathname === "/billing",
+      path: "/bugs",
+      icon: "🐛",
+      label: "Report bugs",
+      active: location.pathname === "/bugs",
     },
     {
-      path: "/reports",
-      icon: "📈",
-      label: "Reports",
-      active: location.pathname === "/reports",
+      path: "/privacy",
+      icon: "🔒",
+      label: "Privacy and Policy",
+      active: location.pathname === "/privacy",
     },
   ];
 
@@ -48,7 +57,12 @@ const Sidebar = () => {
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          {!isCollapsed && <span>Snooker Club</span>}
+          {!isCollapsed && (
+            <>
+              <span className="brand-icon">🎱</span>
+              <span className="brand-text">SNOKEHEAD</span>
+            </>
+          )}
         </div>
         <button
           className="collapse-btn"
@@ -86,7 +100,7 @@ const Sidebar = () => {
             </div>
           )}
         </div>
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <span>🚪</span>
           {!isCollapsed && <span>Logout</span>}
         </button>

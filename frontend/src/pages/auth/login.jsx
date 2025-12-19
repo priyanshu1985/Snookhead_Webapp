@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks";
-import "../../styles/custom.css";
+import "../../styles/auth.css";
 
 const Login = () => {
   const { login, user, loading } = useAuth();
   const [credentials, setCredentials] = useState({
-    email: "",
+    email: "demo@gmail.com",
     password: "",
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Redirect if already logged in
   if (user) {
@@ -32,8 +33,11 @@ const Login = () => {
     setError("");
 
     try {
-      await login(credentials.email, credentials.password);
-      // Navigation will happen automatically via context
+      const result = await login(credentials.email, credentials.password);
+      if (result.success) {
+        // Navigation will happen automatically via ProtectedRoute redirect
+        console.log("Login successful");
+      }
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.");
     } finally {
@@ -41,62 +45,134 @@ const Login = () => {
     }
   };
 
+  const handleQuickLogin = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Use demo credentials for quick login
+      const result = await login("demo@gmail.com", "password123");
+      if (result.success) {
+        console.log("Quick login successful");
+      }
+    } catch (err) {
+      setError(err.message || "Quick login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="login-container">
-      <div className="login-form">
-        <div className="login-header">
-          <h2>Login to Snooker Management</h2>
-          <p>Welcome back! Please sign in to your account.</p>
+    <div className="auth-container">
+      <div className="auth-background">
+        <div className="auth-header">
+          <div className="brand-logo">
+            <i className="fas fa-circle"></i>
+            <span className="brand-name">SNOKEHEAD</span>
+          </div>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <div className="auth-card">
+          <div className="auth-card-content">
+            <h1 className="auth-title">Sign in</h1>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={credentials.email}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Enter your email"
-              required
-            />
+            {error && <div className="auth-error">{error}</div>}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="form-field">
+                <label htmlFor="email">Email</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-envelope input-icon"></i>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={credentials.email}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="demo@gmail.com"
+                    className="auth-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-lock input-icon"></i>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={credentials.password}
+                    onChange={handleChange}
+                    disabled={isLoading || loading}
+                    placeholder="Enter your password"
+                    className="auth-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-options">
+                <div className="remember-me">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <label htmlFor="remember" className="checkbox-label">
+                    <i className="fas fa-check"></i>
+                    Remember Me
+                  </label>
+                </div>
+                <Link to="/forgot-password" className="forgot-link">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                className="auth-button"
+                disabled={isLoading || loading}
+              >
+                {isLoading || loading ? "Signing In..." : "Login"}
+              </button>
+            </form>
+
+            {/* Quick Test Login Button */}
+            <div style={{ marginTop: "15px", textAlign: "center" }}>
+              <button
+                type="button"
+                className="auth-button"
+                style={{
+                  background: "#28a745",
+                  fontSize: "14px",
+                  padding: "12px 20px",
+                  opacity: isLoading || loading ? 0.6 : 1,
+                }}
+                disabled={isLoading || loading}
+                onClick={handleQuickLogin}
+              >
+                {isLoading || loading ? "Logging In..." : "Quick Login (Demo)"}
+              </button>
+            </div>
+
+            <div className="auth-footer">
+              <p>
+                Don't have an Account?{" "}
+                <Link to="/register" className="signup-link">
+                  Sign up
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              disabled={isLoading || loading}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isLoading || loading}
-          >
-            {isLoading || loading ? "Signing In..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="login-footer">
-          <p>
-            Don't have an account?{" "}
-            <Link to="/register" className="link">
-              Sign up here
-            </Link>
-          </p>
         </div>
+
+        <div className="home-indicator"></div>
       </div>
     </div>
   );
