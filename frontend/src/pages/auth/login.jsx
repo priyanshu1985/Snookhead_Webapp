@@ -1,178 +1,80 @@
-import React, { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
-import { useAuth } from "../../hooks";
-import "../../styles/auth.css";
+import { useNavigate } from "react-router-dom";
+import "../../styles/custom.css";
 
 const Login = () => {
-  const { login, user, loading } = useAuth();
-  const [credentials, setCredentials] = useState({
-    email: "demo@gmail.com",
-    password: "",
-  });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
 
-  // Redirect if already logged in
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value,
-    });
-    // Clear error when user starts typing
-    if (error) setError("");
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const result = await login(credentials.email, credentials.password);
-      if (result.success) {
-        // Navigation will happen automatically via ProtectedRoute redirect
-        console.log("Login successful");
-      }
-    } catch (err) {
-      setError(err.message || "Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuickLogin = async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Use demo credentials for quick login
-      const result = await login("demo@gmail.com", "password123");
-      if (result.success) {
-        console.log("Quick login successful");
-      }
-    } catch (err) {
-      setError(err.message || "Quick login failed.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Later: API authentication logic
+    navigate("/"); // redirect to dashboard
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-background">
-        <div className="auth-header">
-          <div className="brand-logo">
-            <i className="fas fa-circle"></i>
-            <span className="brand-name">SNOKEHEAD</span>
-          </div>
-        </div>
+    <div className="login-page container-fluid">
+      <div className="row min-vh-100 align-items-center justify-content-center">
+        {/* Login Card */}
+        <div className="col-11 col-sm-9 col-md-6 col-lg-4">
+          <div className="login-card shadow-sm">
+            {/* Brand */}
+            <div className="text-center mb-4">
+              <h4 className="fw-bold brand-title">SNOKEHEAD</h4>
+              <p className="text-muted small">Sign in to continue</p>
+            </div>
 
-        <div className="auth-card">
-          <div className="auth-card-content">
-            <h1 className="auth-title">Sign in</h1>
-
-            {error && <div className="auth-error">{error}</div>}
-
-            <form onSubmit={handleSubmit} className="auth-form">
-              <div className="form-field">
-                <label htmlFor="email">Email</label>
-                <div className="input-wrapper">
-                  <i className="fas fa-envelope input-icon"></i>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={credentials.email}
-                    onChange={handleChange}
-                    disabled={isLoading || loading}
-                    placeholder="demo@gmail.com"
-                    className="auth-input"
-                    required
-                  />
-                </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="demo@gmail.com"
+                  required
+                />
               </div>
 
-              <div className="form-field">
-                <label htmlFor="password">Password</label>
-                <div className="input-wrapper">
-                  <i className="fas fa-lock input-icon"></i>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={credentials.password}
-                    onChange={handleChange}
-                    disabled={isLoading || loading}
-                    placeholder="Enter your password"
-                    className="auth-input"
-                    required
-                  />
-                </div>
+              <div className="mb-2">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter your password"
+                  required
+                />
               </div>
 
-              <div className="form-options">
-                <div className="remember-me">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="form-check">
                   <input
+                    className="form-check-input"
                     type="checkbox"
-                    id="remember"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="checkbox-input"
+                    id="rememberMe"
                   />
-                  <label htmlFor="remember" className="checkbox-label">
-                    <i className="fas fa-check"></i>
-                    Remember Me
+                  <label className="form-check-label" htmlFor="rememberMe">
+                    Remember me
                   </label>
                 </div>
-                <Link to="/forgot-password" className="forgot-link">
-                  Forgot Password?
-                </Link>
+
+                <span className="text-warning small cursor-pointer">
+                  Forgot password?
+                </span>
               </div>
 
               <button
                 type="submit"
-                className="auth-button"
-                disabled={isLoading || loading}
+                className="btn btn-warning w-100 fw-semibold"
               >
-                {isLoading || loading ? "Signing In..." : "Login"}
+                Login
               </button>
             </form>
 
-            {/* Quick Test Login Button */}
-            <div style={{ marginTop: "15px", textAlign: "center" }}>
-              <button
-                type="button"
-                className="auth-button"
-                style={{
-                  background: "#28a745",
-                  fontSize: "14px",
-                  padding: "12px 20px",
-                  opacity: isLoading || loading ? 0.6 : 1,
-                }}
-                disabled={isLoading || loading}
-                onClick={handleQuickLogin}
-              >
-                {isLoading || loading ? "Logging In..." : "Quick Login (Demo)"}
-              </button>
-            </div>
-
-            <div className="auth-footer">
-              <p>
-                Don't have an Account?{" "}
-                <Link to="/register" className="signup-link">
-                  Sign up
-                </Link>
-              </p>
-            </div>
+            <p className="text-center mt-3 small">
+              Don’t have an account?{" "}
+              <span className="text-warning cursor-pointer">Sign up</span>
+            </p>
           </div>
         </div>
-
-        <div className="home-indicator"></div>
       </div>
     </div>
   );

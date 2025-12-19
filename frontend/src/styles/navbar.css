@@ -1,0 +1,123 @@
+/* =========================
+   TOP NAVBAR
+========================= */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* LEFT */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* CENTER NAV */
+.topbar-center {
+  display: flex;
+  gap: 24px;
+}
+
+/* NAV ITEM */
+.nav-item {
+  text-decoration: none;
+  color: #777;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.nav-item.active {
+  color: #000;
+  border-bottom: 2px solid #ff8c1a;
+}
+
+/* ICON + TEXT */
+.nav-icon {
+  font-size: 18px;
+}
+
+.nav-text {
+  font-size: 14px;
+}
+
+/* SEARCH */
+.search-input {
+  border-radius: 20px;
+  padding: 6px 14px;
+  border: 1px solid #ddd;
+  min-width: 220px;
+}
+
+/* RIGHT */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-chip {
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  border: 1px solid #eee;
+}
+
+/* HAMBURGER */
+.hamburger-btn {
+  font-size: 22px;
+  background: none;
+  border: none;
+  display: none;
+}
+
+/* DESKTOP ONLY */
+.desktop-only {
+  display: flex;
+}
+
+/* =========================
+   MOBILE NAVBAR
+========================= */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .topbar {
+    justify-content: center;
+  }
+
+  .topbar-left {
+    position: absolute;
+    left: 12px;
+  }
+
+  .topbar-center {
+    gap: 32px;
+  }
+
+  .nav-text {
+    display: none;
+  }
+
+  .nav-icon {
+    font-size: 22px;
+  }
+
+  .nav-item.active {
+    border-bottom: none;
+    color: #ff8c1a;
+  }
+}

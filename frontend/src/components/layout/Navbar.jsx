@@ -1,64 +1,60 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import { useContext } from "react";
+import { LayoutContext } from "../../context/LayoutContext";
+import "../../styles/navbar.css";
 
 const Navbar = () => {
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    // Toggle sidebar for mobile
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.querySelector(".sidebar-overlay");
-    if (sidebar) {
-      sidebar.classList.toggle("open");
-    }
-    if (overlay) {
-      overlay.classList.toggle("active");
-    }
-  };
+  const { toggleSidebar } = useContext(LayoutContext);
 
   return (
-    <nav className="top-navbar horizontal-navbar">
-      <div className="navbar-nav">
-        <Link
-          to="/dashboard"
-          className={`nav-item ${
-            location.pathname === "/dashboard" ? "active" : ""
-          }`}
+    <header className="topbar">
+      {/* LEFT: Hamburger (mobile only) */}
+      <div className="topbar-left">
+        <button
+          className="hamburger-btn"
+          onClick={toggleSidebar}
+          aria-label="Open menu"
         >
-          <i className="fas fa-home"></i>
-          <span>Home</span>
-        </Link>
-        <Link
-          to="/bookings"
-          className={`nav-item ${
-            location.pathname === "/bookings" ? "active" : ""
-          }`}
-        >
-          <i className="fas fa-clock"></i>
-          <span>Queue</span>
-        </Link>
-        <Link
-          to="/billing"
-          className={`nav-item ${
-            location.pathname === "/billing" ? "active" : ""
-          }`}
-        >
-          <i className="fas fa-receipt"></i>
-          <span>Billing</span>
-        </Link>
-        <Link
-          to="/food-scanner"
-          className={`nav-item ${
-            location.pathname === "/food-scanner" ? "active" : ""
-          }`}
-        >
-          <i className="fas fa-qrcode"></i>
-          <span>Food & Scanner</span>
-        </Link>
+          ☰
+        </button>
+
+        {/* Desktop search only */}
+        <input
+          type="text"
+          className="search-input desktop-only"
+          placeholder="Search..."
+        />
       </div>
-    </nav>
+
+      {/* CENTER NAVIGATION */}
+      <nav className="topbar-center">
+        <NavLink to="/" end className="nav-item">
+          <span className="nav-icon">🏠</span>
+          <span className="nav-text">Dashboard</span>
+        </NavLink>
+
+        <NavLink to="/bookings" className="nav-item">
+          <span className="nav-icon">⏱</span>
+          <span className="nav-text">Queue</span>
+        </NavLink>
+
+        <NavLink to="/billing" className="nav-item">
+          <span className="nav-icon">🧾</span>
+          <span className="nav-text">Billing</span>
+        </NavLink>
+
+        <NavLink to="/food-orders" className="nav-item">
+          <span className="nav-icon">🍔</span>
+          <span className="nav-text">Food & Order</span>
+        </NavLink>
+      </nav>
+
+      {/* RIGHT: Desktop actions only */}
+      <div className="topbar-right desktop-only">
+        <button className="btn btn-warning btn-sm">Add member</button>
+        <span className="date-chip">02/08/2025</span>
+      </div>
+    </header>
   );
 };
 

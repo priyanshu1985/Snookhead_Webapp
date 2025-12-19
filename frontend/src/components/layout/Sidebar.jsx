@@ -1,111 +1,51 @@
-import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks";
+import { NavLink } from "react-router-dom";
+import { useContext } from "react";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/sidebar.css";
 
 const Sidebar = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const menuItems = [
-    {
-      path: "/owners-panel",
-      icon: "👤",
-      label: "Owners panel",
-      active: location.pathname === "/owners-panel",
-    },
-    {
-      path: "/setup-menu",
-      icon: "⚙️",
-      label: "Set up menu",
-      active: location.pathname === "/setup-menu",
-    },
-    {
-      path: "/inventory",
-      icon: "📦",
-      label: "Inventory tracking",
-      active: location.pathname === "/inventory",
-    },
-    {
-      path: "/subscription",
-      icon: "⬆️",
-      label: "Upgrade subscription",
-      active: location.pathname === "/subscription",
-    },
-    {
-      path: "/bugs",
-      icon: "🐛",
-      label: "Report bugs",
-      active: location.pathname === "/bugs",
-    },
-    {
-      path: "/privacy",
-      icon: "🔒",
-      label: "Privacy and Policy",
-      active: location.pathname === "/privacy",
-    },
-  ];
+  const { isSidebarOpen, closeSidebar } = useContext(LayoutContext);
 
   return (
-    <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-brand">
-          {!isCollapsed && (
-            <>
-              <span className="brand-icon">🎱</span>
-              <span className="brand-text">SNOKEHEAD</span>
-            </>
-          )}
-        </div>
-        <button
-          className="collapse-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? "→" : "←"}
-        </button>
-      </div>
+    <>
+      {/* Overlay */}
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={closeSidebar} />
+      )}
 
-      <nav className="sidebar-nav">
-        <ul className="nav-list">
-          {menuItems.map((item) => (
-            <li key={item.path} className="nav-item">
-              <Link
-                to={item.path}
-                className={`nav-link ${item.active ? "active" : ""}`}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                {!isCollapsed && (
-                  <span className="nav-label">{item.label}</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="sidebar-footer">
-        <div className="user-info">
-          <div className="user-avatar">👤</div>
-          {!isCollapsed && (
-            <div className="user-details">
-              <span className="user-name">Admin</span>
-              <span className="user-role">Administrator</span>
-            </div>
-          )}
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-top">
+          <h5 className="brand">SNOKEHEAD</h5>
+          <div className="user-box">
+            <strong>Austin Robertson</strong>
+            <small>Marketing Administrator</small>
+          </div>
         </div>
-        <button className="logout-btn" onClick={handleLogout}>
-          <span>🚪</span>
-          {!isCollapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </div>
+
+        <nav className="sidebar-menu">
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Owners panel
+          </NavLink>
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Set up menu
+          </NavLink>
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Inventory tracking
+          </NavLink>
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Upgrade subscription
+          </NavLink>
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Report bugs
+          </NavLink>
+          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+            Privacy & Policy
+          </NavLink>
+        </nav>
+
+        <button className="logout-btn">Logout</button>
+      </aside>
+    </>
   );
 };
 

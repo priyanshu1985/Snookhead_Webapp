@@ -1,9 +1,15 @@
-import React from "react";
+import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./app/AppRoutes";
-import "./App.css";
+import { LayoutProvider } from "./context/LayoutContext";
 
-function App() {
-  return <AppRoutes />;
-}
+const App = () => {
+  return (
+    <BrowserRouter>
+      <LayoutProvider>
+        <AppRoutes />
+      </LayoutProvider>
+    </BrowserRouter>
+  );
+};
 
 export default App;
