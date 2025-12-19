@@ -8,6 +8,8 @@ import UpcomingReservation from "../pages/bookings/UpcomingReservation";
 import Billing from "../pages/billing/Billing";
 import FoodOrder from "../pages/food/FoodOrder";
 
+import OwnersPanel from "../pages/owners/OwnersPanel";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -25,6 +27,8 @@ const AppRoutes = () => {
         />
         <Route path="/billing" element={<Billing />} />
         <Route path="/food-orders" element={<FoodOrder />} />
+
+        <Route path="/owners" element={<OwnersPanel />} />
       </Route>
     </Routes>
   );

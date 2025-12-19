@@ -23,22 +23,22 @@ const Sidebar = () => {
         </div>
 
         <nav className="sidebar-menu">
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/owners" className="menu-item" onClick={closeSidebar}>
             Owners panel
           </NavLink>
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/setup-menu" className="menu-item" onClick={closeSidebar}>
             Set up menu
           </NavLink>
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/inventory" className="menu-item" onClick={closeSidebar}>
             Inventory tracking
           </NavLink>
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/subscription" className="menu-item" onClick={closeSidebar}>
             Upgrade subscription
           </NavLink>
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/report-bugs" className="menu-item" onClick={closeSidebar}>
             Report bugs
           </NavLink>
-          <NavLink to="/" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/privacy-policy" className="menu-item" onClick={closeSidebar}>
             Privacy & Policy
           </NavLink>
         </nav>
