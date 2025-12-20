@@ -14,6 +14,7 @@ import PrivacyPolicy from "../pages/subscription/PrivacyPolicy";
 import ReportBugs from "../pages/bugs/ReportBugs";
 import CreateBug from "../pages/bugs/CreateBug";
 import SetupMenu from "../pages/setup-menu/SetupMenu";
+import InventoryTracking from "../pages/inventory/InventoryTracking";
 
 const AppRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="/report-bugs" element={<ReportBugs />} />
         <Route path="/report-bugs/create" element={<CreateBug />} />
         <Route path="/setup-menu" element={<SetupMenu />} />
+        <Route path="/inventory" element={<InventoryTracking />} />
       </Route>
     </Routes>
   );
