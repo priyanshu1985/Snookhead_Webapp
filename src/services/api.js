@@ -1,240 +1,412 @@
-// // API configuration and utilities for the Snooker Management System
+// API configuration and utilities for the Snooker Management System
 
-// const API_BASE_URL = "http://localhost:3001/api"; // TODO: Configure environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
-// // API endpoints
-// const ENDPOINTS = {
-//   // Authentication
-//   LOGIN: "/auth/login",
-//   LOGOUT: "/auth/logout",
-//   REFRESH: "/auth/refresh",
+// API endpoints
+const ENDPOINTS = {
+  // Authentication
+  LOGIN: "/auth/login",
+  LOGOUT: "/auth/logout",
+  REFRESH: "/auth/refresh",
+  REGISTER: "/auth/register",
 
-//   // Tables
-//   TABLES: "/tables",
-//   TABLE_BY_ID: (id) => `/tables/${id}`,
+  // Tables
+  TABLES: "/tables",
+  TABLE_BY_ID: (id) => `/tables/${id}`,
 
-//   // Games
-//   GAMES: "/games",
-//   GAME_BY_ID: (id) => `/games/${id}`,
-//   START_GAME: "/games/start",
-//   END_GAME: (id) => `/games/${id}/end`,
-//   UPDATE_SCORE: (id) => `/games/${id}/score`,
+  // Games
+  GAMES: "/games",
+  GAME_BY_ID: (id) => `/games/${id}`,
+  START_GAME: "/games/start",
+  END_GAME: (id) => `/games/${id}/end`,
+  UPDATE_SCORE: (id) => `/games/${id}/score`,
 
-//   // Bookings
-//   BOOKINGS: "/bookings",
-//   BOOKING_BY_ID: (id) => `/bookings/${id}`,
-//   CHECK_AVAILABILITY: "/bookings/check-availability",
+  // Reservations
+  RESERVATIONS: "/reservations",
+  RESERVATION_BY_ID: (id) => `/reservations/${id}`,
+  AUTOASSIGN: "/reservations/autoassign",
 
-//   // Members
-//   MEMBERS: "/members",
-//   MEMBER_BY_ID: (id) => `/members/${id}`,
+  // Active Tables
+  ACTIVE_TABLES: "/activeTables",
+  START_SESSION: "/activeTables/start",
+  STOP_SESSION: "/activeTables/stop",
 
-//   // Billing
-//   BILLS: "/bills",
-//   BILL_BY_ID: (id) => `/bills/${id}`,
-//   GENERATE_BILL: "/bills/generate",
+  // Queue
+  QUEUE: "/queue",
+  QUEUE_NEXT: "/queue/next",
+  QUEUE_CLEAR: "/queue/clear",
 
-//   // Reports
-//   REPORTS: "/reports",
-//   REVENUE_REPORT: "/reports/revenue",
-//   USAGE_REPORT: "/reports/usage",
-//   CUSTOMER_REPORT: "/reports/customers",
-// };
+  // Menu
+  MENU: "/menu",
+  MENU_BY_ID: (id) => `/menu/${id}`,
 
-// // Request interceptor to add auth token
-// const getAuthToken = () => {
-//   return localStorage.getItem("authToken");
-// };
+  // Food
+  FOOD: "/food",
+  FOOD_BY_ID: (id) => `/food/${id}`,
 
-// // Generic request handler
-// const apiRequest = async (endpoint, options = {}) => {
-//   const token = getAuthToken();
+  // Orders
+  ORDERS: "/orders",
+  ORDER_BY_ID: (id) => `/orders/${id}`,
 
-//   const defaultOptions = {
-//     method: "GET",
-//     headers: {
-//       "Content-Type": "application/json",
-//       ...(token && { Authorization: `Bearer ${token}` }),
-//     },
-//   };
+  // Billing
+  BILLS: "/bills",
+  BILL_BY_ID: (id) => `/bills/${id}`,
+  BILL_PAY: (id) => `/bills/${id}/pay`,
 
-//   const config = {
-//     ...defaultOptions,
-//     ...options,
-//     headers: {
-//       ...defaultOptions.headers,
-//       ...options.headers,
-//     },
-//   };
+  // Users
+  USERS: "/users",
+  USER_BY_ID: (id) => `/users/${id}`,
 
-//   try {
-//     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  // Customers
+  CUSTOMERS: "/customer",
+  CUSTOMER_BY_ID: (id) => `/customer/${id}`,
 
-//     if (!response.ok) {
-//       const error = await response.json();
-//       throw new Error(
-//         error.message || `HTTP error! status: ${response.status}`
-//       );
-//     }
+  // Wallets
+  WALLETS: "/wallets",
+  WALLET_BY_ID: (id) => `/wallets/${id}`,
 
-//     const contentType = response.headers.get("content-type");
-//     if (contentType && contentType.includes("application/json")) {
-//       return await response.json();
-//     }
+  // Health
+  HEALTH: "/health",
+};
 
-//     return response;
-//   } catch (error) {
-//     console.error("API request failed:", error);
-//     throw error;
-//   }
-// };
+// Request interceptor to add auth token
+const getAuthToken = () => {
+  return localStorage.getItem("authToken");
+};
 
-// // Authentication API
-// export const authAPI = {
-//   login: (email, password) =>
-//     apiRequest(ENDPOINTS.LOGIN, {
-//       method: "POST",
-//       body: JSON.stringify({ email, password }),
-//     }),
+// Generic request handler
+const apiRequest = async (endpoint, options = {}) => {
+  const token = getAuthToken();
 
-//   logout: () => apiRequest(ENDPOINTS.LOGOUT, { method: "POST" }),
+  const defaultOptions = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  };
 
-//   refreshToken: () => apiRequest(ENDPOINTS.REFRESH, { method: "POST" }),
-// };
+  const config = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers,
+    },
+  };
 
-// // Tables API
-// export const tablesAPI = {
-//   getAll: () => apiRequest(ENDPOINTS.TABLES),
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-//   getById: (id) => apiRequest(ENDPOINTS.TABLE_BY_ID(id)),
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.message || `HTTP error! status: ${response.status}`
+      );
+    }
 
-//   create: (tableData) =>
-//     apiRequest(ENDPOINTS.TABLES, {
-//       method: "POST",
-//       body: JSON.stringify(tableData),
-//     }),
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    }
 
-//   update: (id, tableData) =>
-//     apiRequest(ENDPOINTS.TABLE_BY_ID(id), {
-//       method: "PUT",
-//       body: JSON.stringify(tableData),
-//     }),
+    return response;
+  } catch (error) {
+    console.error("API request failed:", error);
+    throw error;
+  }
+};
 
-//   delete: (id) => apiRequest(ENDPOINTS.TABLE_BY_ID(id), { method: "DELETE" }),
-// };
+// Authentication API
+export const authAPI = {
+  login: (email, password) =>
+    apiRequest(ENDPOINTS.LOGIN, {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
 
-// // Games API
-// export const gamesAPI = {
-//   getAll: () => apiRequest(ENDPOINTS.GAMES),
+  register: (userData) =>
+    apiRequest(ENDPOINTS.REGISTER, {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
 
-//   getById: (id) => apiRequest(ENDPOINTS.GAME_BY_ID(id)),
+  logout: () => apiRequest(ENDPOINTS.LOGOUT, { method: "POST" }),
 
-//   start: (gameData) =>
-//     apiRequest(ENDPOINTS.START_GAME, {
-//       method: "POST",
-//       body: JSON.stringify(gameData),
-//     }),
+  refreshToken: () => apiRequest(ENDPOINTS.REFRESH, { method: "POST" }),
+};
 
-//   end: (id) => apiRequest(ENDPOINTS.END_GAME(id), { method: "POST" }),
+// Tables API
+export const tablesAPI = {
+  getAll: () => apiRequest(ENDPOINTS.TABLES),
 
-//   updateScore: (id, score1, score2) =>
-//     apiRequest(ENDPOINTS.UPDATE_SCORE(id), {
-//       method: "PUT",
-//       body: JSON.stringify({ score1, score2 }),
-//     }),
-// };
+  getById: (id) => apiRequest(ENDPOINTS.TABLE_BY_ID(id)),
 
-// // Bookings API
-// export const bookingsAPI = {
-//   getAll: () => apiRequest(ENDPOINTS.BOOKINGS),
+  create: (tableData) =>
+    apiRequest(ENDPOINTS.TABLES, {
+      method: "POST",
+      body: JSON.stringify(tableData),
+    }),
 
-//   getById: (id) => apiRequest(ENDPOINTS.BOOKING_BY_ID(id)),
+  update: (id, tableData) =>
+    apiRequest(ENDPOINTS.TABLE_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(tableData),
+    }),
 
-//   create: (bookingData) =>
-//     apiRequest(ENDPOINTS.BOOKINGS, {
-//       method: "POST",
-//       body: JSON.stringify(bookingData),
-//     }),
+  delete: (id) => apiRequest(ENDPOINTS.TABLE_BY_ID(id), { method: "DELETE" }),
+};
 
-//   update: (id, bookingData) =>
-//     apiRequest(ENDPOINTS.BOOKING_BY_ID(id), {
-//       method: "PUT",
-//       body: JSON.stringify(bookingData),
-//     }),
+// Games API
+export const gamesAPI = {
+  getAll: () => apiRequest(ENDPOINTS.GAMES),
 
-//   delete: (id) => apiRequest(ENDPOINTS.BOOKING_BY_ID(id), { method: "DELETE" }),
+  getById: (id) => apiRequest(ENDPOINTS.GAME_BY_ID(id)),
 
-//   checkAvailability: (tableId, date, startTime, duration) =>
-//     apiRequest(ENDPOINTS.CHECK_AVAILABILITY, {
-//       method: "POST",
-//       body: JSON.stringify({ tableId, date, startTime, duration }),
-//     }),
-// };
+  start: (gameData) =>
+    apiRequest(ENDPOINTS.START_GAME, {
+      method: "POST",
+      body: JSON.stringify(gameData),
+    }),
 
-// // Members API
-// export const membersAPI = {
-//   getAll: () => apiRequest(ENDPOINTS.MEMBERS),
+  end: (id) => apiRequest(ENDPOINTS.END_GAME(id), { method: "POST" }),
 
-//   getById: (id) => apiRequest(ENDPOINTS.MEMBER_BY_ID(id)),
+  updateScore: (id, score1, score2) =>
+    apiRequest(ENDPOINTS.UPDATE_SCORE(id), {
+      method: "PUT",
+      body: JSON.stringify({ score1, score2 }),
+    }),
+};
 
-//   create: (memberData) =>
-//     apiRequest(ENDPOINTS.MEMBERS, {
-//       method: "POST",
-//       body: JSON.stringify(memberData),
-//     }),
+// Reservations API
+export const reservationsAPI = {
+  getAll: () => apiRequest(ENDPOINTS.RESERVATIONS),
 
-//   update: (id, memberData) =>
-//     apiRequest(ENDPOINTS.MEMBER_BY_ID(id), {
-//       method: "PUT",
-//       body: JSON.stringify(memberData),
-//     }),
+  getById: (id) => apiRequest(ENDPOINTS.RESERVATION_BY_ID(id)),
 
-//   delete: (id) => apiRequest(ENDPOINTS.MEMBER_BY_ID(id), { method: "DELETE" }),
-// };
+  create: (reservationData) =>
+    apiRequest(ENDPOINTS.RESERVATIONS, {
+      method: "POST",
+      body: JSON.stringify(reservationData),
+    }),
 
-// // Billing API
-// export const billingAPI = {
-//   getAll: () => apiRequest(ENDPOINTS.BILLS),
+  update: (id, reservationData) =>
+    apiRequest(ENDPOINTS.RESERVATION_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(reservationData),
+    }),
 
-//   getById: (id) => apiRequest(ENDPOINTS.BILL_BY_ID(id)),
+  delete: (id) => apiRequest(ENDPOINTS.RESERVATION_BY_ID(id), { method: "DELETE" }),
 
-//   generate: (gameId) =>
-//     apiRequest(ENDPOINTS.GENERATE_BILL, {
-//       method: "POST",
-//       body: JSON.stringify({ gameId }),
-//     }),
+  autoassign: (data) =>
+    apiRequest(ENDPOINTS.AUTOASSIGN, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
 
-//   markPaid: (id, paymentData) =>
-//     apiRequest(ENDPOINTS.BILL_BY_ID(id), {
-//       method: "PUT",
-//       body: JSON.stringify({
-//         status: "paid",
-//         ...paymentData,
-//       }),
-//     }),
-// };
+// Active Tables API
+export const activeTablesAPI = {
+  getAll: () => apiRequest(ENDPOINTS.ACTIVE_TABLES),
 
-// // Reports API
-// export const reportsAPI = {
-//   getRevenue: (dateRange) =>
-//     apiRequest(`${ENDPOINTS.REVENUE_REPORT}?range=${dateRange}`),
+  start: (sessionData) =>
+    apiRequest(ENDPOINTS.START_SESSION, {
+      method: "POST",
+      body: JSON.stringify(sessionData),
+    }),
 
-//   getUsage: (dateRange) =>
-//     apiRequest(`${ENDPOINTS.USAGE_REPORT}?range=${dateRange}`),
+  stop: (sessionData) =>
+    apiRequest(ENDPOINTS.STOP_SESSION, {
+      method: "POST",
+      body: JSON.stringify(sessionData),
+    }),
+};
 
-//   getCustomers: (dateRange) =>
-//     apiRequest(`${ENDPOINTS.CUSTOMER_REPORT}?range=${dateRange}`),
-// };
+// Queue API
+export const queueAPI = {
+  getAll: () => apiRequest(ENDPOINTS.QUEUE),
 
-// // Export default API object
-// const api = {
-//   auth: authAPI,
-//   tables: tablesAPI,
-//   games: gamesAPI,
-//   bookings: bookingsAPI,
-//   members: membersAPI,
-//   billing: billingAPI,
-//   reports: reportsAPI,
-// };
+  add: (queueData) =>
+    apiRequest(ENDPOINTS.QUEUE, {
+      method: "POST",
+      body: JSON.stringify(queueData),
+    }),
 
-// export default api;
+  next: () => apiRequest(ENDPOINTS.QUEUE_NEXT, { method: "POST" }),
+
+  clear: () => apiRequest(ENDPOINTS.QUEUE_CLEAR, { method: "POST" }),
+};
+
+// Menu API
+export const menuAPI = {
+  getAll: () => apiRequest(ENDPOINTS.MENU),
+
+  getById: (id) => apiRequest(ENDPOINTS.MENU_BY_ID(id)),
+
+  create: (menuData) =>
+    apiRequest(ENDPOINTS.MENU, {
+      method: "POST",
+      body: JSON.stringify(menuData),
+    }),
+
+  update: (id, menuData) =>
+    apiRequest(ENDPOINTS.MENU_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(menuData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.MENU_BY_ID(id), { method: "DELETE" }),
+};
+
+// Food API
+export const foodAPI = {
+  getAll: () => apiRequest(ENDPOINTS.FOOD),
+
+  getById: (id) => apiRequest(ENDPOINTS.FOOD_BY_ID(id)),
+
+  create: (foodData) =>
+    apiRequest(ENDPOINTS.FOOD, {
+      method: "POST",
+      body: JSON.stringify(foodData),
+    }),
+
+  update: (id, foodData) =>
+    apiRequest(ENDPOINTS.FOOD_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(foodData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.FOOD_BY_ID(id), { method: "DELETE" }),
+};
+
+// Orders API
+export const ordersAPI = {
+  getAll: () => apiRequest(ENDPOINTS.ORDERS),
+
+  getById: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id)),
+
+  create: (orderData) =>
+    apiRequest(ENDPOINTS.ORDERS, {
+      method: "POST",
+      body: JSON.stringify(orderData),
+    }),
+
+  update: (id, orderData) =>
+    apiRequest(ENDPOINTS.ORDER_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(orderData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id), { method: "DELETE" }),
+};
+
+// Billing API
+export const billingAPI = {
+  getAll: () => apiRequest(ENDPOINTS.BILLS),
+
+  getById: (id) => apiRequest(ENDPOINTS.BILL_BY_ID(id)),
+
+  create: (billData) =>
+    apiRequest(ENDPOINTS.BILLS, {
+      method: "POST",
+      body: JSON.stringify(billData),
+    }),
+
+  pay: (id, paymentData) =>
+    apiRequest(ENDPOINTS.BILL_PAY(id), {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    }),
+
+  update: (id, billData) =>
+    apiRequest(ENDPOINTS.BILL_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(billData),
+    }),
+};
+
+// Users API
+export const usersAPI = {
+  getAll: () => apiRequest(ENDPOINTS.USERS),
+
+  getById: (id) => apiRequest(ENDPOINTS.USER_BY_ID(id)),
+
+  create: (userData) =>
+    apiRequest(ENDPOINTS.USERS, {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
+
+  update: (id, userData) =>
+    apiRequest(ENDPOINTS.USER_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(userData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.USER_BY_ID(id), { method: "DELETE" }),
+};
+
+// Customers API
+export const customersAPI = {
+  getAll: () => apiRequest(ENDPOINTS.CUSTOMERS),
+
+  getById: (id) => apiRequest(ENDPOINTS.CUSTOMER_BY_ID(id)),
+
+  create: (customerData) =>
+    apiRequest(ENDPOINTS.CUSTOMERS, {
+      method: "POST",
+      body: JSON.stringify(customerData),
+    }),
+
+  update: (id, customerData) =>
+    apiRequest(ENDPOINTS.CUSTOMER_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(customerData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.CUSTOMER_BY_ID(id), { method: "DELETE" }),
+};
+
+// Wallets API
+export const walletsAPI = {
+  getAll: () => apiRequest(ENDPOINTS.WALLETS),
+
+  getById: (id) => apiRequest(ENDPOINTS.WALLET_BY_ID(id)),
+
+  create: (walletData) =>
+    apiRequest(ENDPOINTS.WALLETS, {
+      method: "POST",
+      body: JSON.stringify(walletData),
+    }),
+
+  update: (id, walletData) =>
+    apiRequest(ENDPOINTS.WALLET_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(walletData),
+    }),
+};
+
+// Health API
+export const healthAPI = {
+  check: () => apiRequest(ENDPOINTS.HEALTH),
+};
+
+// Export default API object
+const api = {
+  auth: authAPI,
+  tables: tablesAPI,
+  games: gamesAPI,
+  reservations: reservationsAPI,
+  activeTables: activeTablesAPI,
+  queue: queueAPI,
+  menu: menuAPI,
+  food: foodAPI,
+  orders: ordersAPI,
+  billing: billingAPI,
+  users: usersAPI,
+  customers: customersAPI,
+  wallets: walletsAPI,
+  health: healthAPI,
+};
+
+export default api;
