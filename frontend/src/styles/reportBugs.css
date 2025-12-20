@@ -1,0 +1,70 @@
+/* =========================
+   REPORT BUGS PAGE
+========================= */
+
+.bugs-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* LIST */
+.bug-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bug-item {
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* STATUS BADGES */
+.status {
+  padding: 6px 16px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.status.reported {
+  background: #ff3b3b;
+}
+
+.status.progress {
+  background: #ff9800;
+}
+
+.status.resolved {
+  background: #0f9d58;
+}
+
+/* FOOTER */
+.bug-footer {
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+.report-btn {
+  background: #ff8c1a;
+  border: none;
+  color: #fff;
+  padding: 12px 40px;
+  border-radius: 30px;
+  font-weight: 600;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .bug-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

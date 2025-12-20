@@ -11,6 +11,8 @@ import FoodOrder from "../pages/food/FoodOrder";
 import OwnersPanel from "../pages/owners/OwnersPanel";
 import UpgradeSubscription from "../pages/subscription/UpgradeSubscription";
 import PrivacyPolicy from "../pages/subscription/PrivacyPolicy";
+import ReportBugs from "../pages/bugs/ReportBugs";
+import CreateBug from "../pages/bugs/CreateBug";
 
 const AppRoutes = () => {
   return (
@@ -33,6 +35,8 @@ const AppRoutes = () => {
         <Route path="/owners" element={<OwnersPanel />} />
         <Route path="/subscription" element={<UpgradeSubscription />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/report-bugs" element={<ReportBugs />} />
+        <Route path="/report-bugs/create" element={<CreateBug />} />
       </Route>
     </Routes>
   );
