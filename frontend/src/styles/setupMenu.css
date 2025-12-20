@@ -1,0 +1,144 @@
+/* =========================
+   SETUP MENU PAGE
+========================= */
+
+.setup-menu-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* PAGE TITLE */
+.setup-menu-page h5 {
+  margin-bottom: 16px;
+}
+
+/* =========================
+   TABS
+========================= */
+
+.setup-tabs {
+  display: flex;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.setup-tabs button {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  background: #f3f3f3;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.setup-tabs button.active {
+  background: #ff8c1a;
+  color: #fff;
+}
+
+/* =========================
+   GRID (TABLE & DIGITAL)
+========================= */
+
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.game-box {
+  height: 180px;
+  border: 2px solid #ff8c1a;
+  border-radius: 8px;
+}
+
+/* =========================
+   ADD BUTTON
+========================= */
+
+.add-btn {
+  margin: 40px auto;
+  display: block;
+  background: #ff8c1a;
+  border: none;
+  color: #fff;
+  padding: 12px 40px;
+  border-radius: 30px;
+  font-weight: 600;
+}
+
+.add-btn.center {
+  margin-top: 30px;
+}
+
+/* =========================
+   MENU TAB
+========================= */
+
+.menu-tab {
+  margin-top: 10px;
+}
+
+.menu-categories {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.menu-categories span {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #eee;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.menu-categories .active {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.menu-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.menu-item {
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.menu-item .img {
+  width: 60px;
+  height: 60px;
+  background: #ddd;
+  border-radius: 6px;
+}
+
+.menu-item h6 {
+  margin-bottom: 4px;
+}
+
+.menu-item span {
+  font-weight: 600;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+  .setup-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .menu-list {
+    grid-template-columns: 1fr;
+  }
+}

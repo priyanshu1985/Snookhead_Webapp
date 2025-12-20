@@ -13,6 +13,7 @@ import UpgradeSubscription from "../pages/subscription/UpgradeSubscription";
 import PrivacyPolicy from "../pages/subscription/PrivacyPolicy";
 import ReportBugs from "../pages/bugs/ReportBugs";
 import CreateBug from "../pages/bugs/CreateBug";
+import SetupMenu from "../pages/setup-menu/SetupMenu";
 
 const AppRoutes = () => {
   return (
@@ -37,6 +38,7 @@ const AppRoutes = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/report-bugs" element={<ReportBugs />} />
         <Route path="/report-bugs/create" element={<CreateBug />} />
+        <Route path="/setup-menu" element={<SetupMenu />} />
       </Route>
     </Routes>
   );
