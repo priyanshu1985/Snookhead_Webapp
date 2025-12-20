@@ -9,6 +9,8 @@ import Billing from "../pages/billing/Billing";
 import FoodOrder from "../pages/food/FoodOrder";
 
 import OwnersPanel from "../pages/owners/OwnersPanel";
+import UpgradeSubscription from "../pages/subscription/UpgradeSubscription";
+import PrivacyPolicy from "../pages/subscription/PrivacyPolicy";
 
 const AppRoutes = () => {
   return (
@@ -29,6 +31,8 @@ const AppRoutes = () => {
         <Route path="/food-orders" element={<FoodOrder />} />
 
         <Route path="/owners" element={<OwnersPanel />} />
+        <Route path="/subscription" element={<UpgradeSubscription />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       </Route>
     </Routes>
   );

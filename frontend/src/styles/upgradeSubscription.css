@@ -1,0 +1,65 @@
+/* =========================
+   UPGRADE & SUBSCRIPTION
+========================= */
+
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f4f4;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 16px;
+}
+
+.upgrade-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+.upgrade-header {
+  text-align: center;
+  margin: 30px 0;
+}
+
+/* PLANS */
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.plan-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+.plan-card h2 span {
+  font-size: 14px;
+  color: #666;
+}
+
+.plan-card ul {
+  text-align: left;
+  margin: 20px 0;
+}
+
+.plan-card button {
+  background: #ff8c1a;
+  border: none;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-weight: 600;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .upgrade-header h3 {
+    font-size: 20px;
+  }
+}

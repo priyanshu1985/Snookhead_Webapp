@@ -1,0 +1,30 @@
+/* =========================
+   PRIVACY POLICY
+========================= */
+
+.privacy-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.policy-content {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  line-height: 1.6;
+}
+
+.policy-content h6 {
+  margin-top: 20px;
+}
+
+.policy-content ul {
+  padding-left: 20px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .policy-content {
+    padding: 16px;
+  }
+}
