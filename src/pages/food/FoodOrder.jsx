@@ -1,18 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { menuAPI, ordersAPI } from "../../services/api";
 import "../../styles/foodOrder.css";
 
-const foodItems = [
-  { id: 1, name: "Veg Burger", price: 120 },
-  { id: 2, name: "French Fries", price: 90 },
-  { id: 3, name: "Cold Coffee", price: 150 },
-  { id: 4, name: "Pizza Slice", price: 180 },
-  { id: 5, name: "Momos", price: 140 },
+const categories = [
+  { key: "all", label: "All Items" },
+  { key: "prepared", label: "Prepared Food" },
+  { key: "packed", label: "Packed Foods" },
+  { key: "cigarette", label: "Cigarette" },
+  { key: "Beverages", label: "Beverages" },
+  { key: "Food", label: "Food" },
+  { key: "Fast Food", label: "Fast Food" },
+  { key: "Snacks", label: "Snacks" },
+  { key: "Desserts", label: "Desserts" },
 ];
 
 const FoodOrder = () => {
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [cart, setCart] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [personName, setPersonName] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("offline");
+  const [cashAmount, setCashAmount] = useState("");
+  const [onlineAmount, setOnlineAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setLoading(true);
+        const data = await menuAPI.getAll();
+        const items = data?.data || (Array.isArray(data) ? data : []);
+        setMenuItems(items);
+        setError("");
+      } catch (err) {
+        console.error("Failed to fetch menu items:", err);
+        setError(err.message || "Failed to load menu items");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenuItems();
+  }, []);
+
+  // Filter items by category
+  const filteredItems = activeCategory === "all"
+    ? menuItems
+    : menuItems.filter(item => item.category === activeCategory);
 
   const addItem = (item) => {
     const exists = cart.find((c) => c.id === item.id);
@@ -37,10 +78,71 @@ const FoodOrder = () => {
     );
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-
+  const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
+
+  // Open payment modal
+  const handleProceedToPay = () => {
+    if (cart.length === 0) {
+      alert("Please add items to cart first");
+      return;
+    }
+    setShowPaymentModal(true);
+  };
+
+  // Handle order submission
+  const handleSubmitOrder = async () => {
+    if (!personName.trim()) {
+      alert("Please enter customer name");
+      return;
+    }
+
+    // Validate payment amounts for hybrid
+    if (paymentMethod === "hybrid") {
+      const cashAmt = Number(cashAmount) || 0;
+      const onlineAmt = Number(onlineAmount) || 0;
+      if (Math.abs((cashAmt + onlineAmt) - total) > 0.01) {
+        alert("Cash + Online amount must equal total");
+        return;
+      }
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      const orderPayload = {
+        personName: personName.trim(),
+        orderTotal: total,
+        paymentMethod,
+        cashAmount: paymentMethod === "offline" ? total : (paymentMethod === "hybrid" ? Number(cashAmount) : 0),
+        onlineAmount: paymentMethod === "online" ? total : (paymentMethod === "hybrid" ? Number(onlineAmount) : 0),
+        cart: cart.map(item => ({
+          item: { id: item.id, name: item.name, price: item.price },
+          qty: item.qty
+        }))
+      };
+
+      await ordersAPI.create(orderPayload);
+
+      // Success - reset everything
+      setCart([]);
+      setShowPaymentModal(false);
+      setPersonName("");
+      setPaymentMethod("offline");
+      setCashAmount("");
+      setOnlineAmount("");
+      alert("Order placed successfully!");
+
+    } catch (err) {
+      console.error("Order submission failed:", err);
+      setError(err.message || "Failed to place order");
+      alert("Failed to place order: " + (err.message || "Unknown error"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="dashboard-wrapper">
@@ -50,18 +152,40 @@ const FoodOrder = () => {
         <Navbar />
 
         <div className="food-page">
-          <h5 className="mb-3">← Food & Order</h5>
+          <h5 className="mb-3">Food & Order</h5>
+
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {/* Category Tabs */}
+          <div className="category-tabs">
+            {categories.map((cat) => (
+              <button
+                key={cat.key}
+                className={`category-tab ${activeCategory === cat.key ? "active" : ""}`}
+                onClick={() => setActiveCategory(cat.key)}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
 
           <div className="food-layout">
             {/* FOOD LIST */}
             <div className="food-list">
-              {foodItems.map((item) => (
-                <div className="food-card" key={item.id}>
-                  <h6>{item.name}</h6>
-                  <p>₹ {item.price}</p>
-                  <button onClick={() => addItem(item)}>Add</button>
-                </div>
-              ))}
+              {loading ? (
+                <p className="loading-text">Loading menu items...</p>
+              ) : filteredItems.length === 0 ? (
+                <p className="empty-text">No items available in this category</p>
+              ) : (
+                filteredItems.map((item) => (
+                  <div className="food-card" key={item.id}>
+                    <h6>{item.name}</h6>
+                    <p className="item-category">{item.category}</p>
+                    <p className="item-price">₹ {item.price}</p>
+                    <button onClick={() => addItem(item)}>Add</button>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* ORDER SUMMARY */}
@@ -78,16 +202,17 @@ const FoodOrder = () => {
                     <span>{item.qty}</span>
                     <button onClick={() => updateQty(item.id, "inc")}>+</button>
                   </div>
+                  <span className="item-total">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
                 </div>
               ))}
 
               <div className="price-box">
                 <div>
                   <span>Subtotal</span>
-                  <span>₹ {subtotal}</span>
+                  <span>₹ {subtotal.toFixed(2)}</span>
                 </div>
                 <div>
-                  <span>Tax</span>
+                  <span>Tax (5%)</span>
                   <span>₹ {tax.toFixed(2)}</span>
                 </div>
                 <div className="total">
@@ -96,11 +221,116 @@ const FoodOrder = () => {
                 </div>
               </div>
 
-              <button className="pay-btn">Proceed to Pay</button>
+              <button
+                className="pay-btn"
+                onClick={handleProceedToPay}
+                disabled={cart.length === 0}
+              >
+                Proceed to Pay
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal">
+            <div className="payment-modal-header">
+              <h5>Complete Payment</h5>
+              <button
+                className="close-btn"
+                onClick={() => setShowPaymentModal(false)}
+                disabled={submitting}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="payment-modal-body">
+              {/* Customer Name */}
+              <div className="form-group">
+                <label>Customer Name *</label>
+                <input
+                  type="text"
+                  placeholder="Enter customer name"
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* Payment Method */}
+              <div className="form-group">
+                <label>Payment Method *</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  disabled={submitting}
+                >
+                  <option value="offline">Cash</option>
+                  <option value="online">Online</option>
+                  <option value="hybrid">Cash + Online</option>
+                </select>
+              </div>
+
+              {/* Hybrid Payment Amounts */}
+              {paymentMethod === "hybrid" && (
+                <>
+                  <div className="form-group">
+                    <label>Cash Amount</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                      value={cashAmount}
+                      onChange={(e) => setCashAmount(e.target.value)}
+                      disabled={submitting}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Online Amount</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                      value={onlineAmount}
+                      onChange={(e) => setOnlineAmount(e.target.value)}
+                      disabled={submitting}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Order Total */}
+              <div className="payment-total">
+                <strong>Total to Pay:</strong>
+                <strong>₹ {total.toFixed(2)}</strong>
+              </div>
+            </div>
+
+            <div className="payment-modal-footer">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowPaymentModal(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-btn"
+                onClick={handleSubmitOrder}
+                disabled={submitting}
+              >
+                {submitting ? "Processing..." : "Confirm Order"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

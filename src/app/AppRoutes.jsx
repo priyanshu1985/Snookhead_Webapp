@@ -18,6 +18,8 @@ import InventoryTracking from "../pages/inventory/InventoryTracking";
 import ProtectedRoute from "./ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 
+import TableBooking from "../pages/tables/TableBooking";
+
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
@@ -54,6 +56,8 @@ const AppRoutes = () => {
         <Route path="/report-bugs/create" element={<CreateBug />} />
         <Route path="/setup-menu" element={<SetupMenu />} />
         <Route path="/inventory" element={<InventoryTracking />} />
+
+        <Route path="/tables/:game/:tableId" element={<TableBooking />} />
       </Route>
 
       {/* Catch all - redirect to login */}

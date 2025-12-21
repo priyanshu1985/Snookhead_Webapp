@@ -27,11 +27,42 @@
   align-items: center;
 }
 
+.history-header h5 {
+  color: #28a745;
+}
+
 .close-btn {
   background: none;
   border: none;
   font-size: 20px;
   cursor: pointer;
+}
+
+/* BILL INFO */
+.history-modal .bill-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+  padding: 10px;
+  background: #f0fff0;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+.history-modal .bill-info .bill-number {
+  font-size: 12px;
+  color: #888;
+}
+
+.history-modal .bill-info .customer-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.history-modal .bill-info .paid-date {
+  font-size: 12px;
+  color: #28a745;
 }
 
 /* METHOD */
@@ -97,14 +128,49 @@
   justify-content: center;
 }
 
+/* ORDER ITEMS */
+.history-modal .order-items-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #eee;
+}
+
+.history-modal .order-items-section .section-title {
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.history-modal .order-item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+  padding: 2px 0;
+}
+
+/* TABLE INFO */
+.table-info-section {
+  display: flex;
+  gap: 16px;
+  margin: 12px 0;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
 /* PAID BUTTON */
 .paid-btn {
   width: 100%;
-  background: #ccc;
+  background: #28a745;
   border: none;
   padding: 10px;
   border-radius: 20px;
   font-weight: 600;
+  color: #fff;
   cursor: not-allowed;
 }
 
