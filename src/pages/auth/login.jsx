@@ -1,13 +1,29 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/custom.css";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Later: API authentication logic
-    navigate("/"); // redirect to dashboard
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -24,13 +40,22 @@ const Login = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div className="alert alert-danger py-2 small" role="alert">
+                  {error}
+                </div>
+              )}
+
               <div className="mb-3">
                 <label className="form-label">Email</label>
                 <input
                   type="email"
                   className="form-control"
                   placeholder="demo@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -40,7 +65,10 @@ const Login = () => {
                   type="password"
                   className="form-control"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -64,8 +92,9 @@ const Login = () => {
               <button
                 type="submit"
                 className="btn btn-warning w-100 fw-semibold"
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? "Logging in..." : "Login"}
               </button>
             </form>
 

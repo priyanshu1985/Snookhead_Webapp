@@ -74,6 +74,18 @@ const getAuthToken = () => {
   return localStorage.getItem("authToken");
 };
 
+// Function to clear auth data and redirect to login
+const handleAuthError = () => {
+  // Clear all auth-related data from localStorage
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userData");
+
+  // Redirect to login page
+  // Using window.location instead of navigate because this is outside React
+  window.location.href = "/login";
+};
+
 // Generic request handler
 const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
@@ -98,10 +110,17 @@ const apiRequest = async (endpoint, options = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
+    // Handle 401 Unauthorized - token is invalid or expired
+    if (response.status === 401) {
+      console.warn("Authentication failed: Token is invalid or expired");
+      handleAuthError();
+      throw new Error("Session expired. Please login again.");
+    }
+
     if (!response.ok) {
-      const error = await response.json();
+      const errorData = await response.json();
       throw new Error(
-        error.message || `HTTP error! status: ${response.status}`
+        errorData.error || errorData.message || `HTTP error! status: ${response.status}`
       );
     }
 
@@ -162,6 +181,20 @@ export const gamesAPI = {
   getAll: () => apiRequest(ENDPOINTS.GAMES),
 
   getById: (id) => apiRequest(ENDPOINTS.GAME_BY_ID(id)),
+
+  create: (gameData) =>
+    apiRequest(ENDPOINTS.GAMES, {
+      method: "POST",
+      body: JSON.stringify(gameData),
+    }),
+
+  update: (id, gameData) =>
+    apiRequest(ENDPOINTS.GAME_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(gameData),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.GAME_BY_ID(id), { method: "DELETE" }),
 
   start: (gameData) =>
     apiRequest(ENDPOINTS.START_GAME, {

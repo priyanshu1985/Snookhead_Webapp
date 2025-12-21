@@ -1,134 +1,126 @@
-// import React, { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
+import { authAPI } from "../services/api";
 
-// const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === null) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
-//   useEffect(() => {
-//     // Check for existing authentication on app start
-//     const token = localStorage.getItem("authToken");
-//     const userData = localStorage.getItem("userData");
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-//     if (token && userData) {
-//       try {
-//         const parsedUser = JSON.parse(userData);
-//         setUser(parsedUser);
-//         setIsAuthenticated(true);
-//       } catch (error) {
-//         console.error("Error parsing stored user data:", error);
-//         localStorage.removeItem("authToken");
-//         localStorage.removeItem("userData");
-//       }
-//     }
-//     setIsLoading(false);
-//   }, []);
+  useEffect(() => {
+    // Check for existing authentication on app start
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("userData");
 
-//   const login = async (email, password) => {
-//     setIsLoading(true);
-//     try {
-//       // TODO: Replace with actual API call
-//       // For now, we'll simulate password validation
-//       if (!password) {
-//         throw new Error("Password is required");
-//       }
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
+        localStorage.removeItem("refreshToken");
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
-//       const mockResponse = {
-//         token: "mock-jwt-token",
-//         user: {
-//           id: 1,
-//           name: "Admin User",
-//           email: email,
-//           role: "admin",
-//         },
-//       };
+  const login = async (email, password) => {
+    setIsLoading(true);
+    try {
+      const response = await authAPI.login(email, password);
 
-//       // Simulate API call delay
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Store tokens
+      localStorage.setItem("authToken", response.accessToken);
+      if (response.refreshToken) {
+        localStorage.setItem("refreshToken", response.refreshToken);
+      }
 
-//       localStorage.setItem("authToken", mockResponse.token);
-//       localStorage.setItem("userData", JSON.stringify(mockResponse.user));
+      // Store user data
+      const userData = response.user || { email };
+      localStorage.setItem("userData", JSON.stringify(userData));
 
-//       setUser(mockResponse.user);
-//       setIsAuthenticated(true);
+      setUser(userData);
+      setIsAuthenticated(true);
 
-//       return { success: true };
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       throw new Error(error.message || "Login failed");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
+      return { success: true };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw new Error(error.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-//   const register = async (name, email, password) => {
-//     setIsLoading(true);
-//     try {
-//       // TODO: Replace with actual API call
-//       // For now, we'll simulate password validation
-//       if (!password || password.length < 6) {
-//         throw new Error("Password must be at least 6 characters long");
-//       }
+  const register = async (name, email, password) => {
+    setIsLoading(true);
+    try {
+      const response = await authAPI.register({ name, email, password });
 
-//       const mockResponse = {
-//         token: "mock-jwt-token",
-//         user: {
-//           id: Date.now(),
-//           name: name,
-//           email: email,
-//           role: "user",
-//         },
-//       };
+      // Store tokens
+      localStorage.setItem("authToken", response.accessToken);
+      if (response.refreshToken) {
+        localStorage.setItem("refreshToken", response.refreshToken);
+      }
 
-//       // Simulate API call delay
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Store user data
+      const userData = response.user || { name, email };
+      localStorage.setItem("userData", JSON.stringify(userData));
 
-//       localStorage.setItem("authToken", mockResponse.token);
-//       localStorage.setItem("userData", JSON.stringify(mockResponse.user));
+      setUser(userData);
+      setIsAuthenticated(true);
 
-//       setUser(mockResponse.user);
-//       setIsAuthenticated(true);
+      return { success: true };
+    } catch (error) {
+      console.error("Register error:", error);
+      throw new Error(error.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-//       return { success: true };
-//     } catch (error) {
-//       console.error("Register error:", error);
-//       throw new Error(error.message || "Registration failed");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("refreshToken");
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
-//   const logout = () => {
-//     localStorage.removeItem("authToken");
-//     localStorage.removeItem("userData");
-//     setUser(null);
-//     setIsAuthenticated(false);
-//   };
+  const updateUser = (userData) => {
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    localStorage.setItem("userData", JSON.stringify(updatedUser));
+  };
 
-//   const updateUser = (userData) => {
-//     const updatedUser = { ...user, ...userData };
-//     setUser(updatedUser);
-//     localStorage.setItem("userData", JSON.stringify(updatedUser));
-//   };
+  const getAuthToken = () => {
+    return localStorage.getItem("authToken");
+  };
 
-//   const getAuthToken = () => {
-//     return localStorage.getItem("authToken");
-//   };
+  const value = {
+    user,
+    isAuthenticated,
+    loading: isLoading,
+    login,
+    register,
+    logout,
+    updateUser,
+    getAuthToken,
+  };
 
-//   const value = {
-//     user,
-//     isAuthenticated,
-//     loading: isLoading,
-//     login,
-//     register,
-//     logout,
-//     updateUser,
-//     getAuthToken,
-//   };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
-//   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-// };
-
-// export default AuthContext;
+export default AuthContext;

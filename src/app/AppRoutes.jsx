@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/login";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Layout from "./Layout";
@@ -15,15 +15,28 @@ import ReportBugs from "../pages/bugs/ReportBugs";
 import CreateBug from "../pages/bugs/CreateBug";
 import SetupMenu from "../pages/setup-menu/SetupMenu";
 import InventoryTracking from "../pages/inventory/InventoryTracking";
+import ProtectedRoute from "./ProtectedRoute";
+import { useAuth } from "../context/AuthContext";
 
 const AppRoutes = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Routes>
-      {/* Public Route */}
-      <Route path="/login" element={<Login />} />
+      {/* Public Route - Redirect to dashboard if already logged in */}
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+      />
 
       {/* Protected Area */}
-      <Route element={<Layout />}>
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/" element={<Dashboard />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/add-queue" element={<AddQueue />} />
@@ -42,6 +55,9 @@ const AppRoutes = () => {
         <Route path="/setup-menu" element={<SetupMenu />} />
         <Route path="/inventory" element={<InventoryTracking />} />
       </Route>
+
+      {/* Catch all - redirect to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
