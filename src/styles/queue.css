@@ -14,6 +14,7 @@
 
 .queue-header h5 {
   font-weight: 600;
+  color: #333;
 }
 
 /* TABS */
@@ -23,18 +24,27 @@
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .queue-tabs button {
   flex: 1;
   border: none;
-  padding: 10px;
+  padding: 12px 16px;
   font-weight: 600;
-  background: #f3f3f3;
+  background: #f8f8f8;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.queue-tabs button:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .queue-tabs .active {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
 }
 
@@ -47,29 +57,39 @@
 
 .queue-item {
   background: #fff;
-  border-radius: 10px;
-  padding: 12px 16px;
+  border-radius: 12px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.queue-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .queue-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .queue-number {
   color: #999;
+  font-weight: 500;
 }
 
 .queue-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 .queue-time {
-  font-weight: 500;
+  font-weight: 600;
+  color: #ff8c1a;
 }
 
 /* FOOTER */
@@ -80,12 +100,25 @@
 }
 
 .add-queue-btn {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
   border: none;
-  padding: 12px 40px;
+  padding: 14px 50px;
   border-radius: 30px;
   font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.add-queue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+}
+
+.add-queue-btn:active {
+  transform: translateY(0);
 }
 
 /* =========================

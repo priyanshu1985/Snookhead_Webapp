@@ -17,23 +17,34 @@
 }
 
 .session-header .back-btn {
-  background: none;
+  background: #fff;
   border: none;
   font-size: 20px;
   cursor: pointer;
-  padding: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.session-header .back-btn:hover {
+  background: #fff5eb;
+  color: #ff8c1a;
+  transform: translateX(-2px);
 }
 
 .session-header h5 {
   flex: 1;
   margin: 0;
+  font-weight: 600;
+  color: #333;
 }
 
 .session-header .table-code {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -41,29 +52,31 @@
 /* TIMER SECTION */
 .timer-section {
   background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 18px;
+  padding: 28px;
   text-align: center;
   color: #fff;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(255, 140, 26, 0.3);
 }
 
 .timer-label {
   font-size: 14px;
   opacity: 0.9;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 .timer-display {
-  font-size: 48px;
+  font-size: 52px;
   font-weight: bold;
   font-family: monospace;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   transition: color 0.3s;
 }
 
 .timer-display.countdown {
-  font-size: 56px;
+  font-size: 60px;
 }
 
 .timer-display.timer-warning {
@@ -89,17 +102,17 @@
 .timer-warning-text {
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 8px;
-  padding: 6px 12px;
+  margin-bottom: 10px;
+  padding: 8px 16px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 25px;
   display: inline-block;
 }
 
 .elapsed-time {
   font-size: 14px;
-  opacity: 0.8;
-  margin-bottom: 8px;
+  opacity: 0.85;
+  margin-bottom: 10px;
 }
 
 .timer-hint {
@@ -119,18 +132,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
+  border-radius: 14px;
+  padding: 14px 28px;
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .control-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
 }
 
 .control-btn.active {
@@ -138,11 +152,12 @@
 }
 
 .control-btn .icon {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .control-btn span:last-child {
   font-size: 12px;
+  font-weight: 500;
 }
 
 /* FOOD CATEGORIES */
@@ -151,33 +166,36 @@
   gap: 12px;
   margin-bottom: 20px;
   overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .food-box {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
+  padding: 12px 18px;
+  border: 2px solid #e8e8e8;
+  border-radius: 25px;
   background: #fff;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .food-box:hover {
   border-color: #ff8c1a;
+  background: #fff5eb;
 }
 
 .food-box.active {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   border-color: #ff8c1a;
   color: #fff;
 }
 
 .food-icon {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 /* MENU ITEMS LIST */
@@ -191,16 +209,23 @@
 .menu-item-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: #fff;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.menu-item-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .item-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+  width: 55px;
+  height: 55px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -211,7 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .item-details {
@@ -222,7 +247,8 @@
 }
 
 .item-details .item-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 .item-details .item-qty {
@@ -234,49 +260,53 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
 }
 
 .item-actions .add-btn {
   background: none;
-  border: 1px solid #ff8c1a;
+  border: 2px solid #ff8c1a;
   color: #ff8c1a;
-  padding: 4px 16px;
-  border-radius: 16px;
+  padding: 6px 18px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .item-actions .add-btn:hover {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  border-color: #ff8c1a;
   color: #fff;
 }
 
 .item-actions .item-price {
-  font-weight: 600;
+  font-weight: 700;
   color: #ff8c1a;
 }
 
 /* ORDER SUMMARY */
 .order-summary {
   background: #fff;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .order-summary h6 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   color: #333;
+  font-weight: 600;
 }
 
 .order-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .order-item:last-child {
@@ -286,44 +316,50 @@
 .qty-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .qty-controls button {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid #ddd;
+  border: 2px solid #e8e8e8;
   background: #fff;
   cursor: pointer;
   font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .qty-controls button:hover {
-  background: #f5f5f5;
+  border-color: #ff8c1a;
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 /* PRICING SUMMARY */
 .pricing-summary {
   background: #fff;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .price-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 10px 0;
   color: #666;
 }
 
 .price-row.total {
-  border-top: 1px solid #eee;
-  padding-top: 12px;
-  margin-top: 8px;
+  border-top: 2px solid #f0f0f0;
+  padding-top: 14px;
+  margin-top: 10px;
   color: #333;
   font-size: 18px;
+  font-weight: 700;
 }
 
 /* ACTION BUTTONS */
@@ -335,24 +371,26 @@
   left: 0;
   right: 0;
   background: #fff;
-  padding: 16px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 16px 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .update-btn {
   flex: 1;
-  padding: 14px;
+  padding: 16px;
   border: 2px solid #ff8c1a;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
   color: #ff8c1a;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .update-btn:hover:not(:disabled) {
-  background: #fff3e6;
+  background: #fff5eb;
+  transform: translateY(-2px);
 }
 
 .update-btn:disabled {
@@ -363,22 +401,30 @@
 
 .generate-bill-btn {
   flex: 1;
-  padding: 14px;
+  padding: 16px;
   border: none;
-  border-radius: 12px;
-  background: #ff8c1a;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
 }
 
 .generate-bill-btn:hover:not(:disabled) {
-  background: #e67e00;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+}
+
+.generate-bill-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .generate-bill-btn:disabled {
   background: #ccc;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -401,10 +447,14 @@
 /* MOBILE */
 @media (max-width: 480px) {
   .timer-display {
-    font-size: 36px;
+    font-size: 40px;
+  }
+
+  .timer-display.countdown {
+    font-size: 48px;
   }
 
   .session-actions {
-    padding: 12px;
+    padding: 12px 16px;
   }
 }

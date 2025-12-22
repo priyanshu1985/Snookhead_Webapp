@@ -23,19 +23,33 @@
 
 .forgot {
   display: block;
-  color: red;
+  color: #ff3b3b;
   font-size: 13px;
   margin-bottom: 20px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.forgot:hover {
+  color: #cc0000;
+  text-decoration: underline;
 }
 
 .owners-auth button {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
   border: none;
   padding: 12px 50px;
   border-radius: 30px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.owners-auth button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
 }
 
 /* DASHBOARD */
@@ -54,6 +68,13 @@
   background: #fff;
   padding: 16px;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .card .up {
@@ -94,6 +115,13 @@
   background: #fff;
   padding: 16px;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.wallet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .wallet-card.active {

@@ -18,10 +18,17 @@
 .bug-item {
   background: #fff;
   padding: 14px 18px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.bug-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* STATUS BADGES */
@@ -30,6 +37,12 @@
   border-radius: 20px;
   color: #fff;
   font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.status:hover {
+  transform: scale(1.05);
 }
 
 .status.reported {
@@ -52,12 +65,20 @@
 }
 
 .report-btn {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   border: none;
   color: #fff;
-  padding: 12px 40px;
+  padding: 14px 44px;
   border-radius: 30px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.report-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
 }
 
 /* MOBILE */

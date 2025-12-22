@@ -11,9 +11,17 @@
 
 .inventory-search input {
   flex: 1;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid #ddd;
+  padding: 12px 18px;
+  border-radius: 25px;
+  border: 2px solid #e8e8e8;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.inventory-search input:focus {
+  outline: none;
+  border-color: #ff8c1a;
+  box-shadow: 0 0 0 3px rgba(255, 140, 26, 0.1);
 }
 
 .inventory-tabs {
@@ -29,11 +37,20 @@
   border: none;
   background: transparent;
   font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inventory-tabs button:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .inventory-tabs .active {
   background: #fff;
   border-bottom: 3px solid #ff8c1a;
+  color: #ff8c1a;
 }
 
 .inventory-alerts {
@@ -72,13 +89,22 @@
 }
 
 .inventory-filters span {
-  padding: 6px 18px;
+  padding: 8px 18px;
   border-radius: 20px;
   background: #f1e0cc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #333;
+}
+
+.inventory-filters span:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .inventory-filters .active {
-  background: #0d6efd;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
 }
 
@@ -91,10 +117,17 @@
 .inventory-item {
   background: #fff;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.inventory-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .inventory-item .img {
@@ -111,11 +144,20 @@
 }
 
 .restock {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(255, 140, 26, 0.3);
+}
+
+.restock:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
 }
 
 .call {
@@ -123,6 +165,16 @@
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #0066cc;
+}
+
+.call:hover {
+  background: #99ccff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
 }
 
 /* MOBILE */

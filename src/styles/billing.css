@@ -14,18 +14,27 @@
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .billing-tabs button {
   flex: 1;
   border: none;
-  padding: 12px;
+  padding: 14px;
   font-weight: 600;
-  background: #f3f3f3;
+  background: #f8f8f8;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.billing-tabs button:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .billing-tabs .active {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
 }
 
@@ -38,12 +47,19 @@
 
 .billing-item {
   background: #fff;
-  border-radius: 10px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 16px 18px;
   display: grid;
   grid-template-columns: 2fr 2fr 1fr 1fr;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.billing-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* LEFT */
@@ -54,6 +70,7 @@
 
 .index {
   color: #aaa;
+  font-weight: 500;
 }
 
 .date {
@@ -62,7 +79,8 @@
 }
 
 .name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 /* TAGS */
@@ -73,30 +91,39 @@
 }
 
 .tag {
-  background: #eee;
-  padding: 4px 10px;
+  background: #f0f0f0;
+  padding: 5px 12px;
   border-radius: 12px;
   font-size: 12px;
+  color: #555;
+  font-weight: 500;
 }
 
 /* ACTION */
 .view-bill-btn {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
   border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-bill-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
 }
 
 /* BILL HISTORY BUTTON */
 .view-bill-btn.history {
-  background: #0d6efd; /* blue */
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
 }
 
-/* OPTIONAL: subtle difference */
 .view-bill-btn.history:hover {
-  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
 }
 
 /* BILL NUMBER */
@@ -107,8 +134,8 @@
 
 /* AMOUNT */
 .billing-amount {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 17px;
   color: #333;
 }
 

@@ -28,13 +28,21 @@
   flex: 1;
   border: none;
   padding: 12px;
-  background: #f3f3f3;
+  background: #f8f8f8;
   font-weight: 600;
   font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.setup-tabs button:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .setup-tabs button.active {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
 }
 
@@ -51,7 +59,15 @@
 .game-box {
   height: 180px;
   border: 2px solid #ff8c1a;
-  border-radius: 8px;
+  border-radius: 12px;
+  background: #fff;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.game-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(255, 140, 26, 0.2);
 }
 
 /* =========================
@@ -61,12 +77,20 @@
 .add-btn {
   margin: 40px auto;
   display: block;
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   border: none;
   color: #fff;
   padding: 12px 40px;
   border-radius: 30px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
 }
 
 .add-btn.center {
@@ -88,15 +112,23 @@
 }
 
 .menu-categories span {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 20px;
-  background: #eee;
+  background: #f0f0f0;
   font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #333;
+}
+
+.menu-categories span:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
 }
 
 .menu-categories .active {
-  background: #0d6efd;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
 }
 
@@ -108,10 +140,17 @@
 
 .menu-item {
   background: #fff;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 12px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .menu-item .img {

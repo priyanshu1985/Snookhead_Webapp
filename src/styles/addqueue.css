@@ -13,19 +13,32 @@
   gap: 10px;
   overflow-x: auto;
   margin: 20px 0;
+  padding-bottom: 8px;
 }
 
 .date-strip button {
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
   border: none;
-  background: #eee;
+  background: #fff;
   white-space: nowrap;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.date-strip button:hover:not(.active) {
+  background: #fff5eb;
+  color: #ff8c1a;
+  transform: translateY(-2px);
 }
 
 .date-strip .active {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
 }
 
 /* OPTIONS */
@@ -47,21 +60,56 @@
 .game-card {
   height: 200px;
   border-radius: 12px;
-  background: #ddd;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 2px solid transparent;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #ff8c1a;
+}
+
+.game-card.active {
+  border-color: #ff8c1a;
+  background: #fff5eb;
 }
 
 /* FOOTER */
 .next-btn {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
   border: none;
-  padding: 12px 50px;
+  padding: 14px 60px;
   border-radius: 30px;
   font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.next-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+}
+
+.next-btn:active {
+  transform: translateY(0);
+}
+
+.next-btn:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 /* MOBILE */

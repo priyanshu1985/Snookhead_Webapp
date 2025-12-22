@@ -1,46 +1,66 @@
 /* =========================
-   TOP NAVBAR
+   TOP NAVBAR - ENHANCED DESIGN
 ========================= */
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
 }
 
 /* LEFT */
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* CENTER NAV */
+/* CENTER NAV - Tab Style */
 .topbar-center {
   display: flex;
-  gap: 24px;
+  gap: 8px;
+  background: #f8f8f8;
+  padding: 6px;
+  border-radius: 30px;
 }
 
-/* NAV ITEM */
+/* NAV ITEM - Pill Style */
 .nav-item {
   text-decoration: none;
   color: #777;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 25px;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  color: #ff8c1a;
+  background: rgba(255, 140, 26, 0.1);
 }
 
 .nav-item.active {
-  color: #000;
-  border-bottom: 2px solid #ff8c1a;
+  color: #333;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
 }
 
 /* ICON + TEXT */
 .nav-icon {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .nav-text {
@@ -49,10 +69,24 @@
 
 /* SEARCH */
 .search-input {
-  border-radius: 20px;
-  padding: 6px 14px;
-  border: 1px solid #ddd;
-  min-width: 220px;
+  border-radius: 25px;
+  padding: 10px 18px;
+  border: 1px solid #eee;
+  min-width: 200px;
+  background: #f8f8f8;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ff8c1a;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 140, 26, 0.1);
+}
+
+.search-input::placeholder {
+  color: #aaa;
 }
 
 /* RIGHT */
@@ -62,20 +96,49 @@
   gap: 12px;
 }
 
+/* ADD MEMBER BUTTON */
+.topbar-right .btn-warning {
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar-right .btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
+}
+
+/* DATE CHIP */
 .date-chip {
   background: #fff;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  border: 1px solid #eee;
+  padding: 10px 18px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  border: 2px solid #ff8c1a;
 }
 
 /* HAMBURGER */
 .hamburger-btn {
-  font-size: 22px;
+  font-size: 24px;
   background: none;
   border: none;
   display: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.hamburger-btn:hover {
+  background: #f5f5f5;
 }
 
 /* DESKTOP ONLY */
@@ -97,15 +160,23 @@
 
   .topbar {
     justify-content: center;
+    padding: 10px 16px;
+    border-radius: 12px;
+    margin: 0 0 16px 0;
   }
 
   .topbar-left {
     position: absolute;
-    left: 12px;
+    left: 16px;
   }
 
   .topbar-center {
-    gap: 32px;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .nav-item {
+    padding: 8px 12px;
   }
 
   .nav-text {
@@ -113,11 +184,31 @@
   }
 
   .nav-icon {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .nav-item.active {
-    border-bottom: none;
-    color: #ff8c1a;
+    background: #ff8c1a;
+    color: #fff;
+  }
+
+  .nav-item.active:hover {
+    background: #ff8c1a;
+    color: #fff;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-center {
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .nav-item {
+    padding: 6px 10px;
+  }
+
+  .nav-icon {
+    font-size: 18px;
   }
 }

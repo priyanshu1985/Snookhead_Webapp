@@ -34,8 +34,17 @@
 .plan-card {
   background: #fff;
   border-radius: 14px;
-  padding: 20px;
+  padding: 24px;
   text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #ff8c1a;
 }
 
 .plan-card h2 span {
@@ -49,12 +58,20 @@
 }
 
 .plan-card button {
-  background: #ff8c1a;
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   border: none;
   color: #fff;
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: 24px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.plan-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
 }
 
 /* MOBILE */

@@ -42,25 +42,28 @@ const ActiveSession = () => {
   // Action states
   const [generating, setGenerating] = useState(false);
 
-  // Auto-release handler
+  // Auto-release handler - generates bill when timer ends
   const handleAutoRelease = async (sessionToRelease) => {
     if (!sessionToRelease || hasAutoReleased.current) return;
 
     hasAutoReleased.current = true;
 
     try {
-      await activeTablesAPI.autoRelease({ active_id: sessionToRelease.active_id });
+      // Stop the session and generate bill automatically
+      await activeTablesAPI.stop({ active_id: sessionToRelease.active_id });
+
+      // Navigate to billing page
+      navigate("/billing");
     } catch (err) {
       console.error("Auto-release failed:", err);
-    } finally {
-      navigate("/dashboard");
+      // Still navigate to billing even if there's an error
+      navigate("/billing");
     }
   };
 
   // Initialize session from passed state or fetch from API
   useEffect(() => {
     const initializeSession = (sessionData) => {
-      console.log("Session data received:", sessionData);
       setSession(sessionData);
 
       const startTime = new Date(sessionData.start_time);
@@ -70,7 +73,6 @@ const ActiveSession = () => {
 
       // Check if session has booking_end_time or duration_minutes (countdown mode)
       const hasDuration = sessionData.booking_end_time || sessionData.duration_minutes;
-      console.log("Has duration:", hasDuration, "booking_end_time:", sessionData.booking_end_time, "duration_minutes:", sessionData.duration_minutes);
 
       if (hasDuration) {
         setIsTimerMode(true);
@@ -80,12 +82,10 @@ const ActiveSession = () => {
           // Calculate from booking_end_time
           const endTime = new Date(sessionData.booking_end_time);
           remaining = Math.floor((endTime - now) / 1000);
-          console.log("Calculated remaining from booking_end_time:", remaining);
         } else if (sessionData.duration_minutes) {
           // Calculate from duration_minutes
           const totalDurationSeconds = sessionData.duration_minutes * 60;
           remaining = totalDurationSeconds - elapsed;
-          console.log("Calculated remaining from duration_minutes:", remaining);
         } else {
           remaining = 0;
         }
@@ -95,10 +95,7 @@ const ActiveSession = () => {
           handleAutoRelease(sessionData);
         } else {
           setRemainingSeconds(remaining);
-          console.log("Set remainingSeconds to:", remaining);
         }
-      } else {
-        console.log("No duration found, using elapsed time mode");
       }
     };
 
