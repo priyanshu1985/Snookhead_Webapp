@@ -242,6 +242,8 @@ export const reservationsAPI = {
 export const activeTablesAPI = {
   getAll: () => apiRequest(ENDPOINTS.ACTIVE_TABLES),
 
+  getById: (id) => apiRequest(`${ENDPOINTS.ACTIVE_TABLES}/${id}`),
+
   start: (sessionData) =>
     apiRequest(ENDPOINTS.START_SESSION, {
       method: "POST",
@@ -250,6 +252,12 @@ export const activeTablesAPI = {
 
   stop: (sessionData) =>
     apiRequest(ENDPOINTS.STOP_SESSION, {
+      method: "POST",
+      body: JSON.stringify(sessionData),
+    }),
+
+  autoRelease: (sessionData) =>
+    apiRequest(`${ENDPOINTS.ACTIVE_TABLES}/auto-release`, {
       method: "POST",
       body: JSON.stringify(sessionData),
     }),

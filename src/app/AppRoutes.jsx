@@ -19,6 +19,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 
 import TableBooking from "../pages/tables/TableBooking";
+import ActiveSession from "../pages/tables/ActiveSession";
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -58,6 +59,9 @@ const AppRoutes = () => {
         <Route path="/inventory" element={<InventoryTracking />} />
 
         <Route path="/tables/:game/:tableId" element={<TableBooking />} />
+        <Route path="/session/:game/:tableId" element={<ActiveSession />} />
+        <Route path="/session/:game/:tableId/:sessionId" element={<ActiveSession />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Route>
 
       {/* Catch all - redirect to login */}

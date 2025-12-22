@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { gamesAPI, tablesAPI } from "../../services/api";
+import { gamesAPI, tablesAPI, activeTablesAPI } from "../../services/api";
 import "../../styles/dashboard.css";
 import { useNavigate } from "react-router-dom";
 
@@ -10,25 +10,29 @@ const Dashboard = () => {
 
   const [games, setGames] = useState([]);
   const [tables, setTables] = useState([]);
+  const [activeSessions, setActiveSessions] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch games and tables from API
+  // Fetch games, tables, and active sessions from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [gamesData, tablesData] = await Promise.all([
+        const [gamesData, tablesData, sessionsData] = await Promise.all([
           gamesAPI.getAll(),
           tablesAPI.getAll(),
+          activeTablesAPI.getAll().catch(() => []), // Don't fail if no active sessions
         ]);
 
         const gamesList = Array.isArray(gamesData) ? gamesData : [];
         const tablesList = tablesData?.data || (Array.isArray(tablesData) ? tablesData : []);
+        const sessionsList = Array.isArray(sessionsData) ? sessionsData : [];
 
         setGames(gamesList);
         setTables(tablesList);
+        setActiveSessions(sessionsList);
 
         // Select first game by default
         if (gamesList.length > 0) {
@@ -64,6 +68,28 @@ const Dashboard = () => {
         return "status-maintenance";
       default:
         return "";
+    }
+  };
+
+  // Get active session for a table
+  const getActiveSession = (tableId) => {
+    return activeSessions.find((s) => String(s.table_id) === String(tableId));
+  };
+
+  // Handle table click - navigate based on status
+  const handleTableClick = (table) => {
+    const gameName = selectedGame?.game_name?.toLowerCase() || "game";
+
+    if (table.status === "reserved") {
+      // Table is reserved - go to active session screen
+      const session = getActiveSession(table.id);
+      navigate(`/session/${gameName}/${table.id}${session ? `/${session.id}` : ""}`);
+    } else if (table.status === "available") {
+      // Table is available - go to booking screen
+      navigate(`/tables/${gameName}/${table.id}`);
+    } else {
+      // Maintenance or other status - show alert
+      alert("This table is currently under maintenance");
     }
   };
 
@@ -111,7 +137,7 @@ const Dashboard = () => {
                     <div
                       className={`table-card ${getStatusClass(table.status)}`}
                       key={table.id || `table-${index}`}
-                      onClick={() => navigate(`/tables/${selectedGame?.game_name?.toLowerCase() || 'game'}/${table.id}`)}
+                      onClick={() => handleTableClick(table)}
                     >
                       <div className="table-number">{table.name}</div>
                       <span className={`table-status ${getStatusClass(table.status)}`}>
