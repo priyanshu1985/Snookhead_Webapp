@@ -1,10 +1,19 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { LayoutContext } from "../../context/LayoutContext";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/sidebar.css";
 
 const Sidebar = () => {
   const { isSidebarOpen, closeSidebar } = useContext(LayoutContext);
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    closeSidebar();
+    navigate("/login");
+  };
 
   return (
     <>
@@ -16,9 +25,14 @@ const Sidebar = () => {
       <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-top">
           <h5 className="brand">SNOKEHEAD</h5>
-          <div className="user-box">
-            <strong>Austin Robertson</strong>
-            <small>Marketing Administrator</small>
+          <div className="user-card">
+            <div className="user-avatar">
+              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
+            </div>
+            <div className="user-info">
+              <strong>{user?.name || "User"}</strong>
+              <small>{user?.role || "Staff"}</small>
+            </div>
           </div>
         </div>
 
@@ -43,7 +57,7 @@ const Sidebar = () => {
           </NavLink>
         </nav>
 
-        <button className="logout-btn">Logout</button>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </aside>
     </>
   );

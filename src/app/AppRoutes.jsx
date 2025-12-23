@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/login";
+import Register from "../pages/auth/Register";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Layout from "./Layout";
 import Bookings from "../pages/bookings/Bookings";
@@ -15,38 +16,80 @@ import ReportBugs from "../pages/bugs/ReportBugs";
 import CreateBug from "../pages/bugs/CreateBug";
 import SetupMenu from "../pages/setup-menu/SetupMenu";
 import InventoryTracking from "../pages/inventory/InventoryTracking";
-import ProtectedRoute from "./ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 
 import TableBooking from "../pages/tables/TableBooking";
 import ActiveSession from "../pages/tables/ActiveSession";
+import StaffOrders from "../pages/staff/StaffOrders";
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
 
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        Loading...
+      </div>
+    );
+  }
+
+  // Get user role (default to empty if not authenticated)
+  const userRole = isAuthenticated ? (user?.role?.toLowerCase() || "staff") : "";
+
+  // Not authenticated - show login/register only
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // STAFF role - only show staff orders page
+  if (userRole === "staff") {
+    return (
+      <Routes>
+        <Route path="/staff-orders" element={<StaffOrders />} />
+        <Route path="*" element={<Navigate to="/staff-orders" replace />} />
+      </Routes>
+    );
+  }
+
+  // ADMIN role - show analytics page (placeholder for now)
+  if (userRole === "admin") {
+    return (
+      <Routes>
+        <Route
+          path="/admin"
+          element={
+            <div style={{ padding: "40px", textAlign: "center" }}>
+              <h1>Admin Analytics Dashboard</h1>
+              <p>Coming soon...</p>
+            </div>
+          }
+        />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    );
+  }
+
+  // OWNER role - full access to all pages
   return (
     <Routes>
-      {/* Public Route - Redirect to dashboard if already logged in */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
-      />
+      {/* Redirect login/register to dashboard if already authenticated */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/register" element={<Navigate to="/" replace />} />
 
-      {/* Protected Area */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
+      {/* Main app with layout */}
+      <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/add-queue" element={<AddQueue />} />
-        <Route
-          path="/bookings/upcoming-reservation"
-          element={<UpcomingReservation />}
-        />
+        <Route path="/bookings/upcoming-reservation" element={<UpcomingReservation />} />
         <Route path="/billing" element={<Billing />} />
         <Route path="/food-orders" element={<FoodOrder />} />
 
@@ -61,11 +104,10 @@ const AppRoutes = () => {
         <Route path="/tables/:game/:tableId" element={<TableBooking />} />
         <Route path="/session/:game/:tableId" element={<ActiveSession />} />
         <Route path="/session/:game/:tableId/:sessionId" element={<ActiveSession />} />
-        <Route path="/dashboard" element={<Dashboard />} />
       </Route>
 
-      {/* Catch all - redirect to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Catch all - redirect to dashboard */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

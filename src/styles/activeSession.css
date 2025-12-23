@@ -5,7 +5,8 @@
 .active-session-page {
   max-width: 500px;
   margin: 0 auto;
-  padding-bottom: 100px;
+  padding: 16px;
+  padding-bottom: 30px;
 }
 
 /* HEADER */
@@ -28,8 +29,8 @@
 }
 
 .session-header .back-btn:hover {
-  background: #fff5eb;
-  color: #ff8c1a;
+  background: #FEF3E7;
+  color: #F08626;
   transform: translateX(-2px);
 }
 
@@ -41,7 +42,7 @@
 }
 
 .session-header .table-code {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
   padding: 8px 16px;
   border-radius: 20px;
@@ -51,7 +52,7 @@
 
 /* TIMER SECTION */
 .timer-section {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   border-radius: 18px;
   padding: 28px;
   text-align: center;
@@ -184,13 +185,13 @@
 }
 
 .food-box:hover {
-  border-color: #ff8c1a;
-  background: #fff5eb;
+  border-color: #F08626;
+  background: #FEF3E7;
 }
 
 .food-box.active {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
-  border-color: #ff8c1a;
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  border-color: #F08626;
   color: #fff;
 }
 
@@ -232,11 +233,12 @@
 .placeholder-img {
   width: 100%;
   height: 100%;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #FEF3E7 0%, #ffe6d0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
+  border-radius: 10px;
 }
 
 .item-details {
@@ -256,6 +258,11 @@
   color: #888;
 }
 
+.item-details .item-qty.has-qty {
+  color: #F08626;
+  font-weight: 600;
+}
+
 .item-actions {
   display: flex;
   flex-direction: column;
@@ -265,8 +272,8 @@
 
 .item-actions .add-btn {
   background: none;
-  border: 2px solid #ff8c1a;
-  color: #ff8c1a;
+  border: 2px solid #F08626;
+  color: #F08626;
   padding: 6px 18px;
   border-radius: 20px;
   font-size: 12px;
@@ -276,14 +283,14 @@
 }
 
 .item-actions .add-btn:hover {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
-  border-color: #ff8c1a;
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  border-color: #F08626;
   color: #fff;
 }
 
 .item-actions .item-price {
   font-weight: 700;
-  color: #ff8c1a;
+  color: #F08626;
 }
 
 /* ORDER SUMMARY */
@@ -293,12 +300,20 @@
   padding: 18px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 2px solid #FEF3E7;
 }
 
 .order-summary h6 {
   margin: 0 0 14px;
-  color: #333;
+  color: #F08626;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-summary h6::before {
+  content: "🛒";
 }
 
 .order-item {
@@ -332,18 +347,19 @@
 }
 
 .qty-controls button:hover {
-  border-color: #ff8c1a;
-  background: #fff5eb;
-  color: #ff8c1a;
+  border-color: #F08626;
+  background: #FEF3E7;
+  color: #F08626;
 }
 
 /* PRICING SUMMARY */
 .pricing-summary {
-  background: #fff;
+  background: linear-gradient(135deg, #fffbf7 0%, #FEF3E7 100%);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 2px solid #ffe6cc;
 }
 
 .price-row {
@@ -354,10 +370,10 @@
 }
 
 .price-row.total {
-  border-top: 2px solid #f0f0f0;
+  border-top: 2px solid #ffe6cc;
   padding-top: 14px;
   margin-top: 10px;
-  color: #333;
+  color: #F08626;
   font-size: 18px;
   font-weight: 700;
 }
@@ -366,22 +382,18 @@
 .session-actions {
   display: flex;
   gap: 12px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background: #fff;
-  padding: 16px 20px;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px 0;
+  margin-top: 10px;
 }
 
 .update-btn {
   flex: 1;
   padding: 16px;
-  border: 2px solid #ff8c1a;
+  border: 2px solid #F08626;
   border-radius: 14px;
   background: #fff;
-  color: #ff8c1a;
+  color: #F08626;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
@@ -389,7 +401,7 @@
 }
 
 .update-btn:hover:not(:disabled) {
-  background: #fff5eb;
+  background: #FEF3E7;
   transform: translateY(-2px);
 }
 
@@ -404,7 +416,7 @@
   padding: 16px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
   font-weight: 700;
   font-size: 15px;
@@ -433,15 +445,30 @@
 .empty-text {
   text-align: center;
   color: #888;
-  padding: 20px;
+  padding: 30px 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  font-size: 14px;
 }
 
 .alert-danger {
-  background: #fee;
+  background: linear-gradient(135deg, #fff0f0 0%, #ffe6e6 100%);
   color: #c00;
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border-radius: 12px;
   margin-bottom: 16px;
+  border: 1px solid #ffcccc;
+  font-weight: 500;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6ffec 100%);
+  color: #0a0;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #99ffaa;
+  font-weight: 500;
 }
 
 /* MOBILE */

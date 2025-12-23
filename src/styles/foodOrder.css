@@ -7,6 +7,37 @@
   margin: 0 auto;
 }
 
+/* MAIN TABS (Similar to Billing) */
+.food-tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.food-tabs button {
+  flex: 1;
+  border: none;
+  padding: 14px;
+  font-weight: 600;
+  background: #f8f8f8;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.food-tabs button:hover:not(.active) {
+  background: #FEF3E7;
+  color: #F08626;
+}
+
+.food-tabs button.active {
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  color: #fff;
+}
+
 /* CATEGORY TABS */
 .category-tabs {
   display: flex;
@@ -29,13 +60,13 @@
 }
 
 .category-tab:hover {
-  border-color: #ff8c1a;
-  color: #ff8c1a;
+  border-color: #F08626;
+  color: #F08626;
 }
 
 .category-tab.active {
-  background: #ff8c1a;
-  border-color: #ff8c1a;
+  background: #F08626;
+  border-color: #F08626;
   color: #fff;
 }
 
@@ -76,7 +107,7 @@
 }
 
 .food-card button {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   border: none;
   color: #fff;
   padding: 6px 14px;
@@ -124,7 +155,7 @@
 }
 
 .qty button:hover {
-  background: #ff8c1a;
+  background: #F08626;
   color: #fff;
   transform: scale(1.1);
 }
@@ -155,7 +186,7 @@
 .pay-btn {
   width: 100%;
   margin-top: 12px;
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   border: none;
   color: #fff;
   padding: 12px;
@@ -181,7 +212,7 @@
 .food-card .item-price {
   font-size: 16px;
   font-weight: 600;
-  color: #ff8c1a;
+  color: #F08626;
 }
 
 .loading-text,
@@ -285,7 +316,7 @@
 .payment-modal-body .form-group input:focus,
 .payment-modal-body .form-group select:focus {
   outline: none;
-  border-color: #ff8c1a;
+  border-color: #F08626;
 }
 
 .payment-total {
@@ -328,7 +359,7 @@
   padding: 12px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
   cursor: pointer;
   font-size: 14px;
@@ -348,6 +379,138 @@
   cursor: not-allowed;
 }
 
+/* =========================
+   ORDERS LIST (Active Orders Tab)
+========================= */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.order-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-index {
+  color: #aaa;
+  font-weight: 500;
+}
+
+.order-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-date {
+  font-size: 12px;
+  color: #888;
+}
+
+.order-customer {
+  font-weight: 600;
+  color: #333;
+}
+
+.order-status {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.order-status.pending {
+  background: #FEF3E7;
+  color: #F08626;
+}
+
+.order-status.completed {
+  background: #e6ffec;
+  color: #0a0;
+}
+
+.order-status.cancelled {
+  background: #ffe6e6;
+  color: #c00;
+}
+
+.order-card-items {
+  padding: 12px 0;
+}
+
+.order-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.order-card-item span:first-child {
+  flex: 1;
+}
+
+.order-card-item span:nth-child(2) {
+  margin: 0 16px;
+  color: #888;
+}
+
+.order-card-item span:last-child {
+  font-weight: 500;
+  color: #333;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.order-payment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-method {
+  padding: 4px 12px;
+  background: #f0f0f0;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.order-total {
+  font-size: 18px;
+  font-weight: 700;
+  color: #F08626;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
   .food-layout {
@@ -362,5 +525,13 @@
 
   .category-tab {
     white-space: nowrap;
+  }
+
+  .order-card-header {
+    flex-wrap: wrap;
+  }
+
+  .order-card-item {
+    font-size: 13px;
   }
 }

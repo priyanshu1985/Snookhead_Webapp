@@ -42,15 +42,15 @@ const ActiveSession = () => {
   // Action states
   const [generating, setGenerating] = useState(false);
 
-  // Auto-release handler - generates bill when timer ends
+  // Auto-release handler - generates bill when timer ends and releases table
   const handleAutoRelease = async (sessionToRelease) => {
     if (!sessionToRelease || hasAutoReleased.current) return;
 
     hasAutoReleased.current = true;
 
     try {
-      // Stop the session and generate bill automatically
-      await activeTablesAPI.stop({ active_id: sessionToRelease.active_id });
+      // Use auto-release endpoint which stops session, generates bill, and sets table to available
+      await activeTablesAPI.autoRelease({ active_id: sessionToRelease.active_id });
 
       // Navigate to billing page
       navigate("/billing");
@@ -278,10 +278,7 @@ const ActiveSession = () => {
       setGenerating(true);
       setError("");
 
-      // Stop the session
-      await activeTablesAPI.stop({ active_id: session.active_id });
-
-      // Create bill
+      // Create comprehensive bill with table charges + food items
       await billingAPI.create({
         customer_name: "Walk-in Customer",
         table_id: tableId,
@@ -294,6 +291,9 @@ const ActiveSession = () => {
           quantity: item.qty,
         })),
       });
+
+      // Stop the session and release the table (skip_bill=true to avoid duplicate bill)
+      await activeTablesAPI.stop({ active_id: session.active_id, skip_bill: true });
 
       navigate("/billing");
     } catch (err) {
@@ -406,7 +406,9 @@ const ActiveSession = () => {
                     </div>
                     <div className="item-details">
                       <span className="item-name">{item.name}</span>
-                      <span className="item-qty">{inCart ? `${inCart.qty} qty` : "0 qty"}</span>
+                      <span className={`item-qty ${inCart ? "has-qty" : ""}`}>
+                        {inCart ? `${inCart.qty} in cart` : "Add to cart"}
+                      </span>
                     </div>
                     <div className="item-actions">
                       <button className="add-btn" onClick={() => addToCart(item)}>

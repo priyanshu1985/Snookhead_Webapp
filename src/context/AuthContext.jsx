@@ -64,10 +64,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password) => {
+  const register = async (userData) => {
     setIsLoading(true);
     try {
-      const response = await authAPI.register({ name, email, password });
+      const response = await authAPI.register(userData);
 
       // Store tokens
       localStorage.setItem("authToken", response.accessToken);
@@ -75,14 +75,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("refreshToken", response.refreshToken);
       }
 
-      // Store user data
-      const userData = response.user || { name, email };
-      localStorage.setItem("userData", JSON.stringify(userData));
+      // Store user data from response
+      const user = response.user || { name: userData.name, email: userData.email, role: userData.role };
+      localStorage.setItem("userData", JSON.stringify(user));
 
-      setUser(userData);
+      setUser(user);
       setIsAuthenticated(true);
 
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       console.error("Register error:", error);
       throw new Error(error.message || "Registration failed");

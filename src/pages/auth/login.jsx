@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/custom.css";
 
@@ -17,11 +17,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate("/");
+      const result = await login(email, password);
+      // Navigation is handled by AppRoutes based on role
+      // Force a re-render by navigating to current location
+      window.location.href = "/";
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -99,8 +100,10 @@ const Login = () => {
             </form>
 
             <p className="text-center mt-3 small">
-              Don’t have an account?{" "}
-              <span className="text-warning cursor-pointer">Sign up</span>
+              Don't have an account?{" "}
+              <Link to="/register" className="text-warning text-decoration-none">
+                Sign up
+              </Link>
             </p>
           </div>
         </div>

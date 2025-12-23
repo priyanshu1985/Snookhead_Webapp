@@ -29,12 +29,12 @@
 }
 
 .billing-tabs button:hover:not(.active) {
-  background: #fff5eb;
-  color: #ff8c1a;
+  background: #FEF3E7;
+  color: #F08626;
 }
 
 .billing-tabs .active {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
 }
 
@@ -101,7 +101,7 @@
 
 /* ACTION */
 .view-bill-btn {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
   border: none;
   padding: 10px 18px;

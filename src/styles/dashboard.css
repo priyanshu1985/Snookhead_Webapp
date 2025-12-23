@@ -58,12 +58,12 @@
 }
 
 .category-tabs button:hover {
-  background: #fff5eb;
-  color: #ff8c1a;
+  background: #FEF3E7;
+  color: #F08626;
 }
 
 .category-tabs .active {
-  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   color: #fff;
   box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
 }

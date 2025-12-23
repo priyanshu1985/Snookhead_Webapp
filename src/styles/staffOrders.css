@@ -1,0 +1,155 @@
+/* =========================
+   STAFF ORDERS PAGE
+========================= */
+
+.staff-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* HEADER */
+.staff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.staff-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.staff-brand {
+  font-weight: 700;
+  color: #F08626;
+  margin: 0;
+  font-size: 20px;
+}
+
+.staff-role-badge {
+  background: #FEF3E7;
+  color: #F08626;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.staff-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.staff-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.staff-user-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.staff-user-role {
+  font-size: 12px;
+  color: #888;
+  text-transform: capitalize;
+}
+
+.staff-logout-btn {
+  background: #F08626;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.staff-logout-btn:hover {
+  background: #D9741F;
+  transform: translateY(-2px);
+}
+
+/* MAIN CONTENT */
+.staff-main {
+  padding: 24px;
+}
+
+.staff-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.staff-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.staff-title-row h5 {
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.refresh-btn {
+  background: #fff;
+  border: 2px solid #F08626;
+  color: #F08626;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #F08626;
+  color: #fff;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .staff-header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .staff-header-left,
+  .staff-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .staff-main {
+    padding: 16px;
+  }
+
+  .staff-title-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .refresh-btn {
+    width: 100%;
+  }
+}

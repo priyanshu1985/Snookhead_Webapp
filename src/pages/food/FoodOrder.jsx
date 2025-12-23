@@ -17,11 +17,19 @@ const categories = [
 ];
 
 const FoodOrder = () => {
+  // Tab state
+  const [activeTab, setActiveTab] = useState("menu");
+
+  // Menu items state
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Active orders state
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -49,6 +57,33 @@ const FoodOrder = () => {
     };
     fetchMenuItems();
   }, []);
+
+  // Fetch orders when switching to orders tab
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const data = await ordersAPI.getAll();
+      const ordersList = Array.isArray(data) ? data : [];
+      setOrders(ordersList);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "orders") {
+      fetchOrders();
+    }
+  }, [activeTab]);
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
 
   // Filter items by category
   const filteredItems = activeCategory === "all"
@@ -156,80 +191,142 @@ const FoodOrder = () => {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* Category Tabs */}
-          <div className="category-tabs">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                className={`category-tab ${activeCategory === cat.key ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat.key)}
-              >
-                {cat.label}
-              </button>
-            ))}
+          {/* Main Tabs */}
+          <div className="food-tabs">
+            <button
+              className={activeTab === "menu" ? "active" : ""}
+              onClick={() => setActiveTab("menu")}
+            >
+              MENU ITEMS
+            </button>
+            <button
+              className={activeTab === "orders" ? "active" : ""}
+              onClick={() => setActiveTab("orders")}
+            >
+              ACTIVE ORDERS ({orders.length})
+            </button>
           </div>
 
-          <div className="food-layout">
-            {/* FOOD LIST */}
-            <div className="food-list">
-              {loading ? (
-                <p className="loading-text">Loading menu items...</p>
-              ) : filteredItems.length === 0 ? (
-                <p className="empty-text">No items available in this category</p>
+          {/* MENU TAB CONTENT */}
+          {activeTab === "menu" && (
+            <>
+              {/* Category Tabs */}
+              <div className="category-tabs">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.key}
+                    className={`category-tab ${activeCategory === cat.key ? "active" : ""}`}
+                    onClick={() => setActiveCategory(cat.key)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="food-layout">
+                {/* FOOD LIST */}
+                <div className="food-list">
+                  {loading ? (
+                    <p className="loading-text">Loading menu items...</p>
+                  ) : filteredItems.length === 0 ? (
+                    <p className="empty-text">No items available in this category</p>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <div className="food-card" key={item.id}>
+                        <h6>{item.name}</h6>
+                        <p className="item-category">{item.category}</p>
+                        <p className="item-price">₹ {item.price}</p>
+                        <button onClick={() => addItem(item)}>Add</button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* ORDER SUMMARY */}
+                <div className="order-summary">
+                  <h6>Order Summary</h6>
+
+                  {cart.length === 0 && <p className="empty">No items added</p>}
+
+                  {cart.map((item) => (
+                    <div className="order-item" key={item.id}>
+                      <span>{item.name}</span>
+                      <div className="qty">
+                        <button onClick={() => updateQty(item.id, "dec")}>−</button>
+                        <span>{item.qty}</span>
+                        <button onClick={() => updateQty(item.id, "inc")}>+</button>
+                      </div>
+                      <span className="item-total">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                    </div>
+                  ))}
+
+                  <div className="price-box">
+                    <div>
+                      <span>Subtotal</span>
+                      <span>₹ {subtotal.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span>Tax (5%)</span>
+                      <span>₹ {tax.toFixed(2)}</span>
+                    </div>
+                    <div className="total">
+                      <strong>Total</strong>
+                      <strong>₹ {total.toFixed(2)}</strong>
+                    </div>
+                  </div>
+
+                  <button
+                    className="pay-btn"
+                    onClick={handleProceedToPay}
+                    disabled={cart.length === 0}
+                  >
+                    Proceed to Pay
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ORDERS TAB CONTENT */}
+          {activeTab === "orders" && (
+            <div className="orders-list">
+              {ordersLoading ? (
+                <p className="loading-text">Loading orders...</p>
+              ) : orders.length === 0 ? (
+                <p className="empty-text">No active orders</p>
               ) : (
-                filteredItems.map((item) => (
-                  <div className="food-card" key={item.id}>
-                    <h6>{item.name}</h6>
-                    <p className="item-category">{item.category}</p>
-                    <p className="item-price">₹ {item.price}</p>
-                    <button onClick={() => addItem(item)}>Add</button>
+                orders.map((order, index) => (
+                  <div className="order-card" key={order.id}>
+                    <div className="order-card-header">
+                      <span className="order-index">{index + 1}.</span>
+                      <div className="order-info">
+                        <span className="order-date">{formatDate(order.createdAt)}</span>
+                        <span className="order-customer">{order.personName || "Customer"}</span>
+                      </div>
+                      <span className={`order-status ${order.status || "pending"}`}>
+                        {order.status || "Pending"}
+                      </span>
+                    </div>
+                    <div className="order-card-items">
+                      {order.cart && order.cart.map((cartItem, idx) => (
+                        <div className="order-card-item" key={idx}>
+                          <span>{cartItem.item?.name || "Item"}</span>
+                          <span>x{cartItem.qty}</span>
+                          <span>₹{(Number(cartItem.item?.price || 0) * cartItem.qty).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="order-card-footer">
+                      <div className="order-payment">
+                        <span className="payment-method">{order.paymentMethod || "Cash"}</span>
+                      </div>
+                      <span className="order-total">₹{Number(order.orderTotal || 0).toFixed(2)}</span>
+                    </div>
                   </div>
                 ))
               )}
             </div>
-
-            {/* ORDER SUMMARY */}
-            <div className="order-summary">
-              <h6>Order Summary</h6>
-
-              {cart.length === 0 && <p className="empty">No items added</p>}
-
-              {cart.map((item) => (
-                <div className="order-item" key={item.id}>
-                  <span>{item.name}</span>
-                  <div className="qty">
-                    <button onClick={() => updateQty(item.id, "dec")}>−</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, "inc")}>+</button>
-                  </div>
-                  <span className="item-total">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
-                </div>
-              ))}
-
-              <div className="price-box">
-                <div>
-                  <span>Subtotal</span>
-                  <span>₹ {subtotal.toFixed(2)}</span>
-                </div>
-                <div>
-                  <span>Tax (5%)</span>
-                  <span>₹ {tax.toFixed(2)}</span>
-                </div>
-                <div className="total">
-                  <strong>Total</strong>
-                  <strong>₹ {total.toFixed(2)}</strong>
-                </div>
-              </div>
-
-              <button
-                className="pay-btn"
-                onClick={handleProceedToPay}
-                disabled={cart.length === 0}
-              >
-                Proceed to Pay
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
