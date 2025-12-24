@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { gamesAPI, tablesAPI, activeTablesAPI } from "../../services/api";
+import { gamesAPI, tablesAPI, activeTablesAPI, getGameImageUrl } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { isSidebarCollapsed } = useContext(LayoutContext);
 
   const [games, setGames] = useState([]);
   const [tables, setTables] = useState([]);
@@ -98,6 +100,9 @@ const Dashboard = () => {
       {/* Sidebar */}
       <Sidebar />
 
+      {/* Sidebar Spacer - takes up space when sidebar is visible */}
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
+
       {/* Main Content */}
       <div className="dashboard-main">
         {/* Navbar */}
@@ -111,7 +116,7 @@ const Dashboard = () => {
             <p className="loading-text">Loading...</p>
           ) : (
             <>
-              {/* Category Tabs - Games */}
+              {/* Category Tabs - Game Selection */}
               <div className="category-tabs">
                 {games.length === 0 ? (
                   <p className="no-games-text">No games available. Please create games in Setup Menu.</p>
@@ -139,13 +144,22 @@ const Dashboard = () => {
                       key={table.id || `table-${index}`}
                       onClick={() => handleTableClick(table)}
                     >
-                      <div className="table-number">{table.name}</div>
-                      <span className={`table-status ${getStatusClass(table.status)}`}>
-                        {table.status || "available"}
-                      </span>
-                      {table.pricePerMin && (
-                        <span className="table-price">₹{table.pricePerMin}/min</span>
+                      {/* Game Image */}
+                      {selectedGame?.image_key && (
+                        <img
+                          className="table-card-img"
+                          src={getGameImageUrl(selectedGame.image_key)}
+                          alt={selectedGame.game_name}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
                       )}
+
+                      {/* Table Number */}
+                      <div className="table-number">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
                     </div>
                   ))
                 )}

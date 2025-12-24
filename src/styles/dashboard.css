@@ -8,10 +8,25 @@
   background: #f5f5f5;
 }
 
+/* Spacer for fixed sidebar */
+.sidebar-spacer {
+  width: 260px;
+  min-width: 260px;
+  flex-shrink: 0;
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.sidebar-spacer.collapsed {
+  width: 0;
+  min-width: 0;
+}
+
 .dashboard-main {
   flex: 1;
   padding: 20px;
+  padding-top: 80px; /* Space for fixed navbar */
   overflow-y: auto;
+  transition: margin-left 0.3s ease;
 }
 
 /* LOADING & ERROR */
@@ -42,199 +57,182 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 16px;
 }
 
 .category-tabs button {
   border: none;
-  padding: 10px 20px;
-  border-radius: 25px;
-  background: #fff;
+  padding: 10px 24px;
+  border-radius: 4px;
+  background: transparent;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: #666;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .category-tabs button:hover {
-  background: #FEF3E7;
-  color: #F08626;
+  color: #f08626;
 }
 
-.category-tabs .active {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+.category-tabs button.active {
+  color: #f08626;
+  font-weight: 600;
 }
 
-/* TABLE GRID - Snooker Table Design */
+.category-tabs button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -17px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #f08626;
+  border-radius: 2px 2px 0 0;
+}
+
+/* TABLE GRID */
 .tables-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 
-/* Snooker Table Card */
+/* =========================
+   TABLE CARD
+========================= */
 .table-card {
   position: relative;
-  height: 200px;
-  border-radius: 12px;
+  height: 300px;
+  width: 167.42px;
+  border-radius: 8px;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  overflow: visible;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #333;
 }
 
 .table-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Wooden Frame Border */
-.table-card::before {
+/* Game Image - Full card */
+.table-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Table Number - Centered on the card */
+.table-number {
+  position: relative;
+  z-index: 2;
+  font-size: 56px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+}
+
+/* =========================
+   STATUS COLORS
+========================= */
+
+/* Reserved Table - Orange overlay */
+.table-card.status-reserved::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #8B4513 0%, #654321 50%, #4a2c0a 100%);
-  z-index: 0;
-}
-
-/* Green Felt Inner */
-.table-card::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, #228B22 0%, #1a6b1a 50%, #145214 100%);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(60, 55, 55, 0.4);
   z-index: 1;
 }
 
-/* Table Content */
-.table-card > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* Inner content wrapper */
-.table-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-/* Table Number */
-.table-number {
-  font-size: 48px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-  z-index: 3;
-  position: relative;
-}
-
-/* Table Status Badge */
-.table-status {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 4px 12px;
-  border-radius: 12px;
-  margin-top: 8px;
-  z-index: 3;
-  position: relative;
-}
-
-/* Status Colors */
-.table-card.status-available .table-status {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
-}
-
-.table-card.status-reserved .table-status {
-  background: rgba(255, 152, 0, 0.9);
-  color: #fff;
-}
-
-.table-card.status-maintenance .table-status {
-  background: rgba(158, 158, 158, 0.9);
-  color: #fff;
-}
-
-/* Reserved Table - Orange tint overlay */
-.table-card.status-reserved::after {
-  background: linear-gradient(180deg, #c97d2c 0%, #a56520 50%, #8b5518 100%);
-}
-
-/* Maintenance Table - Grey tint overlay */
+/* Maintenance Table - Grey overlay */
 .table-card.status-maintenance::after {
-  background: linear-gradient(180deg, #6b6b6b 0%, #555555 50%, #404040 100%);
-}
-
-/* Table Price */
-.table-price {
-  font-size: 10px;
-  opacity: 0.9;
-  margin-top: 4px;
-  color: #fff;
-  z-index: 3;
-  position: relative;
-}
-
-/* Corner Pockets */
-.table-card .pocket {
+  content: "";
   position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #1a1a1a;
-  border-radius: 50%;
-  z-index: 2;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(80, 80, 80, 0.6);
+  z-index: 1;
 }
 
-.table-card .pocket-tl { top: 6px; left: 6px; }
-.table-card .pocket-tr { top: 6px; right: 6px; }
-.table-card .pocket-bl { bottom: 6px; left: 6px; }
-.table-card .pocket-br { bottom: 6px; right: 6px; }
-.table-card .pocket-ml { top: 50%; left: 6px; transform: translateY(-50%); }
-.table-card .pocket-mr { top: 50%; right: 6px; transform: translateY(-50%); }
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+@media (max-width: 1200px) {
+  .tables-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 
-/* MOBILE RESPONSIVE */
+@media (max-width: 900px) {
+  .tables-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .sidebar-spacer {
+    display: none;
+  }
+
   .dashboard-main {
     padding: 16px;
+    padding-top: 70px;
   }
 
   .tables-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 
   .table-card {
-    height: 170px;
+    height: 150px;
   }
 
   .table-number {
-    font-size: 36px;
+    font-size: 42px;
   }
 
   .category-tabs {
     gap: 8px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 8px;
+    padding-bottom: 12px;
   }
 
   .category-tabs button {
     padding: 8px 16px;
     font-size: 13px;
     white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .tables-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .table-card {
+    height: 130px;
+  }
+
+  .table-number {
+    font-size: 36px;
+  }
+
+  .table-receipt {
+    font-size: 10px;
+    padding: 3px 8px;
   }
 }

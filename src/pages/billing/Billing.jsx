@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import PaymentModal from "../../components/billing/PaymentModal";
 import BillHistoryModal from "../../components/billing/BillHistoryModal";
 import { billingAPI } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/billing.css";
 
 const Billing = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
   const [activeTab, setActiveTab] = useState("active");
   const [showPayment, setShowPayment] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -81,6 +83,8 @@ const Billing = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

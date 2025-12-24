@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 
 import TableGames from "../../components/setupMenu/TableGames";
 import DigitalGames from "../../components/setupMenu/DigitalGames";
@@ -9,11 +10,14 @@ import MenuItems from "../../components/setupMenu/MenuItems";
 import "../../styles/setupMenu.css";
 
 const SetupMenu = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
   const [activeTab, setActiveTab] = useState("table");
 
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

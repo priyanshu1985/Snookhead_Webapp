@@ -1,11 +1,17 @@
+import { useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/privacyPolicy.css";
 
 const PrivacyPolicy = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

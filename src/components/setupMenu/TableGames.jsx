@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { gamesAPI } from "../../services/api";
+import { gamesAPI, getGameImageUrl } from "../../services/api";
 import CreateGameModal from "./CreateGamePopUp";
 
 const TableGames = () => {
@@ -29,7 +29,7 @@ const TableGames = () => {
 
   /* ---------------- ADD / UPDATE ---------------- */
 
-  const handleCreateOrUpdate = async ({ name }) => {
+  const handleCreateOrUpdate = async ({ name, image_key }) => {
     try {
       setSubmitting(true);
       setError("");
@@ -37,10 +37,12 @@ const TableGames = () => {
       if (editingGame) {
         await gamesAPI.update(editingGame.game_id, {
           game_name: name,
+          image_key: image_key,
         });
       } else {
         await gamesAPI.create({
           game_name: name,
+          image_key: image_key,
         });
       }
 
@@ -107,6 +109,17 @@ const TableGames = () => {
 
       {games.map((game, index) => (
         <div className="game-box" key={game.game_id || `game-${index}`}>
+          {game.image_key && (
+            <div className="game-image">
+              <img
+                src={getGameImageUrl(game.image_key)}
+                alt={game.game_name}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
           <span className="game-name">{game.game_name}</span>
 
           <div className="game-actions">

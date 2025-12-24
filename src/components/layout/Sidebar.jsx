@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import "../../styles/sidebar.css";
 
 const Sidebar = () => {
-  const { isSidebarOpen, closeSidebar } = useContext(LayoutContext);
+  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapse } = useContext(LayoutContext);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
@@ -22,7 +22,15 @@ const Sidebar = () => {
         <div className="sidebar-overlay" onClick={closeSidebar} />
       )}
 
-      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}>
+        {/* Toggle Arrow Button */}
+        <button
+          className="sidebar-toggle"
+          onClick={toggleSidebarCollapse}
+          aria-label={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+        >
+          <span className="toggle-arrow">{isSidebarCollapsed ? "→" : "←"}</span>
+        </button>
         <div className="sidebar-top">
           <h5 className="brand">SNOKEHEAD</h5>
           <div className="user-card">

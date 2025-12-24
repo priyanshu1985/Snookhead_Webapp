@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import TableBookedModal from "../../components/tables/TableBookedModel";
 import { menuAPI, activeTablesAPI, tablesAPI } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/tableBooking.css";
 
@@ -17,6 +18,7 @@ const categories = [
 const TableBooking = () => {
   const { game, tableId } = useParams();
   const navigate = useNavigate();
+  const { isSidebarCollapsed } = useContext(LayoutContext);
 
   // Time selection
   const [timeMode, setTimeMode] = useState("timer"); // timer, set, frame
@@ -164,6 +166,8 @@ const TableBooking = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

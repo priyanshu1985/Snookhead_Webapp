@@ -11,10 +11,18 @@
   flex-direction: column;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
   height: 100vh;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   border-right: 3px solid #F08626;
   transition: transform 0.3s ease;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+/* Collapsed state */
+.sidebar.collapsed {
+  transform: translateX(-260px);
 }
 
 /* TOP SECTION - BRAND */
@@ -171,7 +179,42 @@
   box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
 }
 
-/* CLOSE BUTTON */
+/* TOGGLE ARROW BUTTON */
+.sidebar-toggle {
+  position: absolute;
+  top: 24px;
+  right: -16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #F08626;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 101;
+}
+
+.sidebar-toggle:hover {
+  background: #D9741F;
+  transform: scale(1.1);
+}
+
+/* Arrow direction based on state */
+.sidebar-toggle .toggle-arrow {
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle .toggle-arrow {
+  transform: rotate(180deg);
+}
+
+/* CLOSE BUTTON (mobile) */
 .sidebar-close {
   position: absolute;
   top: 16px;
@@ -233,5 +276,9 @@
 
   .sidebar-close {
     display: flex;
+  }
+
+  .sidebar-toggle {
+    display: none;
   }
 }

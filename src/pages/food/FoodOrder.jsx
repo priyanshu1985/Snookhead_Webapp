@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { menuAPI, ordersAPI } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/foodOrder.css";
 
 const categories = [
@@ -17,6 +18,8 @@ const categories = [
 ];
 
 const FoodOrder = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
+
   // Tab state
   const [activeTab, setActiveTab] = useState("menu");
 
@@ -182,6 +185,8 @@ const FoodOrder = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

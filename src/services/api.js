@@ -67,7 +67,13 @@ const ENDPOINTS = {
 
   // Health
   HEALTH: "/health",
+
+  // Stock Images
+  STOCK_IMAGES_GAMES: "/stock-images/games",
 };
+
+// Image base URL for constructing full image URLs
+export const IMAGE_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || "http://localhost:4000";
 
 // Request interceptor to add auth token
 const getAuthToken = () => {
@@ -432,6 +438,17 @@ export const healthAPI = {
   check: () => apiRequest(ENDPOINTS.HEALTH),
 };
 
+// Stock Images API
+export const stockImagesAPI = {
+  getGameImages: () => apiRequest(ENDPOINTS.STOCK_IMAGES_GAMES),
+};
+
+// Helper to build full image URL from image_key
+export const getGameImageUrl = (imageKey) => {
+  if (!imageKey) return null;
+  return `${IMAGE_BASE_URL}/static/game-images/${encodeURIComponent(imageKey)}`;
+};
+
 // Export default API object
 const api = {
   auth: authAPI,
@@ -448,6 +465,7 @@ const api = {
   customers: customersAPI,
   wallets: walletsAPI,
   health: healthAPI,
+  stockImages: stockImagesAPI,
 };
 
 export default api;

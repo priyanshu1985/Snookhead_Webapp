@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 
 import InventoryTabs from "../../components/inventory/InventoryTabs";
 import InventoryStats from "../../components/inventory/InventoryStats";
@@ -10,11 +11,14 @@ import InventoryList from "../../components/inventory/InventoryList";
 import "../../styles/inventoryTracking.css";
 
 const InventoryTracking = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
   const [activeTab, setActiveTab] = useState("cafe");
 
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

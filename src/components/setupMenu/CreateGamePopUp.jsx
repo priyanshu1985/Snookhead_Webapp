@@ -1,8 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { stockImagesAPI, IMAGE_BASE_URL } from "../../services/api";
 import "../../styles/creategame.css";
 
 const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
   const [gameName, setGameName] = useState(editingGame?.game_name || "");
+  const [selectedImageKey, setSelectedImageKey] = useState(editingGame?.image_key || null);
+  const [stockImages, setStockImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(true);
+
+  // Fetch stock images on mount
+  useEffect(() => {
+    const fetchStockImages = async () => {
+      try {
+        setImagesLoading(true);
+        const images = await stockImagesAPI.getGameImages();
+        setStockImages(Array.isArray(images) ? images : []);
+      } catch (err) {
+        console.error("Failed to fetch stock images:", err);
+        setStockImages([]);
+      } finally {
+        setImagesLoading(false);
+      }
+    };
+
+    fetchStockImages();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -14,9 +36,15 @@ const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
 
     const payload = {
       name: gameName.trim(),
+      image_key: selectedImageKey,
     };
 
     onSubmit?.(payload);
+  };
+
+  const handleImageSelect = (imageKey) => {
+    // Toggle selection - if same image clicked, deselect it
+    setSelectedImageKey(prev => prev === imageKey ? null : imageKey);
   };
 
   return (
@@ -43,6 +71,46 @@ const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
               required
               disabled={submitting}
             />
+          </div>
+
+          {/* Image Selection */}
+          <div className="form-group">
+            <label>Select Game Image</label>
+            {imagesLoading ? (
+              <p className="loading-text">Loading images...</p>
+            ) : stockImages.length === 0 ? (
+              <p className="no-images-text">No stock images available</p>
+            ) : (
+              <div className="image-grid">
+                {stockImages.map((img) => (
+                  <div
+                    key={img.key}
+                    className={`image-item ${selectedImageKey === img.key ? "selected" : ""}`}
+                    onClick={() => handleImageSelect(img.key)}
+                  >
+                    <img
+                      src={`${IMAGE_BASE_URL}${img.url}`}
+                      alt={img.filename}
+                      loading="lazy"
+                    />
+                    {selectedImageKey === img.key && (
+                      <div className="selected-overlay">
+                        <span className="checkmark">✓</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedImageKey && (
+              <button
+                type="button"
+                className="clear-selection-btn"
+                onClick={() => setSelectedImageKey(null)}
+              >
+                Clear Selection
+              </button>
+            )}
           </div>
 
           {/* Actions */}

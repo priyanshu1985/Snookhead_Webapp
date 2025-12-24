@@ -3,6 +3,7 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/navbar.css";
 
+
 // All searchable pages/routes
 const searchablePages = [
   { name: "Dashboard", path: "/", icon: "🏠", keywords: ["home", "main", "tables"] },
@@ -18,7 +19,7 @@ const searchablePages = [
 ];
 
 const Navbar = () => {
-  const { toggleSidebar } = useContext(LayoutContext);
+  const { toggleSidebar, isSidebarCollapsed } = useContext(LayoutContext);
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +76,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="topbar">
+    <header className={`topbar ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       {/* LEFT: Hamburger (mobile only) */}
       <div className="topbar-left">
         <button

@@ -1,5 +1,7 @@
+import { useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/addQueue.css";
 
 const dates = [
@@ -21,9 +23,13 @@ const games = [
 ];
 
 const AddQueue = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

@@ -1,10 +1,13 @@
+import { useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/queue.css";
 import { useNavigate } from "react-router-dom";
 
 const Bookings = () => {
   const navigate = useNavigate();
+  const { isSidebarCollapsed } = useContext(LayoutContext);
 
   const queueList = [
     { id: 1, name: "Rohit", time: "11.00PM" },
@@ -18,6 +21,9 @@ const Bookings = () => {
     <div className="dashboard-wrapper">
       {/* Sidebar */}
       <Sidebar />
+
+      {/* Sidebar Spacer */}
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       {/* Main Area */}
       <div className="dashboard-main">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { gamesAPI, tablesAPI } from "../../services/api";
+import { gamesAPI, tablesAPI, getGameImageUrl } from "../../services/api";
 import CreateTablePopUp from "./CreateTablePopUp";
 
 const DigitalGames = () => {
@@ -118,6 +118,18 @@ const DigitalGames = () => {
             ) : (
               gameTables.map((table, index) => (
                 <div className="game-box table-box" key={table.id || `table-${index}`}>
+                  {/* Show game image if available */}
+                  {selectedGame?.image_key && (
+                    <div className="game-image">
+                      <img
+                        src={getGameImageUrl(selectedGame.image_key)}
+                        alt={selectedGame.game_name}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="table-info">
                     <span className="table-name">{table.name}</span>
                     <span className={`table-status status-${table.status}`}>

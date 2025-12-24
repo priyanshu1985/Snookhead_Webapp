@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
+import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/createBug.css";
 import { useNavigate } from "react-router-dom";
 import BugSuccessModal from "../../components/bugs/BugSuccessModal";
 
 const CreateBug = () => {
+  const { isSidebarCollapsed } = useContext(LayoutContext);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -14,6 +16,8 @@ const CreateBug = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />

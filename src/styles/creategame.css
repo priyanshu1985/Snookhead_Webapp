@@ -85,3 +85,97 @@
 .submit-btn:hover {
   background: #1c5fe0;
 }
+
+/* Image Grid Styles */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.image-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.image-item:hover {
+  border-color: #F08626;
+  transform: scale(1.02);
+}
+
+.image-item.selected {
+  border-color: #F08626;
+  box-shadow: 0 0 10px rgba(240, 134, 38, 0.4);
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(240, 134, 38, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkmark {
+  background: #F08626;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.loading-text,
+.no-images-text {
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
+.clear-selection-btn {
+  background: none;
+  border: none;
+  color: #F08626;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  padding: 4px 8px;
+}
+
+.clear-selection-btn:hover {
+  text-decoration: underline;
+}
+
+/* Make modal wider to accommodate image grid */
+.create-game-modal {
+  width: 500px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
