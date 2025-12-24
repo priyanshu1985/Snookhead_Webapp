@@ -91,7 +91,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #F08626;
+  border-color: #f08626;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.1);
 }
@@ -127,7 +127,7 @@
 
 .search-result-item:hover,
 .search-result-item.selected {
-  background: #FEF3E7;
+  background: #fef3e7;
 }
 
 .search-result-item .result-icon {
@@ -141,7 +141,7 @@
 }
 
 .search-result-item.selected .result-name {
-  color: #F08626;
+  color: #f08626;
 }
 
 .search-no-results {
@@ -187,7 +187,27 @@
   border: 2px solid #ff8c1a;
 }
 
-/* HAMBURGER */
+/* SIDEBAR TOGGLE BUTTON */
+.sidebar-toggle-btn {
+  font-size: 20px;
+  background: #f8f8f8;
+  border: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f08626;
+  color: #fff;
+}
+
+/* HAMBURGER (mobile only) */
 .hamburger-btn {
   font-size: 24px;
   background: none;
@@ -220,12 +240,15 @@
     display: block;
   }
 
+  .sidebar-toggle-btn {
+    display: none;
+  }
+
   .topbar {
     left: 0;
     justify-content: center;
     padding: 10px 16px;
-    border-radius: 12px;
-    margin: 0 0 16px 0;
+    border-radius: 0 0 12px 12px;
   }
 
   .topbar.sidebar-collapsed {

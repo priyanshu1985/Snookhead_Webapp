@@ -21,6 +21,7 @@
   background: #ffffff;
   border-radius: 10px;
   overflow: hidden;
+  margin-top: 60px;
   margin-bottom: 24px;
 }
 
@@ -58,7 +59,7 @@
 
 .game-box {
   height: 220px;
-  border: 2px solid #F08626;
+  border: 2px solid #f08626;
   border-radius: 12px;
   background: #fff;
   transition: all 0.2s ease;
@@ -117,12 +118,12 @@
 }
 
 .game-actions .btn-edit {
-  background: #F08626;
+  background: #f08626;
   color: white;
 }
 
 .game-actions .btn-edit:hover {
-  background: #D9741F;
+  background: #d9741f;
 }
 
 .game-actions .btn-delete {
@@ -187,7 +188,7 @@
 
 .table-price {
   font-size: 13px;
-  color: #F08626;
+  color: #f08626;
   font-weight: 600;
 }
 
@@ -201,10 +202,10 @@
 
 .game-tab {
   padding: 10px 20px;
-  border: 2px solid #F08626;
+  border: 2px solid #f08626;
   border-radius: 25px;
   background: #fff;
-  color: #F08626;
+  color: #f08626;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -212,11 +213,11 @@
 }
 
 .game-tab:hover {
-  background: #FEF3E7;
+  background: #fef3e7;
 }
 
 .game-tab.active {
-  background: #F08626;
+  background: #f08626;
   color: #fff;
 }
 

@@ -5,37 +5,25 @@ import { useAuth } from "../../context/AuthContext";
 import "../../styles/sidebar.css";
 
 const Sidebar = () => {
-  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapse } = useContext(LayoutContext);
+  const { isSidebarCollapsed } = useContext(LayoutContext);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    closeSidebar();
     navigate("/login");
   };
 
   return (
-    <>
-      {/* Overlay */}
-      {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={closeSidebar} />
-      )}
-
-      <aside className={`sidebar ${isSidebarOpen ? "open" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}>
-        {/* Toggle Arrow Button */}
-        <button
-          className="sidebar-toggle"
-          onClick={toggleSidebarCollapse}
-          aria-label={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
-        >
-          <span className="toggle-arrow">{isSidebarCollapsed ? "→" : "←"}</span>
-        </button>
+    <aside className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""}`}>
         <div className="sidebar-top">
           <h5 className="brand">SNOKEHEAD</h5>
           <div className="user-card">
             <div className="user-avatar">
-              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
+              <img
+                src="https://randomuser.me/api/portraits/men/32.jpg"
+                alt="User"
+              />
             </div>
             <div className="user-info">
               <strong>{user?.name || "User"}</strong>
@@ -45,29 +33,30 @@ const Sidebar = () => {
         </div>
 
         <nav className="sidebar-menu">
-          <NavLink to="/owners" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/owners" className="menu-item">
             Owners panel
           </NavLink>
-          <NavLink to="/setup-menu" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/setup-menu" className="menu-item">
             Set up menu
           </NavLink>
-          <NavLink to="/inventory" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/inventory" className="menu-item">
             Inventory tracking
           </NavLink>
-          <NavLink to="/subscription" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/subscription" className="menu-item">
             Upgrade subscription
           </NavLink>
-          <NavLink to="/report-bugs" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/report-bugs" className="menu-item">
             Report bugs
           </NavLink>
-          <NavLink to="/privacy-policy" className="menu-item" onClick={closeSidebar}>
+          <NavLink to="/privacy-policy" className="menu-item">
             Privacy & Policy
           </NavLink>
         </nav>
 
-        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
       </aside>
-    </>
   );
 };
 

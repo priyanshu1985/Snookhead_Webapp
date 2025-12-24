@@ -3,23 +3,73 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { LayoutContext } from "../../context/LayoutContext";
 import "../../styles/navbar.css";
 
-
 // All searchable pages/routes
 const searchablePages = [
-  { name: "Dashboard", path: "/", icon: "🏠", keywords: ["home", "main", "tables"] },
-  { name: "Queue", path: "/bookings", icon: "⏱", keywords: ["bookings", "waiting", "line"] },
-  { name: "Billing", path: "/billing", icon: "🧾", keywords: ["bills", "payment", "invoice"] },
-  { name: "Food & Order", path: "/food-orders", icon: "🍔", keywords: ["food", "menu", "order", "restaurant"] },
-  { name: "Owners Panel", path: "/owners", icon: "📋", keywords: ["admin", "owner", "management"] },
-  { name: "Set Up Menu", path: "/setup-menu", icon: "⚙️", keywords: ["menu", "setup", "configure", "games"] },
-  { name: "Inventory Tracking", path: "/inventory", icon: "📦", keywords: ["stock", "inventory", "items"] },
-  { name: "Upgrade Subscription", path: "/subscription", icon: "💎", keywords: ["plan", "upgrade", "premium"] },
-  { name: "Report Bugs", path: "/report-bugs", icon: "🐛", keywords: ["bug", "issue", "problem", "report"] },
-  { name: "Privacy & Policy", path: "/privacy-policy", icon: "🔒", keywords: ["privacy", "policy", "terms"] },
+  {
+    name: "Dashboard",
+    path: "/",
+    icon: "🏠",
+    keywords: ["home", "main", "tables"],
+  },
+  {
+    name: "Queue",
+    path: "/bookings",
+    icon: "⏱",
+    keywords: ["bookings", "waiting", "line"],
+  },
+  {
+    name: "Billing",
+    path: "/billing",
+    icon: "🧾",
+    keywords: ["bills", "payment", "invoice"],
+  },
+  {
+    name: "Food & Order",
+    path: "/food-orders",
+    icon: "🍔",
+    keywords: ["food", "menu", "order", "restaurant"],
+  },
+  {
+    name: "Owners Panel",
+    path: "/owners",
+    icon: "📋",
+    keywords: ["admin", "owner", "management"],
+  },
+  {
+    name: "Set Up Menu",
+    path: "/setup-menu",
+    icon: "⚙️",
+    keywords: ["menu", "setup", "configure", "games"],
+  },
+  {
+    name: "Inventory Tracking",
+    path: "/inventory",
+    icon: "📦",
+    keywords: ["stock", "inventory", "items"],
+  },
+  {
+    name: "Upgrade Subscription",
+    path: "/subscription",
+    icon: "💎",
+    keywords: ["plan", "upgrade", "premium"],
+  },
+  {
+    name: "Report Bugs",
+    path: "/report-bugs",
+    icon: "🐛",
+    keywords: ["bug", "issue", "problem", "report"],
+  },
+  {
+    name: "Privacy & Policy",
+    path: "/privacy-policy",
+    icon: "🔒",
+    keywords: ["privacy", "policy", "terms"],
+  },
 ];
 
 const Navbar = () => {
-  const { toggleSidebar, isSidebarCollapsed } = useContext(LayoutContext);
+  const { toggleSidebarCollapse, isSidebarCollapsed } =
+    useContext(LayoutContext);
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,10 +105,14 @@ const Navbar = () => {
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < filteredPages.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) =>
+        prev < filteredPages.length - 1 ? prev + 1 : 0
+      );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredPages.length - 1));
+      setSelectedIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredPages.length - 1
+      );
     } else if (e.key === "Enter" && selectedIndex >= 0) {
       e.preventDefault();
       handleSelectPage(filteredPages[selectedIndex]);
@@ -76,12 +130,25 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`topbar ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-      {/* LEFT: Hamburger (mobile only) */}
+    <header
+      className={`topbar ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}
+    >
+      {/* LEFT: Sidebar toggle + Search */}
       <div className="topbar-left">
+        {/* Sidebar toggle button (always visible) */}
+        <button
+          className="sidebar-toggle-btn"
+          onClick={toggleSidebarCollapse}
+          aria-label={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+          title={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+        >
+          {isSidebarCollapsed ? "☰" : "◀"}
+        </button>
+
+        {/* Mobile hamburger (hidden on desktop) */}
         <button
           className="hamburger-btn"
-          onClick={toggleSidebar}
+          onClick={toggleSidebarCollapse}
           aria-label="Open menu"
         >
           ☰
@@ -109,7 +176,9 @@ const Navbar = () => {
               {filteredPages.map((page, index) => (
                 <div
                   key={page.path}
-                  className={`search-result-item ${index === selectedIndex ? "selected" : ""}`}
+                  className={`search-result-item ${
+                    index === selectedIndex ? "selected" : ""
+                  }`}
                   onClick={() => handleSelectPage(page)}
                 >
                   <span className="result-icon">{page.icon}</span>
@@ -153,8 +222,7 @@ const Navbar = () => {
 
       {/* RIGHT: Desktop actions only */}
       <div className="topbar-right desktop-only">
-        <button className="btn btn-warning btn-sm">Add member</button>
-        <span className="date-chip">02/08/2025</span>
+        <button className="btn btn-warning btn-sm">New Registration</button>
       </div>
     </header>
   );

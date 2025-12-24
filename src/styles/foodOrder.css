@@ -13,6 +13,7 @@
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
+  margin-top: 60px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -29,12 +30,12 @@
 }
 
 .food-tabs button:hover:not(.active) {
-  background: #FEF3E7;
-  color: #F08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .food-tabs button.active {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   color: #fff;
 }
 
@@ -60,13 +61,13 @@
 }
 
 .category-tab:hover {
-  border-color: #F08626;
-  color: #F08626;
+  border-color: #f08626;
+  color: #f08626;
 }
 
 .category-tab.active {
-  background: #F08626;
-  border-color: #F08626;
+  background: #f08626;
+  border-color: #f08626;
   color: #fff;
 }
 
@@ -107,7 +108,7 @@
 }
 
 .food-card button {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   border: none;
   color: #fff;
   padding: 6px 14px;
@@ -155,7 +156,7 @@
 }
 
 .qty button:hover {
-  background: #F08626;
+  background: #f08626;
   color: #fff;
   transform: scale(1.1);
 }
@@ -186,7 +187,7 @@
 .pay-btn {
   width: 100%;
   margin-top: 12px;
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   border: none;
   color: #fff;
   padding: 12px;
@@ -212,7 +213,7 @@
 .food-card .item-price {
   font-size: 16px;
   font-weight: 600;
-  color: #F08626;
+  color: #f08626;
 }
 
 .loading-text,
@@ -316,7 +317,7 @@
 .payment-modal-body .form-group input:focus,
 .payment-modal-body .form-group select:focus {
   outline: none;
-  border-color: #F08626;
+  border-color: #f08626;
 }
 
 .payment-total {
@@ -359,7 +360,7 @@
   padding: 12px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   color: #fff;
   cursor: pointer;
   font-size: 14px;
@@ -440,8 +441,8 @@
 }
 
 .order-status.pending {
-  background: #FEF3E7;
-  color: #F08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .order-status.completed {
@@ -508,7 +509,7 @@
 .order-total {
   font-size: 18px;
   font-weight: 700;
-  color: #F08626;
+  color: #f08626;
 }
 
 /* MOBILE */

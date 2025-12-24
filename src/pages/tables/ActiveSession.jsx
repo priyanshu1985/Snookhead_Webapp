@@ -1,9 +1,10 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { menuAPI, activeTablesAPI, tablesAPI, billingAPI } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/activeSession.css";
 
@@ -18,6 +19,7 @@ const ActiveSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const passedSession = location.state?.session;
+  const { isSidebarCollapsed } = useContext(LayoutContext);
 
   // Session state
   const [session, setSession] = useState(null);
@@ -308,6 +310,7 @@ const ActiveSession = () => {
     return (
       <div className="dashboard-wrapper">
         <Sidebar />
+        <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
         <div className="dashboard-main">
           <Navbar />
           <div className="active-session-page">
@@ -321,6 +324,8 @@ const ActiveSession = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
       <div className="dashboard-main">
         <Navbar />
