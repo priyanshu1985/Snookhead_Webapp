@@ -22,6 +22,7 @@ import Members from "../pages/members/Members";
 import TableBooking from "../pages/tables/TableBooking";
 import ActiveSession from "../pages/tables/ActiveSession";
 import StaffOrders from "../pages/staff/StaffOrders";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 const AppRoutes = () => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -66,19 +67,11 @@ const AppRoutes = () => {
     );
   }
 
-  // ADMIN role - show analytics page (placeholder for now)
+  // ADMIN role - show analytics page
   if (userRole === "admin") {
     return (
       <Routes>
-        <Route
-          path="/admin"
-          element={
-            <div style={{ padding: "40px", textAlign: "center" }}>
-              <h1>Admin Analytics Dashboard</h1>
-              <p>Coming soon...</p>
-            </div>
-          }
-        />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     );

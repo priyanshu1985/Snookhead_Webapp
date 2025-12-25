@@ -65,8 +65,9 @@ const FoodOrder = () => {
   const fetchOrders = async () => {
     try {
       setOrdersLoading(true);
-      const data = await ordersAPI.getAll();
-      const ordersList = Array.isArray(data) ? data : [];
+      const response = await ordersAPI.getAll();
+      // Backend returns { total, currentPage, data: orders }
+      const ordersList = response?.data || (Array.isArray(response) ? response : []);
       setOrders(ordersList);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
@@ -86,6 +87,18 @@ const FoodOrder = () => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Update order status
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await ordersAPI.updateStatus(orderId, newStatus);
+      // Refresh orders list after status update
+      fetchOrders();
+    } catch (err) {
+      console.error("Failed to update order status:", err);
+      alert("Failed to update order status: " + (err.message || "Unknown error"));
+    }
   };
 
   // Filter items by category
@@ -208,7 +221,7 @@ const FoodOrder = () => {
               className={activeTab === "orders" ? "active" : ""}
               onClick={() => setActiveTab("orders")}
             >
-              ACTIVE ORDERS ({orders.length})
+              ACTIVE ORDERS ({orders.filter(o => o.status === "pending").length})
             </button>
           </div>
 
@@ -297,10 +310,12 @@ const FoodOrder = () => {
             <div className="orders-list">
               {ordersLoading ? (
                 <p className="loading-text">Loading orders...</p>
-              ) : orders.length === 0 ? (
+              ) : orders.filter(o => o.status === "pending").length === 0 ? (
                 <p className="empty-text">No active orders</p>
               ) : (
-                orders.map((order, index) => (
+                orders
+                  .filter(order => order.status === "pending")
+                  .map((order, index) => (
                   <div className="order-card" key={order.id}>
                     <div className="order-card-header">
                       <span className="order-index">{index + 1}.</span>
@@ -313,11 +328,11 @@ const FoodOrder = () => {
                       </span>
                     </div>
                     <div className="order-card-items">
-                      {order.cart && order.cart.map((cartItem, idx) => (
+                      {order.OrderItems && order.OrderItems.map((orderItem, idx) => (
                         <div className="order-card-item" key={idx}>
-                          <span>{cartItem.item?.name || "Item"}</span>
-                          <span>x{cartItem.qty}</span>
-                          <span>₹{(Number(cartItem.item?.price || 0) * cartItem.qty).toFixed(2)}</span>
+                          <span>{orderItem.MenuItem?.name || "Item"}</span>
+                          <span>x{orderItem.qty}</span>
+                          <span>₹{(Number(orderItem.priceEach || 0) * orderItem.qty).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -325,7 +340,15 @@ const FoodOrder = () => {
                       <div className="order-payment">
                         <span className="payment-method">{order.paymentMethod || "Cash"}</span>
                       </div>
-                      <span className="order-total">₹{Number(order.orderTotal || 0).toFixed(2)}</span>
+                      <span className="order-total">₹{Number(order.total || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="order-card-actions">
+                      <button
+                        className="complete-btn"
+                        onClick={() => handleUpdateStatus(order.id, "completed")}
+                      >
+                        Mark as Completed
+                      </button>
                     </div>
                   </div>
                 ))

@@ -344,6 +344,12 @@ export const ordersAPI = {
       body: JSON.stringify(orderData),
     }),
 
+  updateStatus: (id, status) =>
+    apiRequest(`${ENDPOINTS.ORDER_BY_ID(id)}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+
   delete: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id), { method: "DELETE" }),
 };
 

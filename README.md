@@ -250,3 +250,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Built with ❤️ for the snooker community**
+
+ADMIN_EMAIL=admin@snookhead.com
+ADMIN_PASS=admin123
+
+owner - ajay@snookhea.com
+pass - ajay1234
+
+staff - kiran@snookhead.com
+pass - kiran1234
