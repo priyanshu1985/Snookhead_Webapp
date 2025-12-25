@@ -70,6 +70,19 @@ const ENDPOINTS = {
 
   // Stock Images
   STOCK_IMAGES_GAMES: "/stock-images/games",
+
+  // Bugs
+  BUGS: "/bugs",
+  BUG_BY_ID: (id) => `/bugs/${id}`,
+  BUG_STATUS: (id) => `/bugs/${id}/status`,
+  BUGS_STATS: "/bugs/stats/summary",
+
+  // Admin Stations
+  ADMIN_STATIONS: "/admin/stations",
+  ADMIN_STATION_BY_ID: (id) => `/admin/stations/${id}`,
+  ADMIN_STATION_PAUSE: (id) => `/admin/stations/${id}/pause-subscription`,
+  ADMIN_STATION_UPGRADE: (id) => `/admin/stations/${id}/upgrade-subscription`,
+  ADMIN_STATION_REMOVE: (id) => `/admin/stations/${id}/remove`,
 };
 
 // Image base URL for constructing full image URLs
@@ -449,6 +462,72 @@ export const stockImagesAPI = {
   getGameImages: () => apiRequest(ENDPOINTS.STOCK_IMAGES_GAMES),
 };
 
+// Bugs API
+export const bugsAPI = {
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.BUGS}?${queryString}` : ENDPOINTS.BUGS;
+    return apiRequest(url);
+  },
+
+  getById: (id) => apiRequest(ENDPOINTS.BUG_BY_ID(id)),
+
+  create: (bugData) =>
+    apiRequest(ENDPOINTS.BUGS, {
+      method: "POST",
+      body: JSON.stringify(bugData),
+    }),
+
+  update: (id, bugData) =>
+    apiRequest(ENDPOINTS.BUG_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(bugData),
+    }),
+
+  updateStatus: (id, status) =>
+    apiRequest(ENDPOINTS.BUG_STATUS(id), {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+
+  delete: (id) => apiRequest(ENDPOINTS.BUG_BY_ID(id), { method: "DELETE" }),
+
+  getStats: () => apiRequest(ENDPOINTS.BUGS_STATS),
+};
+
+// Admin Stations API (for admin panel to manage stations/cafes)
+export const adminStationsAPI = {
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.ADMIN_STATIONS}?${queryString}` : ENDPOINTS.ADMIN_STATIONS;
+    return apiRequest(url);
+  },
+
+  getById: (id) => apiRequest(ENDPOINTS.ADMIN_STATION_BY_ID(id)),
+
+  create: (stationData) =>
+    apiRequest(`${ENDPOINTS.ADMIN_STATIONS}/create`, {
+      method: "POST",
+      body: JSON.stringify(stationData),
+    }),
+
+  pauseSubscription: (id) =>
+    apiRequest(ENDPOINTS.ADMIN_STATION_PAUSE(id), {
+      method: "POST",
+    }),
+
+  upgradeSubscription: (id, data) =>
+    apiRequest(ENDPOINTS.ADMIN_STATION_UPGRADE(id), {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  remove: (id) =>
+    apiRequest(ENDPOINTS.ADMIN_STATION_REMOVE(id), {
+      method: "DELETE",
+    }),
+};
+
 // Helper to build full image URL from image_key
 export const getGameImageUrl = (imageKey) => {
   if (!imageKey) return null;
@@ -472,6 +551,8 @@ const api = {
   wallets: walletsAPI,
   health: healthAPI,
   stockImages: stockImagesAPI,
+  bugs: bugsAPI,
+  adminStations: adminStationsAPI,
 };
 
 export default api;

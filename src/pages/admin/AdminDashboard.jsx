@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ordersAPI, tablesAPI, menuAPI } from "../../services/api";
+import { ordersAPI, tablesAPI, menuAPI, adminStationsAPI } from "../../services/api";
 import "../../styles/adminDashboard.css";
 
 const AdminDashboard = () => {
@@ -18,16 +18,11 @@ const AdminDashboard = () => {
     totalRevenue: 0,
   });
 
-  // Cafe details - these would typically come from a backend API
-  const [cafeDetails] = useState({
-    name: "SNOKEHEAD",
-    location: "123 Main Street, City Center",
-    ownerName: "John Doe",
-    ownerPhone: "+91 98765 43210",
-    email: "contact@snokehead.com",
-    openingHours: "10:00 AM - 11:00 PM",
-    establishedYear: "2023",
-  });
+  // Stations state
+  const [stations, setStations] = useState([]);
+  const [stationsLoading, setStationsLoading] = useState(true);
+  const [stationsError, setStationsError] = useState("");
+  const [subscriptionFilter, setSubscriptionFilter] = useState("all");
 
   // Fetch analytics data
   const fetchStats = async () => {
@@ -78,13 +73,93 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch stations
+  const fetchStations = async () => {
+    try {
+      setStationsLoading(true);
+      setStationsError("");
+
+      const params = subscriptionFilter !== "all"
+        ? { subscription_type: subscriptionFilter }
+        : {};
+
+      const data = await adminStationsAPI.getAll(params);
+      setStations(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch stations:", err);
+      setStationsError(err.message || "Failed to load stations");
+    } finally {
+      setStationsLoading(false);
+    }
+  };
+
+  // Handle pause subscription
+  const handlePauseSubscription = async (stationId) => {
+    try {
+      await adminStationsAPI.pauseSubscription(stationId);
+      fetchStations(); // Refresh list
+    } catch (err) {
+      console.error("Failed to pause subscription:", err);
+      alert(err.message || "Failed to pause subscription");
+    }
+  };
+
+  // Handle remove station
+  const handleRemoveStation = async (stationId) => {
+    if (!window.confirm("Are you sure you want to remove this station?")) return;
+
+    try {
+      await adminStationsAPI.remove(stationId);
+      fetchStations(); // Refresh list
+    } catch (err) {
+      console.error("Failed to remove station:", err);
+      alert(err.message || "Failed to remove station");
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchStations();
   }, []);
+
+  useEffect(() => {
+    fetchStations();
+  }, [subscriptionFilter]);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Get subscription badge class
+  const getSubscriptionClass = (type) => {
+    switch (type) {
+      case "enterprise": return "subscription-enterprise";
+      case "pro": return "subscription-pro";
+      case "basic": return "subscription-basic";
+      default: return "subscription-free";
+    }
+  };
+
+  // Get status badge class
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "active": return "status-active";
+      case "paused": return "status-paused";
+      case "expired": return "status-expired";
+      case "removed": return "status-removed";
+      default: return "";
+    }
   };
 
   return (
@@ -109,49 +184,6 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="admin-main">
         <div className="admin-content">
-          {/* Cafe Details Section */}
-          <section className="admin-section">
-            <h5 className="section-title">Cafe Details</h5>
-            <div className="cafe-details-card">
-              <div className="cafe-header">
-                <div className="cafe-logo">
-                  <span className="logo-text">{cafeDetails.name.charAt(0)}</span>
-                </div>
-                <div className="cafe-name-section">
-                  <h2 className="cafe-name">{cafeDetails.name}</h2>
-                  <p className="cafe-tagline">Premium Snooker & Cafe</p>
-                </div>
-              </div>
-
-              <div className="cafe-info-grid">
-                <div className="info-item">
-                  <span className="info-label">Location</span>
-                  <span className="info-value">{cafeDetails.location}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Owner Name</span>
-                  <span className="info-value">{cafeDetails.ownerName}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Contact Number</span>
-                  <span className="info-value">{cafeDetails.ownerPhone}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Email</span>
-                  <span className="info-value">{cafeDetails.email}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Opening Hours</span>
-                  <span className="info-value">{cafeDetails.openingHours}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Established</span>
-                  <span className="info-value">{cafeDetails.establishedYear}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Analytics Section */}
           <section className="admin-section">
             <div className="section-header">
@@ -239,6 +271,125 @@ const AdminDashboard = () => {
                     <span className="stat-label">Total Revenue</span>
                   </div>
                 </div>
+              </div>
+            )}
+          </section>
+
+          {/* Stations Management Section */}
+          <section className="admin-section">
+            <div className="section-header">
+              <h5 className="section-title">Station Management</h5>
+              <div className="section-actions">
+                <select
+                  className="filter-select"
+                  value={subscriptionFilter}
+                  onChange={(e) => setSubscriptionFilter(e.target.value)}
+                >
+                  <option value="all">All Subscriptions</option>
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+                <button className="refresh-btn" onClick={fetchStations} disabled={stationsLoading}>
+                  {stationsLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+            </div>
+
+            {stationsError && <div className="alert-danger">{stationsError}</div>}
+
+            {stationsLoading ? (
+              <p className="loading-text">Loading stations...</p>
+            ) : stations.length === 0 ? (
+              <div className="empty-state">
+                <p>No stations found</p>
+                <small>Stations will appear here once they are onboarded</small>
+              </div>
+            ) : (
+              <div className="stations-grid">
+                {stations.map((station) => (
+                  <div className="station-card" key={station.id}>
+                    <div className="station-header">
+                      <div className="station-logo">
+                        {station.station_photo_url ? (
+                          <img src={station.station_photo_url} alt={station.station_name} />
+                        ) : (
+                          <span>{station.station_name?.charAt(0) || "S"}</span>
+                        )}
+                      </div>
+                      <div className="station-title">
+                        <h6>{station.station_name}</h6>
+                        <span className="station-location">
+                          {station.location_city}, {station.location_state}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="station-badges">
+                      <span className={`subscription-badge ${getSubscriptionClass(station.subscription_type)}`}>
+                        {station.subscription_type}
+                      </span>
+                      <span className={`status-badge ${getStatusClass(station.subscription_status)}`}>
+                        {station.subscription_status}
+                      </span>
+                    </div>
+
+                    <div className="station-info">
+                      <div className="info-row">
+                        <span className="info-label">Owner:</span>
+                        <span className="info-value">{station.owner_name}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Phone:</span>
+                        <span className="info-value">{station.owner_phone}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Onboarded:</span>
+                        <span className="info-value">{formatDate(station.onboarding_date)}</span>
+                      </div>
+                      {station.StationPayments?.length > 0 && (
+                        <div className="info-row">
+                          <span className="info-label">Payments:</span>
+                          <span className="info-value">{station.StationPayments.length} records</span>
+                        </div>
+                      )}
+                      {station.StationIssues?.length > 0 && (
+                        <div className="info-row">
+                          <span className="info-label">Issues:</span>
+                          <span className="info-value issue-count">
+                            {station.StationIssues.filter(i => i.status === "open").length} open
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="station-actions">
+                      {station.subscription_status === "active" && (
+                        <button
+                          className="action-btn pause-btn"
+                          onClick={() => handlePauseSubscription(station.id)}
+                        >
+                          Pause
+                        </button>
+                      )}
+                      <button
+                        className="action-btn view-btn"
+                        onClick={() => navigate(`/admin/stations/${station.id}`)}
+                      >
+                        View
+                      </button>
+                      {station.status !== "removed" && (
+                        <button
+                          className="action-btn remove-btn"
+                          onClick={() => handleRemoveStation(station.id)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </section>
