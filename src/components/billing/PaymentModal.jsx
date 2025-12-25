@@ -11,6 +11,8 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
   const tableCharges = Number(bill?.table_charges || 0);
   const menuCharges = Number(bill?.menu_charges || 0);
   const totalAmount = Number(bill?.total_amount || 0);
+  const sessionDuration = bill?.session_duration || 0;
+  const orderItems = bill?.order_items || [];
 
   // Handle pay button click
   const handlePay = async () => {
@@ -66,26 +68,31 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
           </button>
         </div>
 
-        {/* Bill Details */}
+        {/* Bill Details - Calculation Breakdown */}
         <div className="payment-details">
+          {/* Table Charges Section */}
           {tableCharges > 0 && (
-            <div>
-              <span>Table Charges</span>
-              <span>₹ {tableCharges.toFixed(2)}</span>
-            </div>
-          )}
-          {menuCharges > 0 && (
-            <div>
-              <span>Food/Menu</span>
-              <span>₹ {menuCharges.toFixed(2)}</span>
+            <div className="charges-section">
+              <div className="section-header">
+                <span className="section-title">Table Charges</span>
+                <span className="section-total">₹ {tableCharges.toFixed(2)}</span>
+              </div>
+              {sessionDuration > 0 && (
+                <div className="charge-detail">
+                  <span>Session Duration: {sessionDuration} mins</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Order Items */}
-          {bill?.order_items && bill.order_items.length > 0 && (
-            <div className="order-items-section">
-              <span className="section-title">Items:</span>
-              {bill.order_items.map((item, idx) => (
+          {/* Food Items Section */}
+          {orderItems.length > 0 && (
+            <div className="charges-section">
+              <div className="section-header">
+                <span className="section-title">Food & Beverages</span>
+                <span className="section-total">₹ {menuCharges.toFixed(2)}</span>
+              </div>
+              {orderItems.map((item, idx) => (
                 <div key={idx} className="order-item-row">
                   <span>{item.name || item.item_name} x{item.qty || 1}</span>
                   <span>₹ {Number(item.amount || item.price || 0).toFixed(2)}</span>
@@ -94,9 +101,24 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
             </div>
           )}
 
-          <div className="total">
-            <strong>Total</strong>
-            <strong>₹ {totalAmount.toFixed(2)}</strong>
+          {/* Calculation Summary */}
+          <div className="calculation-summary">
+            {tableCharges > 0 && (
+              <div className="summary-row">
+                <span>Table Charges</span>
+                <span>₹ {tableCharges.toFixed(2)}</span>
+              </div>
+            )}
+            {menuCharges > 0 && (
+              <div className="summary-row">
+                <span>Food & Beverages</span>
+                <span>₹ {menuCharges.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="total">
+              <strong>Grand Total</strong>
+              <strong>₹ {totalAmount.toFixed(2)}</strong>
+            </div>
           </div>
         </div>
 

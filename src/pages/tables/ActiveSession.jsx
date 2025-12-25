@@ -19,6 +19,7 @@ const ActiveSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const passedSession = location.state?.session;
+  const initialCart = location.state?.initialCart || []; // Cart items from booking
   const { isSidebarCollapsed } = useContext(LayoutContext);
 
   // Session state
@@ -38,21 +39,31 @@ const ActiveSession = () => {
   // Food selection
   const [activeCategory, setActiveCategory] = useState("Food");
   const [menuItems, setMenuItems] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(initialCart); // Initialize with items from booking
   const [loadingMenu, setLoadingMenu] = useState(true);
+  const cartRef = useRef(initialCart); // Ref to access cart in timer callbacks
 
   // Action states
   const [generating, setGenerating] = useState(false);
 
   // Auto-release handler - generates bill when timer ends and releases table
-  const handleAutoRelease = async (sessionToRelease) => {
+  const handleAutoRelease = async (sessionToRelease, cartItems = []) => {
     if (!sessionToRelease || hasAutoReleased.current) return;
 
     hasAutoReleased.current = true;
 
     try {
       // Use auto-release endpoint which stops session, generates bill, and sets table to available
-      await activeTablesAPI.autoRelease({ active_id: sessionToRelease.active_id });
+      // Pass cart items so they are included in the bill
+      await activeTablesAPI.autoRelease({
+        active_id: sessionToRelease.active_id,
+        cart_items: cartItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+        })),
+      });
 
       // Navigate to billing page
       navigate("/billing");
@@ -169,6 +180,11 @@ const ActiveSession = () => {
     fetchMenu();
   }, []);
 
+  // Keep cartRef in sync with cart state for use in timer callbacks
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+
   // Timer effect - handles both countdown and elapsed time
   useEffect(() => {
     if (!isPaused && session && !hasAutoReleased.current) {
@@ -186,7 +202,7 @@ const ActiveSession = () => {
             // Auto-release when timer hits zero
             if (newValue <= 0) {
               clearInterval(timerRef.current);
-              handleAutoRelease(session);
+              handleAutoRelease(session, cartRef.current);
               return 0;
             }
             return newValue;
@@ -258,7 +274,11 @@ const ActiveSession = () => {
   // Calculate totals
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
   const elapsedMinutes = Math.ceil(elapsedSeconds / 60);
-  const tableCost = elapsedMinutes * (tableInfo?.pricePerMin || 0);
+  // For timer mode, use the booked duration; for open-ended, use elapsed time
+  const billingMinutes = isTimerMode && session?.duration_minutes
+    ? session.duration_minutes
+    : elapsedMinutes;
+  const tableCost = billingMinutes * (tableInfo?.pricePerMin || 0);
   const grandTotal = tableCost + cartTotal;
 
   // Toggle pause
@@ -266,10 +286,10 @@ const ActiveSession = () => {
     setIsPaused(!isPaused);
   };
 
-  // Handle update (add more items to order)
+  // Handle update (confirm items added - keep them in cart for final bill)
   const handleUpdate = async () => {
-    alert("Items added to order!");
-    setCart([]);
+    alert("Items confirmed! They will be included in the final bill.");
+    // Don't clear cart - items should remain for final bill calculation
   };
 
   // Handle generate bill
@@ -281,13 +301,15 @@ const ActiveSession = () => {
       setError("");
 
       // Create comprehensive bill with table charges + food items
+      // Use billingMinutes (booked duration for timer mode, elapsed for open-ended)
+      // Only include frame charges if it's a frame-based booking (not timer mode)
       await billingAPI.create({
         customer_name: "Walk-in Customer",
         table_id: tableId,
         session_id: session.active_id,
-        session_duration: elapsedMinutes,
+        session_duration: billingMinutes,
         table_price_per_min: tableInfo?.pricePerMin || 0,
-        frame_charges: tableInfo?.frameCharge || 0,
+        frame_charges: 0, // Frame charges only apply to frame-based bookings, not timer mode
         selected_menu_items: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
@@ -448,7 +470,7 @@ const ActiveSession = () => {
           {/* Pricing Summary */}
           <div className="pricing-summary">
             <div className="price-row">
-              <span>Table Time ({elapsedMinutes} mins)</span>
+              <span>Table Time ({billingMinutes} mins{isTimerMode ? " - booked" : ""})</span>
               <span>₹{tableCost.toFixed(2)}</span>
             </div>
             {cartTotal > 0 && (

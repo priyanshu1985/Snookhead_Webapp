@@ -142,11 +142,14 @@ const TableBooking = () => {
       const newSession = response?.session;
       setShowSuccess(true);
 
-      // Navigate to active session after short delay with session data
+      // Navigate to active session after short delay with session data and initial cart
       setTimeout(() => {
         setShowSuccess(false);
         navigate(`/session/${game}/${tableId}/${newSession?.active_id || ""}`, {
-          state: { session: newSession }
+          state: {
+            session: newSession,
+            initialCart: cart, // Pass the cart items selected during booking
+          }
         });
       }, 1500);
     } catch (err) {

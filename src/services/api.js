@@ -360,7 +360,7 @@ export const billingAPI = {
   getById: (id) => apiRequest(ENDPOINTS.BILL_BY_ID(id)),
 
   create: (billData) =>
-    apiRequest(ENDPOINTS.BILLS, {
+    apiRequest(`${ENDPOINTS.BILLS}/create`, {
       method: "POST",
       body: JSON.stringify(billData),
     }),

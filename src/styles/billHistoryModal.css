@@ -128,18 +128,39 @@
   justify-content: center;
 }
 
-/* ORDER ITEMS */
-.history-modal .order-items-section {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed #eee;
+/* CHARGES SECTIONS */
+.history-modal .charges-section {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
 }
 
-.history-modal .order-items-section .section-title {
-  font-weight: 500;
+.history-modal .charges-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.history-modal .charges-section .section-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.history-modal .charges-section .section-total {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 14px;
+}
+
+.history-modal .charge-detail {
+  font-size: 12px;
   color: #666;
-  margin-bottom: 4px;
-  display: block;
+  padding: 2px 0;
 }
 
 .history-modal .order-item-row {
@@ -147,7 +168,31 @@
   justify-content: space-between;
   font-size: 13px;
   color: #555;
-  padding: 2px 0;
+  padding: 4px 0;
+}
+
+/* CALCULATION SUMMARY */
+.history-modal .calculation-summary {
+  background: #f0fff0;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.history-modal .summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #666;
+  padding: 4px 0;
+}
+
+.history-modal .calculation-summary .total {
+  border-top: 2px solid #28a745;
+  padding-top: 10px;
+  margin-top: 8px;
+  font-size: 16px;
 }
 
 /* TABLE INFO */
