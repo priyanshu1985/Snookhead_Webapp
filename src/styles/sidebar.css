@@ -14,7 +14,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  border-right: 3px solid #F08626;
+  border-right: 3px solid #f08626;
   transition: transform 0.3s ease;
   z-index: 100;
   overflow-y: auto;
@@ -35,7 +35,7 @@
 .brand {
   font-size: 22px;
   font-weight: 800;
-  color: #F08626;
+  color: #f08626;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -56,7 +56,7 @@
   padding: 14px 16px;
   background: #fff;
   border-radius: 12px;
-  border-left: 4px solid #F08626;
+  border-left: 4px solid #f08626;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
 }
@@ -71,7 +71,7 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid #FEF3E7;
+  border: 2px solid #fef3e7;
 }
 
 .user-avatar img {
@@ -123,45 +123,52 @@
 }
 
 .menu-item::before {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
+  content: "";
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
 }
 
 /* Menu Item Icons */
 .menu-item[href="/owners"]::before {
-  content: "📋";
+  background-image: url("/owners.png");
 }
 .menu-item[href="/setup-menu"]::before {
-  content: "⚙️";
+  background-image: url("/setupmenu.png");
 }
 .menu-item[href="/inventory"]::before {
-  content: "📦";
+  background-image: url("/inventory.png");
+}
+.menu-item[href="/members"]::before {
+  background-image: url("/members.png");
 }
 .menu-item[href="/subscription"]::before {
-  content: "💎";
+  background-image: url("/subscribtion.png");
 }
 .menu-item[href="/report-bugs"]::before {
-  content: "🐛";
+  background-image: url("/reportbugs.png");
 }
 .menu-item[href="/privacy-policy"]::before {
-  content: "🔒";
+  background-image: url("/privacy.png");
 }
 
 .menu-item:hover {
-  background: #FEF3E7;
-  color: #F08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .menu-item.active {
-  background: #FEF3E7;
-  color: #F08626;
+  background: #fef3e7;
+  color: #f08626;
   font-weight: 600;
 }
 
 /* LOGOUT */
 .logout-btn {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   border: none;
   color: #fff;
   padding: 14px 20px;
@@ -174,7 +181,7 @@
 }
 
 .logout-btn:hover {
-  background: linear-gradient(135deg, #D9741F 0%, #e55a00 100%);
+  background: linear-gradient(135deg, #d9741f 0%, #e55a00 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
 }
@@ -187,7 +194,7 @@
   width: 32px;
   height: 32px;
   border: none;
-  background: #F08626;
+  background: #f08626;
   border-radius: 50%;
   font-size: 16px;
   cursor: pointer;
@@ -201,7 +208,7 @@
 }
 
 .sidebar-toggle:hover {
-  background: #D9741F;
+  background: #d9741f;
   transform: scale(1.1);
 }
 
@@ -234,7 +241,7 @@
 }
 
 .sidebar-close:hover {
-  background: #F08626;
+  background: #f08626;
   color: #fff;
 }
 
@@ -267,7 +274,7 @@
     transform: translateX(-100%);
     z-index: 100;
     width: 280px;
-    border-right: 3px solid #F08626;
+    border-right: 3px solid #f08626;
   }
 
   .sidebar.open {

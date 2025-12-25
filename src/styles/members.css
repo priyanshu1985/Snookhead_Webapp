@@ -1,0 +1,240 @@
+.members-page {
+  padding: 16px;
+}
+
+.members-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.add-member-btn {
+  background: #ff8c1a;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.members-table th,
+.members-table td {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.members-table thead {
+  background: #f4f4f4;
+}
+
+.members-table tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.active {
+  background: #e6f6ee;
+  color: #1aa36f;
+}
+
+.status.inactive {
+  background: #fdecec;
+  color: #d32f2f;
+}
+
+/* =========================
+   ADD MEMBER MODAL
+========================= */
+.member-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.member-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.member-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.member-modal-header h5 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.member-modal-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.member-modal-header .close-btn:hover {
+  color: #333;
+}
+
+.member-modal-body {
+  padding: 20px;
+}
+
+.member-modal-body .error-message {
+  background: #fdecec;
+  color: #d32f2f;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.member-modal-body .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.member-modal-body .form-group {
+  flex: 1;
+}
+
+.member-modal-body .form-group.full-width {
+  width: 100%;
+}
+
+.member-modal-body .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #555;
+}
+
+.member-modal-body .form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.member-modal-body .form-group input:focus {
+  outline: none;
+  border-color: #f08626;
+}
+
+.member-modal-body .form-group input::placeholder {
+  color: #aaa;
+}
+
+.member-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+}
+
+.member-modal-footer .cancel-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.member-modal-footer .cancel-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.member-modal-footer .confirm-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff8c1a 0%, #f08626 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.member-modal-footer .confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
+}
+
+.member-modal-footer .confirm-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .members-table {
+    font-size: 12px;
+  }
+
+  .members-header h4 {
+    font-size: 16px;
+  }
+
+  .member-modal {
+    width: 95%;
+    max-width: none;
+    margin: 16px;
+  }
+
+  .member-modal-body .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .member-modal-body .form-group {
+    margin-bottom: 16px;
+  }
+}

@@ -17,6 +17,7 @@ import CreateBug from "../pages/bugs/CreateBug";
 import SetupMenu from "../pages/setup-menu/SetupMenu";
 import InventoryTracking from "../pages/inventory/InventoryTracking";
 import { useAuth } from "../context/AuthContext";
+import Members from "../pages/members/Members";
 
 import TableBooking from "../pages/tables/TableBooking";
 import ActiveSession from "../pages/tables/ActiveSession";
@@ -28,14 +29,21 @@ const AppRoutes = () => {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         Loading...
       </div>
     );
   }
 
   // Get user role (default to empty if not authenticated)
-  const userRole = isAuthenticated ? (user?.role?.toLowerCase() || "staff") : "";
+  const userRole = isAuthenticated ? user?.role?.toLowerCase() || "staff" : "";
 
   // Not authenticated - show login/register only
   if (!isAuthenticated) {
@@ -89,7 +97,10 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/add-queue" element={<AddQueue />} />
-        <Route path="/bookings/upcoming-reservation" element={<UpcomingReservation />} />
+        <Route
+          path="/bookings/upcoming-reservation"
+          element={<UpcomingReservation />}
+        />
         <Route path="/billing" element={<Billing />} />
         <Route path="/food-orders" element={<FoodOrder />} />
 
@@ -100,10 +111,14 @@ const AppRoutes = () => {
         <Route path="/report-bugs/create" element={<CreateBug />} />
         <Route path="/setup-menu" element={<SetupMenu />} />
         <Route path="/inventory" element={<InventoryTracking />} />
+        <Route path="/members" element={<Members />} />
 
         <Route path="/tables/:game/:tableId" element={<TableBooking />} />
         <Route path="/session/:game/:tableId" element={<ActiveSession />} />
-        <Route path="/session/:game/:tableId/:sessionId" element={<ActiveSession />} />
+        <Route
+          path="/session/:game/:tableId/:sessionId"
+          element={<ActiveSession />}
+        />
       </Route>
 
       {/* Catch all - redirect to dashboard */}
