@@ -341,7 +341,12 @@ export const foodAPI = {
 
 // Orders API
 export const ordersAPI = {
-  getAll: () => apiRequest(ENDPOINTS.ORDERS),
+  getAll: (source = null) => {
+    const url = source && source !== "all"
+      ? `${ENDPOINTS.ORDERS}?source=${source}`
+      : ENDPOINTS.ORDERS;
+    return apiRequest(url);
+  },
 
   getById: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id)),
 
@@ -439,8 +444,10 @@ export const walletsAPI = {
 
   getById: (id) => apiRequest(ENDPOINTS.WALLET_BY_ID(id)),
 
+  getByCustomerId: (customerId) => apiRequest(`${ENDPOINTS.WALLETS}/customer/${customerId}`),
+
   create: (walletData) =>
-    apiRequest(ENDPOINTS.WALLETS, {
+    apiRequest(`${ENDPOINTS.WALLETS}/create`, {
       method: "POST",
       body: JSON.stringify(walletData),
     }),
@@ -449,6 +456,18 @@ export const walletsAPI = {
     apiRequest(ENDPOINTS.WALLET_BY_ID(id), {
       method: "PUT",
       body: JSON.stringify(walletData),
+    }),
+
+  addMoney: (customerId, amount) =>
+    apiRequest(`${ENDPOINTS.WALLETS}/add-money`, {
+      method: "POST",
+      body: JSON.stringify({ customer_id: customerId, amount }),
+    }),
+
+  deductMoney: (customerId, amount) =>
+    apiRequest(`${ENDPOINTS.WALLETS}/deduct-money`, {
+      method: "POST",
+      body: JSON.stringify({ customer_id: customerId, amount }),
     }),
 };
 

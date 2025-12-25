@@ -18,6 +18,7 @@ import SetupMenu from "../pages/setup-menu/SetupMenu";
 import InventoryTracking from "../pages/inventory/InventoryTracking";
 import { useAuth } from "../context/AuthContext";
 import Members from "../pages/members/Members";
+import MemberDetail from "../pages/members/MemberDetail";
 
 import TableBooking from "../pages/tables/TableBooking";
 import ActiveSession from "../pages/tables/ActiveSession";
@@ -105,6 +106,7 @@ const AppRoutes = () => {
         <Route path="/setup-menu" element={<SetupMenu />} />
         <Route path="/inventory" element={<InventoryTracking />} />
         <Route path="/members" element={<Members />} />
+        <Route path="/members/:id" element={<MemberDetail />} />
 
         <Route path="/tables/:game/:tableId" element={<TableBooking />} />
         <Route path="/session/:game/:tableId" element={<ActiveSession />} />

@@ -125,6 +125,102 @@
   cursor: not-allowed;
 }
 
+/* =========================
+   SOURCE FILTER TABS
+========================= */
+
+.source-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  background: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.source-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  background: #fff;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.source-tab:hover {
+  border-color: #F08626;
+  color: #F08626;
+}
+
+.source-tab.active {
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  border-color: #F08626;
+  color: #fff;
+}
+
+.source-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.source-tab.active .source-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* =========================
+   SOURCE BADGES IN CARDS
+========================= */
+
+.order-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.source-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.source-table {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.source-counter {
+  background: #F3E5F5;
+  color: #7B1FA2;
+}
+
+.source-zomato {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.source-swiggy {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
   .staff-header {
@@ -151,5 +247,24 @@
 
   .refresh-btn {
     width: 100%;
+  }
+
+  .source-filter-tabs {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .source-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex: 1;
+    min-width: calc(50% - 6px);
+    justify-content: center;
+  }
+
+  .source-count {
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
   }
 }

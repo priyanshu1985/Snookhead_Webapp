@@ -1,39 +1,92 @@
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import AddMemberModal from "../../components/member/AddMemberModel";
-import { customersAPI } from "../../services/api";
+import { customersAPI, walletsAPI } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/members.css";
 
 const Members = () => {
+  const navigate = useNavigate();
   const { isSidebarCollapsed } = useContext(LayoutContext);
   const [members, setMembers] = useState([]);
+  const [wallets, setWallets] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchData = async () => {
       try {
-        const data = await customersAPI.getAll();
-        setMembers(data);
-      } catch (error) {
-        console.error("Failed to fetch members", error);
-        setError(error.message);
+        setLoading(true);
+        const customersData = await customersAPI.getAll();
+        setMembers(customersData);
+
+        // Fetch all wallets and create a map by customer_id
+        try {
+          const walletsData = await walletsAPI.getAll();
+          const walletMap = {};
+          walletsData.forEach((w) => {
+            walletMap[w.customer_id] = w;
+          });
+          setWallets(walletMap);
+        } catch (walletErr) {
+          console.log("Could not fetch wallets:", walletErr.message);
+        }
+      } catch (err) {
+        console.error("Failed to fetch members", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMembers();
+    fetchData();
   }, []);
 
   const handleMemberAdded = (newMember) => {
     setMembers((prev) => [...prev, newMember]);
   };
+
+  // Get wallet balance for a member
+  const getBalance = (memberId) => {
+    const wallet = wallets[memberId];
+    return wallet ? Number(wallet.balance || 0) : 0;
+  };
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    const num = Number(amount);
+    if (num < 0) {
+      return `-$${Math.abs(num).toFixed(2)}`;
+    }
+    return `$${num.toFixed(2)}`;
+  };
+
+  // Get contact info (prefer phone, fallback to email)
+  const getContact = (member) => {
+    return member.phone || member.email || "-";
+  };
+
+  // Filter members based on active tab
+  const getFilteredMembers = () => {
+    switch (activeTab) {
+      case "credits":
+        // Members with positive balance (credits)
+        return members.filter((m) => getBalance(m.id) > 0);
+      case "balance":
+        // Members with negative balance (owe money)
+        return members.filter((m) => getBalance(m.id) < 0);
+      default:
+        return members;
+    }
+  };
+
+  const filteredMembers = getFilteredMembers();
 
   return (
     <div className="dashboard-wrapper">
@@ -45,48 +98,77 @@ const Members = () => {
         <Navbar />
 
         <div className="members-page">
-          <div className="members-header">
-            <h4>Members</h4>
+          {/* Tabs */}
+          <div className="members-tabs">
+            <button
+              className={`members-tab ${activeTab === "all" ? "active" : ""}`}
+              onClick={() => setActiveTab("all")}
+            >
+              All
+            </button>
+            <button
+              className={`members-tab ${activeTab === "credits" ? "active" : ""}`}
+              onClick={() => setActiveTab("credits")}
+            >
+              Credits
+            </button>
+            <button
+              className={`members-tab ${activeTab === "balance" ? "active" : ""}`}
+              onClick={() => setActiveTab("balance")}
+            >
+              Balance
+            </button>
+
             <button className="add-member-btn" onClick={() => setIsModalOpen(true)}>
               + Add Member
             </button>
           </div>
 
-          {loading ? (
-            <p>Loading members...</p>
-          ) : error ? (
-            <p className="error-message">Error: {error}</p>
-          ) : (
-            <table className="members-table">
-              <thead>
-                <tr>
-                  <th>S.No</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Join Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {members.map((m, index) => (
-                  <tr key={m.id}>
-                    <td>{index + 1}</td>
-                    <td>{m.name}</td>
-                    <td>{m.phone}</td>
-                    <td>{m.email || "-"}</td>
-                    <td>{new Date(m.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`status ${m.is_active ? "active" : "inactive"}`}>
-                        {m.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
+          {/* Members Table */}
+          <div className="members-table-container">
+            {loading ? (
+              <p className="loading-text">Loading members...</p>
+            ) : error ? (
+              <p className="error-message">Error: {error}</p>
+            ) : (
+              <table className="members-table">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Contact</th>
+                    <th className="text-right">Balance amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+
+                <tbody>
+                  {filteredMembers.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="empty-row">
+                        No members found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredMembers.map((m) => {
+                      const balance = getBalance(m.id);
+                      return (
+                        <tr
+                          key={m.id}
+                          className="clickable"
+                          onClick={() => navigate(`/members/${m.id}`)}
+                        >
+                          <td className="customer-name">{m.name}</td>
+                          <td className="contact">{getContact(m)}</td>
+                          <td className={`balance-amount ${balance < 0 ? "negative" : balance > 0 ? "positive" : ""}`}>
+                            {formatCurrency(balance)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
 

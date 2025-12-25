@@ -12,6 +12,16 @@ const StaffOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("all");
+
+  // Source filter options
+  const sourceFilters = [
+    { key: "all", label: "All" },
+    { key: "table_booking", label: "Table Booking" },
+    { key: "counter", label: "Counter/Screen" },
+    { key: "zomato", label: "Zomato" },
+    { key: "swiggy", label: "Swiggy" },
+  ];
 
   // Fetch orders
   const fetchOrders = async () => {
@@ -48,6 +58,40 @@ const StaffOrders = () => {
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Filter orders by status (pending) and source
+  const pendingOrders = orders.filter(o => o.status === "pending");
+  const filteredOrders = sourceFilter === "all"
+    ? pendingOrders
+    : pendingOrders.filter(o => o.order_source === sourceFilter);
+
+  // Count orders by source
+  const getSourceCount = (source) => {
+    if (source === "all") return pendingOrders.length;
+    return pendingOrders.filter(o => o.order_source === source).length;
+  };
+
+  // Get source label for display
+  const getSourceLabel = (source) => {
+    const sourceMap = {
+      table_booking: "Table",
+      counter: "Counter",
+      zomato: "Zomato",
+      swiggy: "Swiggy",
+    };
+    return sourceMap[source] || source;
+  };
+
+  // Get source badge class
+  const getSourceClass = (source) => {
+    const classMap = {
+      table_booking: "source-table",
+      counter: "source-counter",
+      zomato: "source-zomato",
+      swiggy: "source-swiggy",
+    };
+    return classMap[source] || "";
+  };
 
   // Format date
   const formatDate = (dateString) => {
@@ -96,16 +140,32 @@ const StaffOrders = () => {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
+          {/* Source Filter Tabs */}
+          <div className="source-filter-tabs">
+            {sourceFilters.map((filter) => (
+              <button
+                key={filter.key}
+                className={`source-tab ${sourceFilter === filter.key ? "active" : ""}`}
+                onClick={() => setSourceFilter(filter.key)}
+              >
+                {filter.label}
+                <span className="source-count">{getSourceCount(filter.key)}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Orders List */}
           <div className="orders-list">
             {loading && orders.length === 0 ? (
               <p className="loading-text">Loading orders...</p>
-            ) : orders.filter(o => o.status === "pending").length === 0 ? (
-              <p className="empty-text">No active orders</p>
+            ) : filteredOrders.length === 0 ? (
+              <p className="empty-text">
+                {sourceFilter === "all"
+                  ? "No active orders"
+                  : `No active orders from ${sourceFilters.find(f => f.key === sourceFilter)?.label}`}
+              </p>
             ) : (
-              orders
-                .filter(order => order.status === "pending")
-                .map((order, index) => (
+              filteredOrders.map((order, index) => (
                 <div className="order-card" key={order.id}>
                   <div className="order-card-header">
                     <span className="order-index">{index + 1}.</span>
@@ -115,9 +175,16 @@ const StaffOrders = () => {
                         {order.personName || "Customer"}
                       </span>
                     </div>
-                    <span className={`order-status ${order.status || "pending"}`}>
-                      {order.status || "Pending"}
-                    </span>
+                    <div className="order-badges">
+                      {order.order_source && (
+                        <span className={`source-badge ${getSourceClass(order.order_source)}`}>
+                          {getSourceLabel(order.order_source)}
+                        </span>
+                      )}
+                      <span className={`order-status ${order.status || "pending"}`}>
+                        {order.status || "Pending"}
+                      </span>
+                    </div>
                   </div>
                   <div className="order-card-items">
                     {order.OrderItems &&
