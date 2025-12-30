@@ -544,6 +544,121 @@
   transform: translateY(0);
 }
 
+/* =========================
+   SOURCE FILTER TABS
+========================= */
+.source-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  align-items: center;
+}
+
+.source-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.source-tab:hover {
+  border-color: #f08626;
+  color: #f08626;
+}
+
+.source-tab.active {
+  background: #f08626;
+  border-color: #f08626;
+  color: #fff;
+}
+
+.source-tab .source-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.source-tab.active .source-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.refresh-btn {
+  margin-left: auto;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  border-color: #f08626;
+  color: #f08626;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   SOURCE BADGES
+========================= */
+.order-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.source-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.source-badge.source-table {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.source-badge.source-counter {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.source-badge.source-zomato {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.source-badge.source-swiggy {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
   .food-layout {
@@ -566,5 +681,33 @@
 
   .order-card-item {
     font-size: 13px;
+  }
+
+  .source-filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+
+  .source-tab {
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .refresh-btn {
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  .order-badges {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .source-badge {
+    font-size: 10px;
+    padding: 3px 8px;
   }
 }

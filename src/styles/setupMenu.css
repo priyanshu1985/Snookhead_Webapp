@@ -3,38 +3,88 @@
 ========================= */
 
 .setup-menu-page {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-}
-
-/* PAGE TITLE */
-.setup-menu-page h5 {
-  margin-bottom: 16px;
+  padding: 16px;
 }
 
 /* =========================
-   TABS
+   HEADER
 ========================= */
+
+.setup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.setup-header .back-btn {
+  background: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.setup-header .back-btn:hover {
+  background: #FEF3E7;
+  color: #F08626;
+  transform: translateX(-2px);
+}
+
+.setup-header h5 {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+  font-size: 18px;
+}
+
+/* =========================
+   TABS WRAPPER
+========================= */
+
+.setup-tabs-wrapper {
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.setup-tabs-wrapper::-webkit-scrollbar {
+  display: none;
+}
 
 .setup-tabs {
   display: flex;
   background: #ffffff;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
-  margin-top: 60px;
-  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  min-width: max-content;
 }
 
 .setup-tabs button {
   flex: 1;
   border: none;
-  padding: 12px;
+  padding: 14px 20px;
   background: #f8f8f8;
   font-weight: 600;
-  font-size: 13px;
-  color: #333;
+  font-size: 14px;
+  color: #555;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  min-width: 120px;
 }
 
 .setup-tabs button:hover:not(.active) {
@@ -45,6 +95,31 @@
 .setup-tabs button.active {
   background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.setup-tabs .tab-icon {
+  font-size: 18px;
+}
+
+.setup-tabs .tab-label-short {
+  display: none;
+}
+
+.setup-tabs .tab-label-full {
+  display: inline;
+}
+
+/* =========================
+   CONTENT WRAPPER
+========================= */
+
+.setup-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  min-height: 400px;
 }
 
 /* =========================
@@ -60,26 +135,30 @@
 .game-box {
   height: 220px;
   border: 2px solid #f08626;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
   transition: all 0.2s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .game-box:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(240, 134, 38, 0.2);
+  box-shadow: 0 8px 24px rgba(240, 134, 38, 0.25);
 }
 
 /* Game Image */
 .game-image {
   width: 100%;
   height: 120px;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #FEF3E7 0%, #ffe6d0 100%);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-image img {
@@ -88,9 +167,14 @@
   object-fit: cover;
 }
 
+.game-image .placeholder-icon {
+  font-size: 40px;
+  opacity: 0.6;
+}
+
 /* Game Name */
 .game-name {
-  padding: 10px;
+  padding: 12px;
   font-weight: 600;
   text-align: center;
   color: #333;
@@ -98,6 +182,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
 }
 
 /* Game Actions */
@@ -109,11 +194,11 @@
 .game-actions .btn-edit,
 .game-actions .btn-delete {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   border: none;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
@@ -169,6 +254,7 @@
   padding: 4px 12px;
   border-radius: 12px;
   text-transform: capitalize;
+  font-weight: 500;
 }
 
 .table-status.status-available {
@@ -236,14 +322,15 @@
 ========================= */
 
 .add-btn {
-  margin: 40px auto;
+  margin: 30px auto;
   display: block;
   background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   border: none;
   color: #fff;
-  padding: 12px 40px;
+  padding: 14px 40px;
   border-radius: 30px;
   font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
@@ -266,79 +353,603 @@
   margin-top: 10px;
 }
 
-.menu-categories {
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+}
+
+.loading-state .loading-icon {
   display: flex;
-  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.loading-state .loading-icon svg {
+  width: 40px;
+  height: 40px;
+  color: #f08626;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.loading-state p {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Menu Categories Wrapper - For scroll indicators */
+.menu-categories-wrapper {
+  position: relative;
   margin-bottom: 20px;
 }
 
+/* Menu Categories - Horizontal Scroll */
+.menu-categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 0;
+}
+
+.menu-categories::-webkit-scrollbar {
+  display: none;
+}
+
 .menu-categories span {
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: #f0f0f0;
+  padding: 10px 18px;
+  border-radius: 25px;
+  background: #f5f5f5;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
-  color: #333;
+  color: #555;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-categories span .category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-categories span .category-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-categories span .category-label {
+  font-size: 13px;
 }
 
 .menu-categories span:hover:not(.active) {
   background: #fff5eb;
   color: #ff8c1a;
+  border-color: #ffe6d0;
 }
 
 .menu-categories .active {
   background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
   color: #fff;
+  border-color: #ff8c1a;
+  box-shadow: 0 2px 8px rgba(255, 140, 26, 0.3);
 }
 
+/* Menu List Grid */
 .menu-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
 .menu-item {
   background: #fff;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 14px;
+  border-radius: 14px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
+  border: 2px solid #f0f0f0;
+  align-items: center;
 }
 
 .menu-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: #ffd9b3;
 }
 
 .menu-item .img {
-  width: 60px;
-  height: 60px;
-  background: #ddd;
-  border-radius: 6px;
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #FEF3E7 0%, #ffe6d0 100%);
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-item .img::after {
+  content: "🍽️";
+  font-size: 24px;
+}
+
+.menu-item .info {
+  flex: 1;
+  min-width: 0;
 }
 
 .menu-item h6 {
-  margin-bottom: 4px;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-item span {
+  font-weight: 700;
+  color: #f08626;
+  font-size: 15px;
+}
+
+.menu-item .item-actions {
+  flex-shrink: 0;
+}
+
+.menu-item .item-actions .btn-delete {
+  background: #fff0f0;
+  border: none;
+  color: #dc3545;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item .item-actions .btn-delete:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* No Data Message */
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 50px 20px;
+  background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+  border-radius: 14px;
+  grid-column: 1 / -1;
+  border: 2px dashed #e0e0e0;
+}
+
+.no-data .no-data-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  opacity: 0.5;
+  color: #888;
+}
+
+.no-data .no-data-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.no-data p {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.no-data small {
+  font-size: 13px;
+  color: #999;
 }
 
 /* =========================
-   MOBILE
+   LOADING & ERROR
 ========================= */
 
-@media (max-width: 768px) {
+.alert-danger {
+  background: linear-gradient(135deg, #fff0f0 0%, #ffe6e6 100%);
+  color: #c00;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #ffcccc;
+  font-weight: 500;
+}
+
+/* =========================
+   LARGE DESKTOP (1400px+)
+========================= */
+
+@media (min-width: 1400px) {
+  .setup-menu-page {
+    max-width: 1400px;
+    padding: 20px 30px;
+  }
+
   .setup-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
   }
 
   .menu-list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .setup-tabs button {
+    padding: 16px 28px;
+    font-size: 15px;
+    min-width: 160px;
+  }
+
+  .setup-content {
+    padding: 28px;
+  }
+}
+
+/* =========================
+   LAPTOP / DESKTOP (992px - 1399px)
+========================= */
+
+@media (min-width: 992px) and (max-width: 1399px) {
+  .setup-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .menu-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* =========================
+   TABLET (768px - 991px)
+========================= */
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .setup-menu-page {
+    padding: 16px 20px;
+  }
+
+  .setup-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .menu-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .setup-tabs button {
+    padding: 12px 16px;
+    font-size: 13px;
+    min-width: 100px;
+  }
+
+  .game-box {
+    height: 200px;
+  }
+
+  .game-image {
+    height: 100px;
+  }
+}
+
+/* =========================
+   SMALL TABLET / LARGE MOBILE (576px - 767px)
+========================= */
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .setup-menu-page {
+    padding: 12px 16px;
+  }
+
+  .setup-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .menu-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .setup-tabs button {
+    padding: 12px 14px;
+    font-size: 12px;
+    min-width: 90px;
+    gap: 6px;
+  }
+
+  .setup-tabs .tab-icon {
+    font-size: 16px;
+  }
+
+  .game-box {
+    height: 190px;
+  }
+
+  .game-image {
+    height: 90px;
+  }
+
+  .game-name {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .setup-content {
+    padding: 16px;
+  }
+}
+
+/* =========================
+   MOBILE (max-width: 575px)
+========================= */
+
+@media (max-width: 575px) {
+  .setup-menu-page {
+    padding: 12px;
+  }
+
+  .setup-header {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .setup-header .back-btn {
+    padding: 8px 12px;
+    font-size: 18px;
+  }
+
+  .setup-header h5 {
+    font-size: 16px;
+  }
+
+  /* Tabs - Show short labels and icons on mobile */
+  .setup-tabs-wrapper {
+    margin-bottom: 16px;
+  }
+
+  .setup-tabs {
+    border-radius: 12px;
+  }
+
+  .setup-tabs button {
+    padding: 12px 10px;
+    font-size: 11px;
+    min-width: 80px;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .setup-tabs .tab-icon {
+    font-size: 20px;
+  }
+
+  .setup-tabs .tab-label-full {
+    display: none;
+  }
+
+  .setup-tabs .tab-label-short {
+    display: inline;
+  }
+
+  /* Content */
+  .setup-content {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  /* Grid - 2 columns on mobile */
+  .setup-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .game-box {
+    height: 170px;
+    border-radius: 12px;
+  }
+
+  .game-image {
+    height: 80px;
+  }
+
+  .game-name {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .game-actions .btn-edit,
+  .game-actions .btn-delete {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  /* Menu List - 1 column on mobile */
+  .menu-list {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .menu-item {
+    padding: 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+
+  .menu-item .img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .menu-item h6 {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .menu-item span {
+    font-size: 14px;
+  }
+
+  /* Menu Categories - Smaller on mobile */
+  .menu-categories-wrapper {
+    margin-bottom: 16px;
+  }
+
+  .menu-categories {
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+
+  .menu-categories span {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .menu-categories span .category-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .menu-categories span .category-label {
+    font-size: 10px;
+  }
+
+  /* No Data - Smaller on mobile */
+  .no-data {
+    padding: 40px 16px;
+  }
+
+  .no-data .no-data-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .no-data p {
+    font-size: 14px;
+  }
+
+  .no-data small {
+    font-size: 12px;
+  }
+
+  /* Add Button */
+  .add-btn {
+    padding: 12px 32px;
+    font-size: 14px;
+    margin: 24px auto;
+  }
+
+  /* Game Tabs */
+  .game-tabs {
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+  }
+
+  .game-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Table Box */
+  .table-box {
+    min-height: 160px;
+  }
+
+  .table-box .game-image {
+    height: 70px;
+  }
+
+  .table-info {
+    padding: 10px;
+    gap: 4px;
+  }
+
+  .table-name {
+    font-size: 14px;
+  }
+
+  .table-status {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .table-price {
+    font-size: 12px;
+  }
+}
+
+/* =========================
+   EXTRA SMALL MOBILE (max-width: 380px)
+========================= */
+
+@media (max-width: 380px) {
+  .setup-tabs button {
+    padding: 10px 8px;
+    min-width: 70px;
+  }
+
+  .setup-tabs .tab-icon {
+    font-size: 18px;
+  }
+
+  .setup-tabs .tab-label-short {
+    font-size: 10px;
+  }
+
+  .setup-grid {
+    gap: 10px;
+  }
+
+  .game-box {
+    height: 150px;
+  }
+
+  .game-image {
+    height: 65px;
+  }
+
+  .game-name {
+    font-size: 11px;
+    padding: 6px;
   }
 }

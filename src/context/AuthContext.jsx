@@ -14,7 +14,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Only for initial app load
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -38,7 +38,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    setIsLoading(true);
+    // Don't set isLoading here - it causes the Login component to unmount!
+    // The login page has its own isLoading state for the button
     try {
       const response = await authAPI.login(email, password);
 
@@ -58,14 +59,13 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
-      throw new Error(error.message || "Login failed");
-    } finally {
-      setIsLoading(false);
+      throw error; // Re-throw the original error to preserve the message
     }
   };
 
   const register = async (userData) => {
-    setIsLoading(true);
+    // Don't set isLoading here - it causes the Register component to unmount!
+    // The register page has its own isLoading state for the button
     try {
       const response = await authAPI.register(userData);
 
@@ -85,9 +85,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user };
     } catch (error) {
       console.error("Register error:", error);
-      throw new Error(error.message || "Registration failed");
-    } finally {
-      setIsLoading(false);
+      throw error; // Re-throw original error to preserve the message
     }
   };
 

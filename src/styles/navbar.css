@@ -67,7 +67,14 @@
 
 /* ICON + TEXT */
 .nav-icon {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .nav-text {
@@ -131,7 +138,20 @@
 }
 
 .search-result-item .result-icon {
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.search-result-item .result-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.search-result-item:hover .result-icon,
+.search-result-item.selected .result-icon {
+  color: #f08626;
 }
 
 .search-result-item .result-name {
@@ -189,7 +209,6 @@
 
 /* SIDEBAR TOGGLE BUTTON */
 .sidebar-toggle-btn {
-  font-size: 20px;
   background: #f8f8f8;
   border: none;
   cursor: pointer;
@@ -202,14 +221,22 @@
   justify-content: center;
 }
 
+.sidebar-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 .sidebar-toggle-btn:hover {
   background: #f08626;
   color: #fff;
 }
 
+.sidebar-toggle-btn:hover svg {
+  stroke: #fff;
+}
+
 /* HAMBURGER (mobile only) */
 .hamburger-btn {
-  font-size: 24px;
   background: none;
   border: none;
   display: none;
@@ -217,10 +244,17 @@
   padding: 8px;
   border-radius: 8px;
   transition: background 0.2s ease;
+  color: #666;
+}
+
+.hamburger-btn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .hamburger-btn:hover {
   background: #f5f5f5;
+  color: #f08626;
 }
 
 /* DESKTOP ONLY */
@@ -273,13 +307,18 @@
     display: none;
   }
 
-  .nav-icon {
-    font-size: 20px;
+  .nav-icon svg {
+    width: 22px;
+    height: 22px;
   }
 
   .nav-item.active {
     background: #ff8c1a;
     color: #fff;
+  }
+
+  .nav-item.active .nav-icon svg {
+    stroke: #fff;
   }
 
   .nav-item.active:hover {
@@ -298,7 +337,8 @@
     padding: 6px 10px;
   }
 
-  .nav-icon {
-    font-size: 18px;
+  .nav-icon svg {
+    width: 18px;
+    height: 18px;
   }
 }

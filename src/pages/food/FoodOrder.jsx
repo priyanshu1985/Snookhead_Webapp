@@ -17,6 +17,15 @@ const categories = [
   { key: "Desserts", label: "Desserts" },
 ];
 
+// Source filter options for orders
+const sourceFilters = [
+  { key: "all", label: "All" },
+  { key: "table_booking", label: "Table Booking" },
+  { key: "counter", label: "Counter/Screen" },
+  { key: "zomato", label: "Zomato" },
+  { key: "swiggy", label: "Swiggy" },
+];
+
 const FoodOrder = () => {
   const { isSidebarCollapsed } = useContext(LayoutContext);
 
@@ -33,6 +42,7 @@ const FoodOrder = () => {
   // Active orders state
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -99,6 +109,40 @@ const FoodOrder = () => {
       console.error("Failed to update order status:", err);
       alert("Failed to update order status: " + (err.message || "Unknown error"));
     }
+  };
+
+  // Filter orders by status (pending) and source
+  const pendingOrders = orders.filter(o => o.status === "pending");
+  const filteredOrders = sourceFilter === "all"
+    ? pendingOrders
+    : pendingOrders.filter(o => o.order_source === sourceFilter);
+
+  // Count orders by source
+  const getSourceCount = (source) => {
+    if (source === "all") return pendingOrders.length;
+    return pendingOrders.filter(o => o.order_source === source).length;
+  };
+
+  // Get source label for display
+  const getSourceLabel = (source) => {
+    const sourceMap = {
+      table_booking: "Table",
+      counter: "Counter",
+      zomato: "Zomato",
+      swiggy: "Swiggy",
+    };
+    return sourceMap[source] || source;
+  };
+
+  // Get source badge class
+  const getSourceClass = (source) => {
+    const classMap = {
+      table_booking: "source-table",
+      counter: "source-counter",
+      zomato: "source-zomato",
+      swiggy: "source-swiggy",
+    };
+    return classMap[source] || "";
   };
 
   // Filter items by category
@@ -169,6 +213,7 @@ const FoodOrder = () => {
         paymentMethod,
         cashAmount: paymentMethod === "offline" ? total : (paymentMethod === "hybrid" ? Number(cashAmount) : 0),
         onlineAmount: paymentMethod === "online" ? total : (paymentMethod === "hybrid" ? Number(onlineAmount) : 0),
+        order_source: "counter", // Orders from this screen are counter orders
         cart: cart.map(item => ({
           item: { id: item.id, name: item.name, price: item.price },
           qty: item.qty
@@ -221,7 +266,7 @@ const FoodOrder = () => {
               className={activeTab === "orders" ? "active" : ""}
               onClick={() => setActiveTab("orders")}
             >
-              ACTIVE ORDERS ({orders.filter(o => o.status === "pending").length})
+              ACTIVE ORDERS ({pendingOrders.length})
             </button>
           </div>
 
@@ -307,53 +352,86 @@ const FoodOrder = () => {
 
           {/* ORDERS TAB CONTENT */}
           {activeTab === "orders" && (
-            <div className="orders-list">
-              {ordersLoading ? (
-                <p className="loading-text">Loading orders...</p>
-              ) : orders.filter(o => o.status === "pending").length === 0 ? (
-                <p className="empty-text">No active orders</p>
-              ) : (
-                orders
-                  .filter(order => order.status === "pending")
-                  .map((order, index) => (
-                  <div className="order-card" key={order.id}>
-                    <div className="order-card-header">
-                      <span className="order-index">{index + 1}.</span>
-                      <div className="order-info">
-                        <span className="order-date">{formatDate(order.createdAt)}</span>
-                        <span className="order-customer">{order.personName || "Customer"}</span>
-                      </div>
-                      <span className={`order-status ${order.status || "pending"}`}>
-                        {order.status || "Pending"}
-                      </span>
-                    </div>
-                    <div className="order-card-items">
-                      {order.OrderItems && order.OrderItems.map((orderItem, idx) => (
-                        <div className="order-card-item" key={idx}>
-                          <span>{orderItem.MenuItem?.name || "Item"}</span>
-                          <span>x{orderItem.qty}</span>
-                          <span>₹{(Number(orderItem.priceEach || 0) * orderItem.qty).toFixed(2)}</span>
+            <>
+              {/* Source Filter Tabs */}
+              <div className="source-filter-tabs">
+                {sourceFilters.map((filter) => (
+                  <button
+                    key={filter.key}
+                    className={`source-tab ${sourceFilter === filter.key ? "active" : ""}`}
+                    onClick={() => setSourceFilter(filter.key)}
+                  >
+                    {filter.label}
+                    <span className="source-count">{getSourceCount(filter.key)}</span>
+                  </button>
+                ))}
+                <button
+                  className="refresh-btn"
+                  onClick={fetchOrders}
+                  disabled={ordersLoading}
+                >
+                  {ordersLoading ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
+
+              {/* Orders List */}
+              <div className="orders-list">
+                {ordersLoading && orders.length === 0 ? (
+                  <p className="loading-text">Loading orders...</p>
+                ) : filteredOrders.length === 0 ? (
+                  <p className="empty-text">
+                    {sourceFilter === "all"
+                      ? "No active orders"
+                      : `No active orders from ${sourceFilters.find(f => f.key === sourceFilter)?.label}`}
+                  </p>
+                ) : (
+                  filteredOrders.map((order, index) => (
+                    <div className="order-card" key={order.id}>
+                      <div className="order-card-header">
+                        <span className="order-index">{index + 1}.</span>
+                        <div className="order-info">
+                          <span className="order-date">{formatDate(order.createdAt)}</span>
+                          <span className="order-customer">{order.personName || "Customer"}</span>
                         </div>
-                      ))}
-                    </div>
-                    <div className="order-card-footer">
-                      <div className="order-payment">
-                        <span className="payment-method">{order.paymentMethod || "Cash"}</span>
+                        <div className="order-badges">
+                          {order.order_source && (
+                            <span className={`source-badge ${getSourceClass(order.order_source)}`}>
+                              {getSourceLabel(order.order_source)}
+                            </span>
+                          )}
+                          <span className={`order-status ${order.status || "pending"}`}>
+                            {order.status || "Pending"}
+                          </span>
+                        </div>
                       </div>
-                      <span className="order-total">₹{Number(order.total || 0).toFixed(2)}</span>
+                      <div className="order-card-items">
+                        {order.OrderItems && order.OrderItems.map((orderItem, idx) => (
+                          <div className="order-card-item" key={idx}>
+                            <span>{orderItem.MenuItem?.name || "Item"}</span>
+                            <span>x{orderItem.qty}</span>
+                            <span>₹{(Number(orderItem.priceEach || 0) * orderItem.qty).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="order-card-footer">
+                        <div className="order-payment">
+                          <span className="payment-method">{order.paymentMethod || "Cash"}</span>
+                        </div>
+                        <span className="order-total">₹{Number(order.total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="order-card-actions">
+                        <button
+                          className="complete-btn"
+                          onClick={() => handleUpdateStatus(order.id, "completed")}
+                        >
+                          Mark as Completed
+                        </button>
+                      </div>
                     </div>
-                    <div className="order-card-actions">
-                      <button
-                        className="complete-btn"
-                        onClick={() => handleUpdateStatus(order.id, "completed")}
-                      >
-                        Mark as Completed
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
