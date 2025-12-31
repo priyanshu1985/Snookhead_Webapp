@@ -29,8 +29,8 @@
 }
 
 .booking-header .back-btn:hover {
-  background: #FEF3E7;
-  color: #F08626;
+  background: #fef3e7;
+  color: #f08626;
   transform: translateX(-2px);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .table-code {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   color: #fff;
   padding: 8px 16px;
   border-radius: 20px;
@@ -65,7 +65,7 @@
   content: "";
   width: 4px;
   height: 18px;
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   border-radius: 2px;
 }
 
@@ -104,14 +104,14 @@
 }
 
 .radio-row label:hover {
-  border-color: #F08626;
-  background: #FEF3E7;
+  border-color: #f08626;
+  background: #fef3e7;
 }
 
 .radio-row label.active {
-  border-color: #F08626;
-  background: #FEF3E7;
-  color: #F08626;
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .radio-row input[type="radio"] {
@@ -120,7 +120,7 @@
 
 /* TIME INPUT SECTION */
 .time-input-section {
-  background: linear-gradient(135deg, #fffbf7 0%, #FEF3E7 100%);
+  background: linear-gradient(135deg, #fffbf7 0%, #fef3e7 100%);
   border-radius: 14px;
   padding: 20px;
   margin-bottom: 20px;
@@ -160,9 +160,9 @@
 }
 
 .timer-controls button:hover {
-  border-color: #F08626;
-  background: #FEF3E7;
-  color: #F08626;
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .timer-controls input {
@@ -171,7 +171,7 @@
   font-size: 28px;
   font-weight: bold;
   border: none;
-  border-bottom: 3px solid #F08626;
+  border-bottom: 3px solid #f08626;
   padding: 8px;
   color: #333;
 }
@@ -201,14 +201,14 @@
 }
 
 .quick-times button:hover {
-  border-color: #F08626;
-  background: #FEF3E7;
-  color: #F08626;
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .quick-times button.active {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
-  border-color: #F08626;
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  border-color: #f08626;
   color: #fff;
 }
 
@@ -224,7 +224,7 @@
 
 .set-time-input input:focus {
   outline: none;
-  border-color: #F08626;
+  border-color: #f08626;
 }
 
 /* Frame Input */
@@ -249,9 +249,9 @@
 }
 
 .frame-controls button:hover {
-  border-color: #F08626;
-  background: #FEF3E7;
-  color: #F08626;
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .frame-controls span {
@@ -265,7 +265,7 @@
 .frame-input small {
   display: block;
   text-align: center;
-  color: #F08626;
+  color: #f08626;
   margin-top: 8px;
   font-weight: 500;
   background: rgba(255, 140, 26, 0.1);
@@ -287,7 +287,7 @@
 }
 
 .food-search-bar:focus-within {
-  border-color: #F08626;
+  border-color: #f08626;
   box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.1);
 }
 
@@ -325,7 +325,7 @@
 }
 
 .food-search-bar .clear-search:hover {
-  background: #F08626;
+  background: #f08626;
   color: #fff;
 }
 
@@ -344,13 +344,14 @@
   background: #fff;
   border-radius: 12px;
   padding: 14px;
+  border: 1px solid transparent;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
 
 .menu-item-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f08626;
 }
 
 .menu-item-info {
@@ -365,14 +366,14 @@
 }
 
 .menu-item-info .item-price {
-  color: #F08626;
+  color: #f08626;
   font-weight: 700;
 }
 
 .menu-item-card .add-btn {
   background: none;
-  border: 2px solid #F08626;
-  color: #F08626;
+  border: 2px solid #f08626;
+  color: #f08626;
   padding: 8px 22px;
   border-radius: 20px;
   font-size: 12px;
@@ -382,20 +383,19 @@
 }
 
 .menu-item-card .add-btn:hover {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
-  border-color: #F08626;
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  border-color: #f08626;
   color: #fff;
 }
 
-
-/* PRICING INFO */
+/* PRICING INFO - Orange theme matching Active Session */
 .pricing-info {
-  background: linear-gradient(135deg, #f8fcff 0%, #eef6ff 100%);
+  background: linear-gradient(135deg, #fffbf7 0%, #fef3e7 100%);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 2px solid #d4e8ff;
+  border: 2px solid #ffe6cc;
 }
 
 .pricing-info > div {
@@ -407,17 +407,17 @@
 }
 
 .pricing-info .estimate {
-  border-top: 2px solid #d4e8ff;
+  border-top: 2px solid #ffe6cc;
   padding-top: 12px;
   margin-top: 8px;
   font-weight: 700;
-  color: #0066cc;
+  color: #f08626;
   font-size: 16px;
 }
 
 /* Food Items Section in Pricing Card */
 .food-items-section {
-  border-top: 2px solid #d4e8ff;
+  border-top: 2px solid #ffe6cc;
   margin-top: 12px;
   padding-top: 12px;
 }
@@ -425,7 +425,7 @@
 .food-items-title {
   font-size: 13px;
   font-weight: 600;
-  color: #F08626;
+  color: #f08626;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -441,7 +441,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #e8f0f8;
+  border-bottom: 1px solid #ffe6cc;
 }
 
 .food-item-row:last-of-type {
@@ -476,9 +476,9 @@
 }
 
 .food-item-controls button:hover {
-  border-color: #F08626;
-  background: #FEF3E7;
-  color: #F08626;
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
 }
 
 .food-item-controls span {
@@ -490,7 +490,7 @@
 .food-item-price {
   font-size: 13px;
   font-weight: 600;
-  color: #F08626;
+  color: #f08626;
   min-width: 60px;
   text-align: right;
 }
@@ -500,21 +500,22 @@
   justify-content: space-between;
   padding-top: 10px;
   margin-top: 8px;
-  border-top: 1px dashed #d4e8ff;
+  border-top: 1px dashed #ffe6cc;
   font-size: 14px;
-  color: #F08626;
+  color: #f08626;
   font-weight: 600;
 }
 
-/* Grand Total */
+/* Grand Total - Clean style without background */
 .grand-total {
   display: flex;
   justify-content: space-between;
   padding: 14px 0;
   margin-top: 12px;
-  border-top: 2px solid #d4e8ff;
+  border-top: 2px solid #ffe6cc;
   font-size: 18px;
-  color: #0066cc;
+  color: #F08626;
+  font-weight: 700;
 }
 
 /* Book Button in Pricing Card */
@@ -522,7 +523,7 @@
   width: 100%;
   margin-top: 16px;
   padding: 14px;
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -534,7 +535,7 @@
 }
 
 .pricing-info .book-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #f07a0a 0%, #c96818 100%);
   box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
 }
 
@@ -543,7 +544,6 @@
   box-shadow: none;
   cursor: not-allowed;
 }
-
 
 /* LOADING */
 .loading-text,
@@ -631,7 +631,7 @@
   }
 
   .menu-items-grid::-webkit-scrollbar-thumb {
-    background: #F08626;
+    background: #f08626;
     border-radius: 3px;
   }
 
@@ -657,10 +657,10 @@
     margin-top: 20px;
   }
 
-  /* Food items section max height on desktop */
+  /* Food items section - auto adjust to content, no scrollbar */
   .food-items-section {
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
   }
 }
 

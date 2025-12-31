@@ -15,6 +15,7 @@ import {
   HamburgerIcon,
   ChevronLeftIcon,
 } from "../common/Icons";
+import AddMemberModal from "../member/AddMemberModel";
 import "../../styles/navbar.css";
 
 // All searchable pages/routes
@@ -81,7 +82,7 @@ const searchablePages = [
   },
 ];
 
-const Navbar = () => {
+const Navbar = ({ onMemberAdded }) => {
   const { toggleSidebarCollapse, isSidebarCollapsed } =
     useContext(LayoutContext);
   const navigate = useNavigate();
@@ -89,6 +90,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const searchRef = useRef(null);
 
   // Filter pages based on search query
@@ -249,8 +251,20 @@ const Navbar = () => {
 
       {/* RIGHT: Desktop actions only */}
       <div className="topbar-right desktop-only">
-        <button className="btn btn-warning btn-sm">New Registration</button>
+        <button
+          className="btn btn-warning btn-sm"
+          onClick={() => setIsAddMemberModalOpen(true)}
+        >
+          New Registration
+        </button>
       </div>
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        isOpen={isAddMemberModalOpen}
+        onClose={() => setIsAddMemberModalOpen(false)}
+        onMemberAdded={onMemberAdded}
+      />
     </header>
   );
 };

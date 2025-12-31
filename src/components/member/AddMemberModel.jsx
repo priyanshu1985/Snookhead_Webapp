@@ -12,6 +12,7 @@ const AddMemberModal = ({ isOpen, onClose, onMemberAdded }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +52,9 @@ const AddMemberModal = ({ isOpen, onClose, onMemberAdded }) => {
       if (onMemberAdded) {
         onMemberAdded(newMember);
       }
-      onClose();
+
+      // Show success popup instead of closing immediately
+      setShowSuccess(true);
     } catch (err) {
       setError(err.message || "Failed to create member");
     } finally {
@@ -59,8 +62,14 @@ const AddMemberModal = ({ isOpen, onClose, onMemberAdded }) => {
     }
   };
 
+  const handleSuccessOk = () => {
+    setShowSuccess(false);
+    onClose();
+  };
+
   const handleClose = () => {
     setError(null);
+    setShowSuccess(false);
     setFormData({
       name: "",
       phone: "",
@@ -72,6 +81,29 @@ const AddMemberModal = ({ isOpen, onClose, onMemberAdded }) => {
   };
 
   if (!isOpen) return null;
+
+  // Show success popup
+  if (showSuccess) {
+    return (
+      <div className="member-modal-overlay">
+        <div className="member-modal success-modal">
+          <div className="success-content">
+            <div className="success-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h4 className="success-title">Member Added Successfully!</h4>
+            <p className="success-message">The new member has been registered.</p>
+            <button className="success-ok-btn" onClick={handleSuccessOk}>
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="member-modal-overlay" onClick={handleClose}>

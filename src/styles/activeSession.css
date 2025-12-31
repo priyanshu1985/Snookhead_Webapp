@@ -145,7 +145,6 @@
 
 .control-btn:hover {
   background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-2px);
 }
 
 .control-btn.active {
@@ -237,7 +236,6 @@
 }
 
 .menu-item-row:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -420,7 +418,6 @@
 
 .update-btn:hover:not(:disabled) {
   background: #FEF3E7;
-  transform: translateY(-2px);
 }
 
 .update-btn:disabled {
@@ -444,12 +441,8 @@
 }
 
 .generate-bill-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #D9741F 0%, #c96818 100%);
   box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
-}
-
-.generate-bill-btn:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .generate-bill-btn:disabled {
@@ -611,15 +604,17 @@
     padding: 16px;
   }
 
-  /* Order summary styling */
+  /* Order summary styling - auto adjust to content, no scrollbar */
   .order-summary {
-    max-height: 250px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
   }
 
-  /* Pricing summary in left column */
+  /* Pricing summary in left column - auto adjust, no scrollbar */
   .pricing-summary {
     margin-top: 20px;
+    max-height: none;
+    overflow: visible;
   }
 
   /* Session actions in left column */
