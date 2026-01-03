@@ -49,7 +49,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #F08626;
 }
 
 .header-subtitle {
@@ -156,12 +156,12 @@
 }
 
 .method-card:hover {
-  border-color: #ff8c1a;
+  border-color: #F08626;
   background: #fff9f5;
 }
 
 .method-card.active {
-  border-color: #ff8c1a;
+  border-color: #F08626;
   background: linear-gradient(135deg, #fff5eb 0%, #ffede0 100%);
   box-shadow: 0 4px 12px rgba(255, 140, 26, 0.15);
 }
@@ -183,7 +183,7 @@
 
 .method-card:hover .method-icon,
 .method-card.active .method-icon {
-  background: #ff8c1a;
+  background: #F08626;
   color: #fff;
 }
 
@@ -198,7 +198,7 @@
 }
 
 .method-card.active .method-name {
-  color: #ff8c1a;
+  color: #F08626;
 }
 
 /* WALLET SECTION */
@@ -320,7 +320,7 @@
 .charges-section .section-total {
   font-size: 15px;
   font-weight: 700;
-  color: #ff8c1a;
+  color: #F08626;
 }
 
 .charge-detail {
@@ -334,8 +334,9 @@
 }
 
 .items-list {
-  max-height: 120px;
-  overflow-y: auto;
+  /* Auto adjust to content, no scrollbar */
+  max-height: none;
+  overflow: visible;
 }
 
 .order-item-row {
@@ -354,25 +355,26 @@
   font-weight: 500;
 }
 
-/* GRAND TOTAL */
+/* GRAND TOTAL - Clean style without background */
 .grand-total {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
-  border-radius: 12px;
-  color: #fff;
+  padding: 14px 0;
+  margin-top: 12px;
+  border-top: 2px solid #ffe6cc;
 }
 
 .grand-total span:first-child {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
 }
 
 .grand-total .total-amount {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
+  color: #F08626;
 }
 
 /* PROMO SECTION */
@@ -393,7 +395,7 @@
 
 .promo-section input:focus {
   outline: none;
-  border-color: #ff8c1a;
+  border-color: #F08626;
 }
 
 .apply-btn {
@@ -409,9 +411,9 @@
 }
 
 .apply-btn:hover:not(:disabled) {
-  background: #ff8c1a;
+  background: #F08626;
   color: #fff;
-  border-color: #ff8c1a;
+  border-color: #F08626;
 }
 
 .apply-btn:disabled {
@@ -450,7 +452,7 @@
   width: calc(100% - 48px);
   margin: 0 24px 24px;
   padding: 16px;
-  background: linear-gradient(135deg, #ff8c1a 0%, #f07800 100%);
+  background: linear-gradient(135deg, #F08626 0%, #f07800 100%);
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -462,12 +464,8 @@
 }
 
 .pay-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #f07a0a 0%, #d96800 100%);
   box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
-}
-
-.pay-btn:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .pay-btn:disabled {
@@ -498,22 +496,15 @@
   }
 }
 
-/* SCROLLBAR */
+/* SCROLLBAR - Hide scrollbar but keep scrolling functional */
 .payment-modal::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  display: none;
 }
 
-.payment-modal::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.payment-modal::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.payment-modal::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+.payment-modal {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* MOBILE */

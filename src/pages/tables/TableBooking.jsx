@@ -9,11 +9,6 @@ import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/tableBooking.css";
 
-const categories = [
-  { key: "Food", label: "Food", icon: "🥗" },
-  { key: "packed", label: "Pack Food", icon: "🍟" },
-  { key: "Beverages", label: "Beverages", icon: "🥤" },
-];
 
 const TableBooking = () => {
   const { game, tableId } = useParams();
@@ -27,10 +22,10 @@ const TableBooking = () => {
   const [frameCount, setFrameCount] = useState(1);
 
   // Food selection
-  const [activeCategory, setActiveCategory] = useState("Food");
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Table info
   const [tableInfo, setTableInfo] = useState(null);
@@ -70,8 +65,10 @@ const TableBooking = () => {
     if (tableId) fetchTable();
   }, [tableId]);
 
-  // Filter menu by category
-  const filteredMenu = menuItems.filter((item) => item.category === activeCategory);
+  // Filter menu by search query
+  const filteredMenu = menuItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Add item to cart
   const addToCart = (item) => {
@@ -185,179 +182,199 @@ const TableBooking = () => {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* Time Selection */}
-          <p className="section-title">Select Time</p>
-          <div className="radio-row">
-            <label className={timeMode === "timer" ? "active" : ""}>
-              <input
-                type="radio"
-                name="time"
-                value="timer"
-                checked={timeMode === "timer"}
-                onChange={(e) => setTimeMode(e.target.value)}
-              />
-              Timer
-            </label>
-
-            <label className={timeMode === "set" ? "active" : ""}>
-              <input
-                type="radio"
-                name="time"
-                value="set"
-                checked={timeMode === "set"}
-                onChange={(e) => setTimeMode(e.target.value)}
-              />
-              Set Time
-            </label>
-
-            <label className={timeMode === "frame" ? "active" : ""}>
-              <input
-                type="radio"
-                name="time"
-                value="frame"
-                checked={timeMode === "frame"}
-                onChange={(e) => setTimeMode(e.target.value)}
-              />
-              Select Frame
-            </label>
-          </div>
-
-          {/* Time Input based on mode */}
-          <div className="time-input-section">
-            {timeMode === "timer" && (
-              <div className="timer-input">
-                <label>Duration (minutes)</label>
-                <div className="timer-controls">
-                  <button onClick={() => setTimerMinutes(Math.max(5, timerMinutes - 5))}>-</button>
+          {/* Main Content - Two Column Layout for Laptop */}
+          <div className="booking-content">
+            {/* Left Column - Time Selection */}
+            <div className="booking-left-column">
+              <p className="section-title">Select Time</p>
+              <div className="radio-row">
+                <label className={timeMode === "timer" ? "active" : ""}>
                   <input
-                    type="number"
-                    value={timerMinutes}
-                    onChange={(e) => setTimerMinutes(Math.max(1, Number(e.target.value)))}
-                    min="1"
+                    type="radio"
+                    name="time"
+                    value="timer"
+                    checked={timeMode === "timer"}
+                    onChange={(e) => setTimeMode(e.target.value)}
                   />
-                  <button onClick={() => setTimerMinutes(timerMinutes + 5)}>+</button>
-                </div>
-                <div className="quick-times">
-                  {[15, 30, 45, 60, 90, 120].map((mins) => (
-                    <button
-                      key={mins}
-                      className={timerMinutes === mins ? "active" : ""}
-                      onClick={() => setTimerMinutes(mins)}
-                    >
-                      {mins < 60 ? `${mins}m` : `${mins / 60}h`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                  Timer
+                </label>
 
-            {timeMode === "set" && (
-              <div className="set-time-input">
-                <label>Set End Time</label>
+                <label className={timeMode === "set" ? "active" : ""}>
+                  <input
+                    type="radio"
+                    name="time"
+                    value="set"
+                    checked={timeMode === "set"}
+                    onChange={(e) => setTimeMode(e.target.value)}
+                  />
+                  Set Time
+                </label>
+
+                <label className={timeMode === "frame" ? "active" : ""}>
+                  <input
+                    type="radio"
+                    name="time"
+                    value="frame"
+                    checked={timeMode === "frame"}
+                    onChange={(e) => setTimeMode(e.target.value)}
+                  />
+                  Select Frame
+                </label>
+              </div>
+
+              {/* Time Input based on mode */}
+              <div className="time-input-section">
+                {timeMode === "timer" && (
+                  <div className="timer-input">
+                    <label>Duration (minutes)</label>
+                    <div className="timer-controls">
+                      <button onClick={() => setTimerMinutes(Math.max(5, timerMinutes - 5))}>-</button>
+                      <input
+                        type="number"
+                        value={timerMinutes}
+                        onChange={(e) => setTimerMinutes(Math.max(1, Number(e.target.value)))}
+                        min="1"
+                      />
+                      <button onClick={() => setTimerMinutes(timerMinutes + 5)}>+</button>
+                    </div>
+                    <div className="quick-times">
+                      {[15, 30, 45, 60, 90, 120].map((mins) => (
+                        <button
+                          key={mins}
+                          className={timerMinutes === mins ? "active" : ""}
+                          onClick={() => setTimerMinutes(mins)}
+                        >
+                          {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {timeMode === "set" && (
+                  <div className="set-time-input">
+                    <label>Set End Time</label>
+                    <input
+                      type="time"
+                      value={setTimeValue}
+                      onChange={(e) => setSetTimeValue(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {timeMode === "frame" && (
+                  <div className="frame-input">
+                    <label>Number of Frames</label>
+                    <div className="frame-controls">
+                      <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
+                      <span>{frameCount}</span>
+                      <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
+                    </div>
+                    <small>~{frameCount * 15} minutes</small>
+                  </div>
+                )}
+              </div>
+
+              {/* Pricing Info & Cart Combined */}
+              <div className="pricing-info">
+                {tableInfo && (
+                  <>
+                    <div>
+                      <span>Price per minute:</span>
+                      <span>₹{tableInfo.pricePerMin || 0}</span>
+                    </div>
+                    {tableInfo.frameCharge > 0 && (
+                      <div>
+                        <span>Frame charge:</span>
+                        <span>₹{tableInfo.frameCharge}</span>
+                      </div>
+                    )}
+                    <div className="estimate">
+                      <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
+                      <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* Food Items in Same Card */}
+                {cart.length > 0 && (
+                  <div className="food-items-section">
+                    <p className="food-items-title">Food Items</p>
+                    {cart.map((item) => (
+                      <div className="food-item-row" key={item.id}>
+                        <span className="food-item-name">{item.name}</span>
+                        <div className="food-item-controls">
+                          <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                          <span>{item.qty}</span>
+                          <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                        </div>
+                        <span className="food-item-price">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="food-total">
+                      <span>Food Total:</span>
+                      <span>₹{cartTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Grand Total */}
+                {tableInfo && (
+                  <div className="grand-total">
+                    <strong>Grand Total:</strong>
+                    <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
+                  </div>
+                )}
+
+                {/* Book Button */}
+                <button className="book-btn" onClick={handleBook} disabled={booking}>
+                  {booking ? "Booking..." : "Book Table"}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column - Food Selection */}
+            <div className="booking-right-column">
+              <p className="section-title">Add Food</p>
+
+              {/* Search Bar */}
+              <div className="food-search-bar">
+                <span className="search-icon">🔍</span>
                 <input
-                  type="time"
-                  value={setTimeValue}
-                  onChange={(e) => setSetTimeValue(e.target.value)}
+                  type="text"
+                  placeholder="Search food items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
-            )}
-
-            {timeMode === "frame" && (
-              <div className="frame-input">
-                <label>Number of Frames</label>
-                <div className="frame-controls">
-                  <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
-                  <span>{frameCount}</span>
-                  <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
-                </div>
-                <small>~{frameCount * 15} minutes</small>
-              </div>
-            )}
-          </div>
-
-          {/* Food Categories */}
-          <p className="section-title">Add Food</p>
-          <div className="food-categories">
-            {categories.map((cat) => (
-              <div
-                key={cat.key}
-                className={`food-box ${activeCategory === cat.key ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat.key)}
-              >
-                <span className="food-icon">{cat.icon}</span>
-                <span>{cat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Menu Items */}
-          <div className="menu-items-grid">
-            {loadingMenu ? (
-              <p className="loading-text">Loading menu...</p>
-            ) : filteredMenu.length === 0 ? (
-              <p className="empty-text">No items in this category</p>
-            ) : (
-              filteredMenu.map((item) => (
-                <div className="menu-item-card" key={item.id}>
-                  <div className="menu-item-info">
-                    <span className="item-name">{item.name}</span>
-                    <span className="item-price">₹{item.price}</span>
-                  </div>
-                  <button className="add-btn" onClick={() => addToCart(item)}>
-                    ADD
+                {searchQuery && (
+                  <button className="clear-search" onClick={() => setSearchQuery("")}>
+                    ✕
                   </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Cart Summary */}
-          {cart.length > 0 && (
-            <div className="cart-summary">
-              <h6>Selected Items ({cart.length})</h6>
-              {cart.map((item) => (
-                <div className="cart-item" key={item.id}>
-                  <span className="cart-item-name">{item.name}</span>
-                  <div className="cart-item-controls">
-                    <button onClick={() => updateCartQty(item.id, -1)}>-</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateCartQty(item.id, 1)}>+</button>
-                  </div>
-                  <span className="cart-item-price">₹{Number(item.price) * item.qty}</span>
-                </div>
-              ))}
-              <div className="cart-total">
-                <strong>Food Total:</strong>
-                <strong>₹{cartTotal.toFixed(2)}</strong>
+                )}
               </div>
+
+              {/* Menu Items */}
+              <div className="menu-items-grid">
+                {loadingMenu ? (
+                  <p className="loading-text">Loading menu...</p>
+                ) : filteredMenu.length === 0 ? (
+                  <p className="empty-text">{searchQuery ? `No items found for "${searchQuery}"` : "No food items available"}</p>
+                ) : (
+                  filteredMenu.map((item) => (
+                    <div className="menu-item-card" key={item.id}>
+                      <div className="menu-item-info">
+                        <span className="item-name">{item.name}</span>
+                        <span className="item-price">₹{item.price}</span>
+                      </div>
+                      <button className="add-btn" onClick={() => addToCart(item)}>
+                        ADD
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
             </div>
-          )}
-
-          {/* Pricing Info */}
-          {tableInfo && (
-            <div className="pricing-info">
-              <div>
-                <span>Price per minute:</span>
-                <span>₹{tableInfo.pricePerMin || 0}</span>
-              </div>
-              {tableInfo.frameCharge > 0 && (
-                <div>
-                  <span>Frame charge:</span>
-                  <span>₹{tableInfo.frameCharge}</span>
-                </div>
-              )}
-              <div className="estimate">
-                <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
-                <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="booking-actions">
-            <button className="book-btn" onClick={handleBook} disabled={booking}>
-              {booking ? "Booking..." : "Book Table"}
-            </button>
           </div>
         </div>
 

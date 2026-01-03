@@ -105,6 +105,9 @@ const handleAuthError = () => {
   window.location.href = "/login";
 };
 
+// Auth endpoints that should NOT trigger redirect on 401
+const AUTH_ENDPOINTS = [ENDPOINTS.LOGIN, ENDPOINTS.REGISTER];
+
 // Generic request handler
 const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
@@ -129,15 +132,23 @@ const apiRequest = async (endpoint, options = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-    // Handle 401 Unauthorized - token is invalid or expired
+    // Handle 401 Unauthorized
     if (response.status === 401) {
+      // For login/register endpoints, don't redirect - let the error show on the page
+      if (AUTH_ENDPOINTS.includes(endpoint)) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || "Invalid credentials"
+        );
+      }
+      // For other endpoints, token is invalid or expired - redirect to login
       console.warn("Authentication failed: Token is invalid or expired");
       handleAuthError();
       throw new Error("Session expired. Please login again.");
     }
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.error || errorData.message || `HTTP error! status: ${response.status}`
       );

@@ -8,11 +8,6 @@ import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/activeSession.css";
 
-const categories = [
-  { key: "Food", label: "Food", icon: "🥗" },
-  { key: "packed", label: "Pack Food", icon: "🍟" },
-  { key: "Beverages", label: "Beverages", icon: "🥤" },
-];
 
 const ActiveSession = () => {
   const { game, tableId, sessionId } = useParams();
@@ -37,10 +32,10 @@ const ActiveSession = () => {
   const hasAutoReleased = useRef(false);
 
   // Food selection
-  const [activeCategory, setActiveCategory] = useState("Food");
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart] = useState(initialCart); // Initialize with items from booking
   const [loadingMenu, setLoadingMenu] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const cartRef = useRef(initialCart); // Ref to access cart in timer callbacks
 
   // Action states
@@ -249,8 +244,10 @@ const ActiveSession = () => {
     return "";
   };
 
-  // Filter menu by category
-  const filteredMenu = menuItems.filter((item) => item.category === activeCategory);
+  // Filter menu by search query
+  const filteredMenu = menuItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Add item to cart
   const addToCart = (item) => {
@@ -362,113 +359,152 @@ const ActiveSession = () => {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* Timer Section */}
-          <div className="timer-section">
-            {isTimerMode ? (
-              <>
-                {/* Countdown Timer Display */}
-                <p className="timer-label">Time Remaining</p>
-                <div className={`timer-display countdown ${getTimerColor()}`}>
-                  {formatCountdown(remainingSeconds)}
-                </div>
-                {remainingSeconds !== null && remainingSeconds <= 300 && remainingSeconds > 0 && (
-                  <p className="timer-warning-text">
-                    {remainingSeconds <= 60 ? "Session ending soon!" : "Less than 5 minutes remaining"}
-                  </p>
+          {/* Main Content - Two Column Layout for Laptop */}
+          <div className="session-content">
+            {/* Left Column - Timer & Pricing */}
+            <div className="session-left-column">
+              {/* Timer Section */}
+              <div className="timer-section">
+                {isTimerMode ? (
+                  <>
+                    {/* Countdown Timer Display */}
+                    <p className="timer-label">Time Remaining</p>
+                    <div className={`timer-display countdown ${getTimerColor()}`}>
+                      {formatCountdown(remainingSeconds)}
+                    </div>
+                    {remainingSeconds !== null && remainingSeconds <= 300 && remainingSeconds > 0 && (
+                      <p className="timer-warning-text">
+                        {remainingSeconds <= 60 ? "Session ending soon!" : "Less than 5 minutes remaining"}
+                      </p>
+                    )}
+                    <p className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</p>
+                  </>
+                ) : (
+                  <>
+                    {/* Elapsed Time Display (no booking end time) */}
+                    <p className="timer-label">Total Time Span</p>
+                    <div className="timer-display">{formatTime(elapsedSeconds)}</div>
+                  </>
                 )}
-                <p className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</p>
-              </>
-            ) : (
-              <>
-                {/* Elapsed Time Display (no booking end time) */}
-                <p className="timer-label">Total Time Span</p>
-                <div className="timer-display">{formatTime(elapsedSeconds)}</div>
-              </>
-            )}
 
-            <p className="timer-hint">
-              {isPaused ? "⏸ Session paused" : "● Session active"}
-            </p>
+                <p className="timer-hint">
+                  {isPaused ? "⏸ Session paused" : "● Session active"}
+                </p>
 
-            {/* Controls */}
-            <div className="timer-controls">
-              <button className={`control-btn pause ${isPaused ? "active" : ""}`} onClick={togglePause}>
-                <span className="icon">{isPaused ? "▶" : "⏸"}</span>
-                <span>{isPaused ? "Resume" : "Pause"}</span>
-              </button>
-              <button className="control-btn switch">
-                <span className="icon">🔄</span>
-                <span>Switch</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Food Categories */}
-          <div className="food-categories">
-            {categories.map((cat) => (
-              <div
-                key={cat.key}
-                className={`food-box ${activeCategory === cat.key ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat.key)}
-              >
-                <span className="food-icon">{cat.icon}</span>
-                <span>{cat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Menu Items */}
-          <div className="menu-items-list">
-            {loadingMenu ? (
-              <p className="loading-text">Loading menu...</p>
-            ) : filteredMenu.length === 0 ? (
-              <p className="empty-text">No items in this category</p>
-            ) : (
-              filteredMenu.map((item) => {
-                const inCart = cart.find((c) => c.id === item.id);
-                return (
-                  <div className="menu-item-row" key={item.id}>
-                    <div className="item-image">
-                      <div className="placeholder-img">🍽</div>
-                    </div>
-                    <div className="item-details">
-                      <span className="item-name">{item.name}</span>
-                      <span className={`item-qty ${inCart ? "has-qty" : ""}`}>
-                        {inCart ? `${inCart.qty} in cart` : "Add to cart"}
-                      </span>
-                    </div>
-                    <div className="item-actions">
-                      <button className="add-btn" onClick={() => addToCart(item)}>
-                        ADD
-                      </button>
-                      <span className="item-price">₹{item.price}</span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Cart Summary */}
-          {cart.length > 0 && (
-            <div className="order-summary">
-              <h6>Order Items</h6>
-              {cart.map((item) => (
-                <div className="order-item" key={item.id}>
-                  <span>{item.name}</span>
-                  <div className="qty-controls">
-                    <button onClick={() => updateCartQty(item.id, -1)}>-</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateCartQty(item.id, 1)}>+</button>
-                  </div>
-                  <span>₹{Number(item.price) * item.qty}</span>
+                {/* Controls */}
+                <div className="timer-controls">
+                  <button className={`control-btn pause ${isPaused ? "active" : ""}`} onClick={togglePause}>
+                    <span className="icon">{isPaused ? "▶" : "⏸"}</span>
+                    <span>{isPaused ? "Resume" : "Pause"}</span>
+                  </button>
+                  <button className="control-btn switch">
+                    <span className="icon">🔄</span>
+                    <span>Switch</span>
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
 
-          {/* Pricing Summary */}
-          <div className="pricing-summary">
+              {/* Pricing Summary - Desktop Only in Left Column */}
+              <div className="pricing-summary desktop-pricing">
+                <div className="price-row">
+                  <span>Table Time ({billingMinutes} mins{isTimerMode ? " - booked" : ""})</span>
+                  <span>₹{tableCost.toFixed(2)}</span>
+                </div>
+                {cartTotal > 0 && (
+                  <div className="price-row">
+                    <span>Food & Beverages</span>
+                    <span>₹{cartTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="price-row total">
+                  <strong>Total</strong>
+                  <strong>₹{grandTotal.toFixed(2)}</strong>
+                </div>
+              </div>
+
+              {/* Action Buttons - Desktop Only in Left Column */}
+              <div className="session-actions desktop-actions">
+                <button className="update-btn" onClick={handleUpdate} disabled={cart.length === 0}>
+                  Update
+                </button>
+                <button className="generate-bill-btn" onClick={handleGenerateBill} disabled={generating}>
+                  {generating ? "Generating..." : "Generate Bill"}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column - Food Selection */}
+            <div className="session-right-column">
+              {/* Search Bar */}
+              <div className="food-search-bar">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search food items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button className="clear-search" onClick={() => setSearchQuery("")}>
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Menu Items */}
+              <div className="menu-items-list">
+                {loadingMenu ? (
+                  <p className="loading-text">Loading menu...</p>
+                ) : filteredMenu.length === 0 ? (
+                  <p className="empty-text">{searchQuery ? `No items found for "${searchQuery}"` : "No food items available"}</p>
+                ) : (
+                  filteredMenu.map((item) => {
+                    const inCart = cart.find((c) => c.id === item.id);
+                    return (
+                      <div className="menu-item-row" key={item.id}>
+                        <div className="item-image">
+                          <div className="placeholder-img">🍽</div>
+                        </div>
+                        <div className="item-details">
+                          <span className="item-name">{item.name}</span>
+                          <span className={`item-qty ${inCart ? "has-qty" : ""}`}>
+                            {inCart ? `${inCart.qty} in cart` : "Add to cart"}
+                          </span>
+                        </div>
+                        <div className="item-actions">
+                          <button className="add-btn" onClick={() => addToCart(item)}>
+                            ADD
+                          </button>
+                          <span className="item-price">₹{item.price}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Cart Summary */}
+              {cart.length > 0 && (
+                <div className="order-summary">
+                  <h6>Order Items</h6>
+                  {cart.map((item) => (
+                    <div className="order-item" key={item.id}>
+                      <span>{item.name}</span>
+                      <div className="qty-controls">
+                        <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                        <span>{item.qty}</span>
+                        <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                      </div>
+                      <span>₹{Number(item.price) * item.qty}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Only - Pricing Summary */}
+          <div className="pricing-summary mobile-pricing">
             <div className="price-row">
               <span>Table Time ({billingMinutes} mins{isTimerMode ? " - booked" : ""})</span>
               <span>₹{tableCost.toFixed(2)}</span>
@@ -485,8 +521,8 @@ const ActiveSession = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="session-actions">
+          {/* Mobile Only - Action Buttons */}
+          <div className="session-actions mobile-actions">
             <button className="update-btn" onClick={handleUpdate} disabled={cart.length === 0}>
               Update
             </button>
