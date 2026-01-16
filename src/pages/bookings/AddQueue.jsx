@@ -2,7 +2,7 @@ import { useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { LayoutContext } from "../../context/LayoutContext";
-import "../../styles/addQueue.css";
+import "../../styles/addqueue.css";
 
 const dates = [
   "Today",
