@@ -1,0 +1,257 @@
+/* =========================
+   MEMBER DETAIL PAGE
+========================= */
+
+.member-detail-page {
+  padding: 16px;
+}
+
+.member-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.member-detail-header h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.back-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+/* Content Grid */
+.member-detail-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Detail Cards */
+.detail-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.detail-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+
+.detail-card .card-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.detail-card .card-body {
+  padding: 20px;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item.full-width {
+  grid-column: span 2;
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.info-item span {
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Wallet Card */
+.wallet-card .add-money-btn {
+  background: linear-gradient(135deg, #ff8c1a 0%, #f08626 100%);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wallet-card .add-money-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
+}
+
+.wallet-balance {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.wallet-balance label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.wallet-balance .balance-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1aa36f;
+}
+
+.wallet-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.wallet-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wallet-detail-item label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.wallet-detail-item span {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* No Wallet State */
+.no-wallet {
+  text-align: center;
+  padding: 32px 20px;
+}
+
+.no-wallet p {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.create-wallet-btn {
+  background: linear-gradient(135deg, #ff8c1a 0%, #f08626 100%);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.create-wallet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.4);
+}
+
+/* Loading and Error States */
+.loading-text {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Clickable Member Row */
+.members-table tbody tr.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.members-table tbody tr.clickable:hover {
+  background-color: #fff8f0;
+}
+
+.members-table tbody tr.clickable td.member-name {
+  color: #f08626;
+  font-weight: 600;
+}
+
+.members-table tbody tr.clickable td.member-name:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .member-detail-content {
+    grid-template-columns: 1fr;
+  }
+
+  .member-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-grid,
+  .wallet-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item.full-width {
+    grid-column: span 1;
+  }
+
+  .wallet-balance .balance-amount {
+    font-size: 28px;
+  }
+}

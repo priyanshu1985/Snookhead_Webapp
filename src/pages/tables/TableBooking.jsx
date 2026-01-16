@@ -1,0 +1,430 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+
+import Sidebar from "../../components/layout/Sidebar";
+import Navbar from "../../components/layout/Navbar";
+import TableBookedModal from "../../components/tables/TableBookedModel";
+import { menuAPI, activeTablesAPI, tablesAPI } from "../../services/api";
+import { LayoutContext } from "../../context/LayoutContext";
+
+import "../../styles/tableBooking.css";
+
+
+const TableBooking = () => {
+  const { game, tableId } = useParams();
+  const navigate = useNavigate();
+  const { isSidebarCollapsed } = useContext(LayoutContext);
+
+  // Time selection
+  const [timeMode, setTimeMode] = useState("timer"); // timer, set, frame
+  const [timerMinutes, setTimerMinutes] = useState(30);
+  const [setTimeValue, setSetTimeValue] = useState("");
+  const [frameCount, setFrameCount] = useState(1);
+
+  // Food selection
+  const [menuItems, setMenuItems] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [loadingMenu, setLoadingMenu] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Table info
+  const [tableInfo, setTableInfo] = useState(null);
+
+  // Booking state
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [booking, setBooking] = useState(false);
+  const [error, setError] = useState("");
+
+  // Fetch menu items
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        setLoadingMenu(true);
+        const data = await menuAPI.getAll();
+        const items = data?.data || (Array.isArray(data) ? data : []);
+        setMenuItems(items);
+      } catch (err) {
+        console.error("Failed to fetch menu:", err);
+      } finally {
+        setLoadingMenu(false);
+      }
+    };
+    fetchMenu();
+  }, []);
+
+  // Fetch table info
+  useEffect(() => {
+    const fetchTable = async () => {
+      try {
+        const data = await tablesAPI.getById(tableId);
+        setTableInfo(data);
+        
+        // If table is already reserved, redirect to active session
+        if (data && data.status === "reserved") {
+          // We need to find the session ID if possible, but redirecting to session root 
+          // (which fetches session by tableId) works too
+          // Use setTimeout to ensure state is set before navigating (optional, but good for UX)
+          console.log("Table is reserved, redirecting to session...");
+          navigate(`/session/${game}/${tableId}`, { replace: true });
+        }
+      } catch (err) {
+        console.error("Failed to fetch table info:", err);
+      }
+    };
+    if (tableId) fetchTable();
+  }, [tableId]);
+
+  // Filter menu by search query
+  const filteredMenu = menuItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Add item to cart
+  const addToCart = (item) => {
+    const exists = cart.find((c) => c.id === item.id);
+    if (exists) {
+      setCart(cart.map((c) => (c.id === item.id ? { ...c, qty: c.qty + 1 } : c)));
+    } else {
+      setCart([...cart, { ...item, qty: 1 }]);
+    }
+  };
+
+  // Update cart quantity
+  const updateCartQty = (id, delta) => {
+    setCart(
+      cart
+        .map((item) => (item.id === id ? { ...item, qty: item.qty + delta } : item))
+        .filter((item) => item.qty > 0)
+    );
+  };
+
+  // Calculate total
+  const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
+
+  // Get duration in minutes based on mode
+  const getDurationMinutes = () => {
+    switch (timeMode) {
+      case "timer":
+        return timerMinutes;
+      case "set":
+        // Parse time like "1:30" to minutes
+        if (setTimeValue) {
+          const [hours, mins] = setTimeValue.split(":").map(Number);
+          return (hours || 0) * 60 + (mins || 0);
+        }
+        return 0;
+      case "frame":
+        // Assume 15 minutes per frame
+        return frameCount * 15;
+      default:
+        return 0;
+    }
+  };
+
+  // Handle booking
+  const handleBook = async () => {
+    const duration = getDurationMinutes();
+    if (duration <= 0) {
+      setError("Please set a valid time");
+      return;
+    }
+
+    try {
+      setBooking(true);
+      setError("");
+
+      // Start active table session with duration
+      const response = await activeTablesAPI.start({
+        table_id: tableId,
+        game_id: tableInfo?.gameid || tableInfo?.game_id,
+        duration_minutes: duration,
+        cart: cart.map((item) => ({
+          menu_item_id: item.id,
+          quantity: item.qty,
+        })),
+      });
+
+      // Show Success Modal - let the modal handle navigation on close
+      setShowSuccess(true);
+    } catch (err) {
+      console.error("Booking failed:", err);
+      setError(err.message || "Failed to book table");
+      setBooking(false);
+    }
+  };
+
+  // Handle success modal close - Navigate with state
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    // Find the session info from local state if needed, but safe to fetch latest or passed from response
+    // Actually we need the 'newSession' from the scope of handleBook.
+    // Since we can't easily access it here without state, we should probably refactor.
+    // BETTER: Navigate immediately, or store session in state var.
+  };
+
+  // REFACTOR: Use a sessionRef or state to hold the new session for the modal
+  const [createdSession, setCreatedSession] = useState(null);
+
+  // Update handleBook to store session
+  const handleBookFixed = async () => {
+    const duration = getDurationMinutes();
+    if (duration <= 0) {
+      setError("Please set a valid time");
+      return;
+    }
+
+    try {
+      setBooking(true);
+      setError("");
+
+      const response = await activeTablesAPI.start({
+        table_id: tableId,
+        game_id: tableInfo?.gameid || tableInfo?.game_id,
+        duration_minutes: duration,
+        cart: cart.map((item) => ({
+          menu_item_id: item.id,
+          quantity: item.qty,
+        })),
+      });
+
+      const newSession = response?.session;
+      setCreatedSession(newSession);
+      setShowSuccess(true);
+      
+      // Auto-navigate after delay if user doesn't click
+      // BUT make sure we don't double navigate.
+      // Easiest: Don't use Timeout. Just show modal. User clicks "Go to Table" (or similar).
+      // Or just navigate immediately and show success THERE?
+      // Let's stick to Modal then Navigate.
+      
+    } catch (err) {
+      console.error("Booking failed:", err);
+      setError(err.message || "Failed to book table");
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-wrapper">
+      <Sidebar />
+
+      <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
+
+      <div className="dashboard-main">
+        <Navbar />
+
+        <div className="table-booking-page">
+          {/* Header */}
+          <div className="booking-header">
+            <button className="back-btn" onClick={() => navigate(-1)}>←</button>
+            <h5>{game || "Game"}</h5>
+            <span className="table-code">{tableInfo?.name || `Table ${tableId}`}</span>
+          </div>
+
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {/* Main Content - Two Column Layout for Laptop */}
+          <div className="booking-content">
+            {/* Left Column - Time Selection */}
+            <div className="booking-left-column">
+              <p className="section-title">Select Time</p>
+              <div className="radio-row">
+                <label className={timeMode === "timer" ? "active" : ""}>
+                  <input
+                    type="radio"
+                    name="time"
+                    value="timer"
+                    checked={timeMode === "timer"}
+                    onChange={(e) => setTimeMode(e.target.value)}
+                  />
+                  Timer
+                </label>
+
+                <label className={timeMode === "set" ? "active" : ""}>
+                  <input
+                    type="radio"
+                    name="time"
+                    value="set"
+                    checked={timeMode === "set"}
+                    onChange={(e) => setTimeMode(e.target.value)}
+                  />
+                  Set Time
+                </label>
+
+                <label className={timeMode === "frame" ? "active" : ""}>
+                  <input
+                    type="radio"
+                    name="time"
+                    value="frame"
+                    checked={timeMode === "frame"}
+                    onChange={(e) => setTimeMode(e.target.value)}
+                  />
+                  Select Frame
+                </label>
+              </div>
+
+              {/* Time Input based on mode */}
+              <div className="time-input-section">
+                {timeMode === "timer" && (
+                  <div className="timer-input">
+                    <label>Duration (minutes)</label>
+                    <div className="timer-controls">
+                      <button onClick={() => setTimerMinutes(Math.max(5, timerMinutes - 5))}>-</button>
+                      <input
+                        type="number"
+                        value={timerMinutes}
+                        onChange={(e) => setTimerMinutes(Math.max(1, Number(e.target.value)))}
+                        min="1"
+                      />
+                      <button onClick={() => setTimerMinutes(timerMinutes + 5)}>+</button>
+                    </div>
+                    <div className="quick-times">
+                      {[15, 30, 45, 60, 90, 120].map((mins) => (
+                        <button
+                          key={mins}
+                          className={timerMinutes === mins ? "active" : ""}
+                          onClick={() => setTimerMinutes(mins)}
+                        >
+                          {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {timeMode === "set" && (
+                  <div className="set-time-input">
+                    <label>Set End Time</label>
+                    <input
+                      type="time"
+                      value={setTimeValue}
+                      onChange={(e) => setSetTimeValue(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {timeMode === "frame" && (
+                  <div className="frame-input">
+                    <label>Number of Frames</label>
+                    <div className="frame-controls">
+                      <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
+                      <span>{frameCount}</span>
+                      <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
+                    </div>
+                    <small>~{frameCount * 15} minutes</small>
+                  </div>
+                )}
+              </div>
+
+              {/* Pricing Info & Cart Combined */}
+              <div className="pricing-info">
+                {tableInfo && (
+                  <>
+                    <div>
+                      <span>Price per minute:</span>
+                      <span>₹{tableInfo.pricePerMin || 0}</span>
+                    </div>
+                    {tableInfo.frameCharge > 0 && (
+                      <div>
+                        <span>Frame charge:</span>
+                        <span>₹{tableInfo.frameCharge}</span>
+                      </div>
+                    )}
+                    <div className="estimate">
+                      <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
+                      <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* Food Items in Same Card */}
+                {cart.length > 0 && (
+                  <div className="food-items-section">
+                    <p className="food-items-title">Food Items</p>
+                    {cart.map((item) => (
+                      <div className="food-item-row" key={item.id}>
+                        <span className="food-item-name">{item.name}</span>
+                        <div className="food-item-controls">
+                          <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                          <span>{item.qty}</span>
+                          <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                        </div>
+                        <span className="food-item-price">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="food-total">
+                      <span>Food Total:</span>
+                      <span>₹{cartTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Grand Total */}
+                {tableInfo && (
+                  <div className="grand-total">
+                    <strong>Grand Total:</strong>
+                    <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
+                  </div>
+                )}
+
+                {/* Book Button */}
+                <button className="book-btn" onClick={handleBook} disabled={booking}>
+                  {booking ? "Booking..." : "Book Table"}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column - Food Selection */}
+            <div className="booking-right-column">
+              <p className="section-title">Add Food</p>
+
+              {/* Search Bar */}
+              <div className="food-search-bar">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search food items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button className="clear-search" onClick={() => setSearchQuery("")}>
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Menu Items */}
+              <div className="menu-items-grid">
+                {loadingMenu ? (
+                  <p className="loading-text">Loading menu...</p>
+                ) : filteredMenu.length === 0 ? (
+                  <p className="empty-text">{searchQuery ? `No items found for "${searchQuery}"` : "No food items available"}</p>
+                ) : (
+                  filteredMenu.map((item) => (
+                    <div className="menu-item-card" key={item.id}>
+                      <div className="menu-item-info">
+                        <span className="item-name">{item.name}</span>
+                        <span className="item-price">₹{item.price}</span>
+                      </div>
+                      <button className="add-btn" onClick={() => addToCart(item)}>
+                        ADD
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* SUCCESS MODAL */}
+        {showSuccess && <TableBookedModal onClose={handleSuccessClose} />}
+      </div>
+    </div>
+  );
+};
+
+export default TableBooking;

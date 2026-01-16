@@ -1,0 +1,140 @@
+/* =========================
+   OWNERS PANEL
+========================= */
+
+.owners-auth {
+  max-width: 420px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.owners-auth .title {
+  margin: 20px 0;
+  font-size: 16px;
+}
+
+.owners-auth input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ff8c1a;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.forgot {
+  display: block;
+  color: #ff3b3b;
+  font-size: 13px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.forgot:hover {
+  color: #cc0000;
+  text-decoration: underline;
+}
+
+.owners-auth button {
+  background: linear-gradient(135deg, #ff8c1a 0%, #ff6b00 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 50px;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.owners-auth button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+}
+
+/* DASHBOARD */
+.owners-dashboard {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.owners-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.card .up {
+  color: green;
+  font-size: 13px;
+}
+
+/* OCCUPANCY */
+.occupancy {
+  margin: 30px 0;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.progress {
+  height: 8px;
+  background: #eee;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: #ff8c1a;
+  border-radius: 20px;
+}
+
+/* WALLET */
+.wallet-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.wallet-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.wallet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.wallet-card.active {
+  background: #eef6ff;
+}
+
+.wallet-card.warning {
+  background: #fff0f0;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .owners-auth {
+    margin: 40px 20px;
+  }
+}

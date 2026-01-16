@@ -1,0 +1,189 @@
+import { useState, useEffect, useRef } from "react";
+import { menuAPI } from "../../services/api";
+import CreateMenuPopUp from "./CreateMenuPopUp";
+import {
+  PreparedFoodIcon,
+  PackedFoodIcon,
+  CigaretteIcon,
+  BeveragesIcon,
+  PlateIcon,
+  FastFoodIcon,
+  SnacksIcon,
+  DessertsIcon,
+  LoadingIcon,
+} from "../common/Icons";
+
+const categories = [
+  { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
+  { key: "packed", label: "Packed Foods", Icon: PackedFoodIcon },
+  { key: "cigarette", label: "Cigarette", Icon: CigaretteIcon },
+  { key: "Beverages", label: "Beverages", Icon: BeveragesIcon },
+  { key: "Food", label: "Food", Icon: PlateIcon },
+  { key: "Fast Food", label: "Fast Food", Icon: FastFoodIcon },
+  { key: "Snacks", label: "Snacks", Icon: SnacksIcon },
+  { key: "Desserts", label: "Desserts", Icon: DessertsIcon },
+];
+
+const MenuItems = () => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("prepared");
+  const [showModal, setShowModal] = useState(false);
+  const categoriesRef = useRef(null);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const data = await menuAPI.getAll();
+      const itemsList = data?.data || (Array.isArray(data) ? data : []);
+      setItems(itemsList);
+      setError("");
+    } catch (err) {
+      setError(err.message || "Failed to fetch menu items");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  // Scroll active category into view
+  useEffect(() => {
+    if (categoriesRef.current) {
+      const activeElement = categoriesRef.current.querySelector(".active");
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      }
+    }
+  }, [activeCategory]);
+
+  const getItemsByCategory = (category) => {
+    return items.filter((item) => item.category === category);
+  };
+
+  const openAddModal = () => {
+    setError("");
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const handleCreateItem = async (payload) => {
+    try {
+      setError("");
+      await menuAPI.create(payload);
+      closeModal();
+      fetchItems();
+    } catch (err) {
+      setError(err.message || "Failed to add menu item");
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      await menuAPI.delete(id);
+      fetchItems();
+    } catch (err) {
+      setError(err.message || "Failed to delete menu item");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="menu-tab">
+        <div className="loading-state">
+          <span className="loading-icon">
+            <LoadingIcon size={40} />
+          </span>
+          <p>Loading menu items...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const categoryItems = getItemsByCategory(activeCategory);
+
+  return (
+    <div className="menu-tab">
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      {/* Category Tabs with horizontal scroll */}
+      <div className="menu-categories-wrapper">
+        <div className="menu-categories" ref={categoriesRef}>
+          {categories.map((cat) => {
+            const IconComponent = cat.Icon;
+            return (
+              <span
+                key={cat.key}
+                className={activeCategory === cat.key ? "active" : ""}
+                onClick={() => setActiveCategory(cat.key)}
+              >
+                <span className="category-icon">
+                  <IconComponent size={18} />
+                </span>
+                <span className="category-label">{cat.label}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Menu Items List */}
+      <div className="menu-list">
+        {categoryItems.length === 0 ? (
+          <div className="no-data">
+            <span className="no-data-icon">
+              <PlateIcon size={48} />
+            </span>
+            <p>No items in this category yet.</p>
+            <small>Add your first item using the button below</small>
+          </div>
+        ) : (
+          categoryItems.map((item, index) => (
+            <div className="menu-item" key={item.id || `item-${index}`}>
+              <div className="img"></div>
+              <div className="info">
+                <h6>{item.name}</h6>
+                <span>₹{item.price}</span>
+              </div>
+              <div className="item-actions">
+                <button
+                  className="btn-delete"
+                  onClick={() => handleDeleteItem(item.id)}
+                  title="Delete"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <button className="add-btn center" onClick={openAddModal}>
+        + Add New Item
+      </button>
+
+      {/* Create Menu Item Popup */}
+      {showModal && (
+        <CreateMenuPopUp
+          onClose={closeModal}
+          onSubmit={handleCreateItem}
+        />
+      )}
+    </div>
+  );
+};
+
+export default MenuItems;

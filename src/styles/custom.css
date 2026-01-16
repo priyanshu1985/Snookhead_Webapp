@@ -1,0 +1,256 @@
+/* LOGIN PAGE */
+
+.login-page {
+  background: linear-gradient(135deg, #ff8c1a, #ffa94d);
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px 24px;
+}
+
+.brand-title {
+  color: #ff8c1a;
+  letter-spacing: 1px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Tablet & Desktop spacing improvement */
+@media (min-width: 768px) {
+  .login-card {
+    padding: 36px 32px;
+  }
+}
+
+/* =========================
+   AUTH ERROR STYLING
+========================= */
+
+/* Main Error Box */
+.auth-error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-error-box .error-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #fee2e2;
+  border-radius: 50%;
+  color: #dc2626;
+}
+
+.auth-error-box .error-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-error-box .error-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 2px;
+}
+
+.auth-error-box .error-message {
+  font-size: 13px;
+  color: #b91c1c;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.auth-error-box .error-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #dc2626;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+}
+
+.auth-error-box .error-close:hover {
+  opacity: 1;
+  background: #fee2e2;
+}
+
+/* Error Type Variations */
+.auth-error-box.error-network {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.auth-error-box.error-network .error-icon {
+  background: #fde68a;
+  color: #d97706;
+}
+
+.auth-error-box.error-network .error-title {
+  color: #92400e;
+}
+
+.auth-error-box.error-network .error-message {
+  color: #b45309;
+}
+
+.auth-error-box.error-network .error-close {
+  color: #d97706;
+}
+
+.auth-error-box.error-network .error-close:hover {
+  background: #fde68a;
+}
+
+/* Field-Level Errors */
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #dc2626;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.field-error svg {
+  flex-shrink: 0;
+}
+
+/* Field Success Message */
+.field-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #16a34a;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.field-success svg {
+  flex-shrink: 0;
+}
+
+/* Form Control States */
+.form-control.is-invalid {
+  border-color: #dc2626;
+  background-image: none;
+}
+
+.form-control.is-invalid:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.form-control.is-valid {
+  border-color: #16a34a;
+  background-image: none;
+}
+
+.form-control.is-valid:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.password-strength .strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.password-strength .strength-bar {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: #e9ecef;
+  transition: background-color 0.3s ease;
+}
+
+.password-strength .strength-label {
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 480px) {
+  .auth-error-box {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .auth-error-box .error-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .auth-error-box .error-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .auth-error-box .error-title {
+    font-size: 13px;
+  }
+
+  .auth-error-box .error-message {
+    font-size: 12px;
+  }
+
+  .field-error,
+  .field-success {
+    font-size: 11px;
+  }
+
+  .password-strength .strength-label {
+    font-size: 10px;
+    min-width: 45px;
+  }
+}

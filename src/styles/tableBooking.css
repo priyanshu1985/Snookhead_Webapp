@@ -1,0 +1,726 @@
+/* =========================
+   TABLE BOOKING PAGE
+========================= */
+
+.table-booking-page {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 12px;
+  padding-bottom: 30px;
+}
+
+/* HEADER */
+.booking-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.booking-header .back-btn {
+  background: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.booking-header .back-btn:hover {
+  background: #fef3e7;
+  color: #f08626;
+  transform: translateX(-2px);
+}
+
+.booking-header h5 {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.table-code {
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* SECTION */
+.section-title {
+  margin: 24px 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  border-radius: 2px;
+}
+
+/* ERROR */
+.table-booking-page .alert-danger {
+  background: linear-gradient(135deg, #fff0f0 0%, #ffe6e6 100%);
+  color: #c00;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #ffcccc;
+  font-weight: 500;
+}
+
+/* RADIO ROW */
+.radio-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radio-row label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.radio-row label:hover {
+  border-color: #f08626;
+  background: #fef3e7;
+}
+
+.radio-row label.active {
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
+}
+
+.radio-row input[type="radio"] {
+  display: none;
+}
+
+/* TIME INPUT SECTION */
+.time-input-section {
+  background: linear-gradient(135deg, #fffbf7 0%, #fef3e7 100%);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 2px solid #ffe6cc;
+}
+
+.timer-input label,
+.set-time-input label,
+.frame-input label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* Timer Controls */
+.timer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.timer-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #e8e8e8;
+  background: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.timer-controls button:hover {
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
+}
+
+.timer-controls input {
+  width: 80px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  border: none;
+  border-bottom: 3px solid #f08626;
+  padding: 8px;
+  color: #333;
+}
+
+.timer-controls input:focus {
+  outline: none;
+}
+
+/* Quick Times */
+.quick-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.quick-times button {
+  padding: 10px 18px;
+  border: 2px solid #e8e8e8;
+  border-radius: 25px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.quick-times button:hover {
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
+}
+
+.quick-times button.active {
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  border-color: #f08626;
+  color: #fff;
+}
+
+/* Set Time Input */
+.set-time-input input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.set-time-input input:focus {
+  outline: none;
+  border-color: #f08626;
+}
+
+/* Frame Input */
+.frame-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.frame-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #e8e8e8;
+  background: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.frame-controls button:hover {
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
+}
+
+.frame-controls span {
+  font-size: 36px;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: center;
+  color: #333;
+}
+
+.frame-input small {
+  display: block;
+  text-align: center;
+  color: #f08626;
+  margin-top: 8px;
+  font-weight: 500;
+  background: rgba(255, 140, 26, 0.1);
+  padding: 6px 12px;
+  border-radius: 15px;
+}
+
+/* FOOD SEARCH BAR */
+.food-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.food-search-bar:focus-within {
+  border-color: #f08626;
+  box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.1);
+}
+
+.food-search-bar .search-icon {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.food-search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+  color: #333;
+}
+
+.food-search-bar input::placeholder {
+  color: #999;
+}
+
+.food-search-bar .clear-search {
+  background: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.food-search-bar .clear-search:hover {
+  background: #f08626;
+  color: #fff;
+}
+
+/* MENU ITEMS GRID */
+.menu-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.menu-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.menu-item-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f08626;
+}
+
+.menu-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item-info .item-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.menu-item-info .item-price {
+  color: #f08626;
+  font-weight: 700;
+}
+
+.menu-item-card .add-btn {
+  background: none;
+  border: 2px solid #f08626;
+  color: #f08626;
+  padding: 8px 22px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item-card .add-btn:hover {
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  border-color: #f08626;
+  color: #fff;
+}
+
+/* PRICING INFO - Orange theme matching Active Session */
+.pricing-info {
+  background: linear-gradient(135deg, #fffbf7 0%, #fef3e7 100%);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 2px solid #ffe6cc;
+}
+
+.pricing-info > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.pricing-info .estimate {
+  border-top: 2px solid #ffe6cc;
+  padding-top: 12px;
+  margin-top: 8px;
+  font-weight: 700;
+  color: #f08626;
+  font-size: 16px;
+}
+
+/* Food Items Section in Pricing Card */
+.food-items-section {
+  border-top: 2px solid #ffe6cc;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.food-items-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f08626;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.food-items-title::before {
+  content: "🍽";
+}
+
+.food-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #ffe6cc;
+}
+
+.food-item-row:last-of-type {
+  border-bottom: none;
+}
+
+.food-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+.food-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 12px;
+}
+
+.food-item-controls button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.food-item-controls button:hover {
+  border-color: #f08626;
+  background: #fef3e7;
+  color: #f08626;
+}
+
+.food-item-controls span {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.food-item-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f08626;
+  min-width: 60px;
+  text-align: right;
+}
+
+.food-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  margin-top: 8px;
+  border-top: 1px dashed #ffe6cc;
+  font-size: 14px;
+  color: #f08626;
+  font-weight: 600;
+}
+
+/* Grand Total - Clean style without background */
+.grand-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  margin-top: 12px;
+  border-top: 2px solid #ffe6cc;
+  font-size: 18px;
+  color: #F08626;
+  font-weight: 700;
+}
+
+/* Book Button in Pricing Card */
+.pricing-info .book-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 26, 0.3);
+}
+
+.pricing-info .book-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f07a0a 0%, #c96818 100%);
+  box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+}
+
+.pricing-info .book-btn:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* LOADING */
+.loading-text,
+.empty-text {
+  text-align: center;
+  color: #888;
+  padding: 30px 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* =========================
+   BOOKING CONTENT WRAPPER
+========================= */
+.booking-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.booking-left-column,
+.booking-right-column {
+  width: 100%;
+}
+
+/* =========================
+   LAPTOP / DESKTOP LAYOUT
+========================= */
+@media (min-width: 992px) {
+  .table-booking-page {
+    max-width: 1200px;
+    padding: 20px 30px;
+  }
+
+  /* Two-column layout */
+  .booking-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+
+  .booking-left-column {
+    position: sticky;
+    top: 80px;
+  }
+
+  /* Improved time section styling for larger screens */
+  .time-input-section {
+    padding: 28px;
+  }
+
+  .timer-controls input {
+    font-size: 36px;
+    width: 100px;
+  }
+
+  .quick-times button {
+    padding: 12px 22px;
+    font-size: 14px;
+  }
+
+  .frame-controls span {
+    font-size: 44px;
+  }
+
+  /* Menu grid layout for larger screens */
+  .menu-items-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .menu-items-grid::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .menu-items-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .menu-items-grid::-webkit-scrollbar-thumb {
+    background: #f08626;
+    border-radius: 3px;
+  }
+
+  .menu-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .menu-item-card .menu-item-info {
+    width: 100%;
+  }
+
+  .menu-item-card .add-btn {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+
+  /* Pricing info styling */
+  .pricing-info {
+    margin-top: 20px;
+  }
+
+  /* Food items section - auto adjust to content, no scrollbar */
+  .food-items-section {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* =========================
+   LARGE DESKTOP (1400px+)
+========================= */
+@media (min-width: 1400px) {
+  .table-booking-page {
+    max-width: 1400px;
+  }
+
+  .booking-content {
+    gap: 40px;
+  }
+
+  .menu-items-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 500px;
+  }
+}
+
+/* =========================
+   TABLET LAYOUT
+========================= */
+@media (min-width: 768px) and (max-width: 991px) {
+  .table-booking-page {
+    max-width: 700px;
+    padding: 16px 24px;
+  }
+
+  .radio-row {
+    gap: 16px;
+  }
+
+  .radio-row label {
+    padding: 16px;
+  }
+
+  .food-categories {
+    justify-content: center;
+  }
+
+  .menu-items-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+  .radio-row {
+    flex-direction: column;
+  }
+
+  .food-categories {
+    overflow-x: auto;
+  }
+
+  .food-box {
+    min-width: 100px;
+  }
+}
