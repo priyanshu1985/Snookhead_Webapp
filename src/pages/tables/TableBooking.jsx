@@ -58,6 +58,15 @@ const TableBooking = () => {
       try {
         const data = await tablesAPI.getById(tableId);
         setTableInfo(data);
+        
+        // If table is already reserved, redirect to active session
+        if (data && data.status === "reserved") {
+          // We need to find the session ID if possible, but redirecting to session root 
+          // (which fetches session by tableId) works too
+          // Use setTimeout to ensure state is set before navigating (optional, but good for UX)
+          console.log("Table is reserved, redirecting to session...");
+          navigate(`/session/${game}/${tableId}`, { replace: true });
+        }
       } catch (err) {
         console.error("Failed to fetch table info:", err);
       }
@@ -127,7 +136,7 @@ const TableBooking = () => {
       // Start active table session with duration
       const response = await activeTablesAPI.start({
         table_id: tableId,
-        game_id: tableInfo?.game_id,
+        game_id: tableInfo?.gameid || tableInfo?.game_id,
         duration_minutes: duration,
         cart: cart.map((item) => ({
           menu_item_id: item.id,
@@ -135,32 +144,65 @@ const TableBooking = () => {
         })),
       });
 
-      // Store session info for navigation
-      const newSession = response?.session;
+      // Show Success Modal - let the modal handle navigation on close
       setShowSuccess(true);
+    } catch (err) {
+      console.error("Booking failed:", err);
+      setError(err.message || "Failed to book table");
+      setBooking(false);
+    }
+  };
 
-      // Navigate to active session after short delay with session data and initial cart
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate(`/session/${game}/${tableId}/${newSession?.active_id || ""}`, {
-          state: {
-            session: newSession,
-            initialCart: cart, // Pass the cart items selected during booking
-          }
-        });
-      }, 1500);
+  // Handle success modal close - Navigate with state
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    // Find the session info from local state if needed, but safe to fetch latest or passed from response
+    // Actually we need the 'newSession' from the scope of handleBook.
+    // Since we can't easily access it here without state, we should probably refactor.
+    // BETTER: Navigate immediately, or store session in state var.
+  };
+
+  // REFACTOR: Use a sessionRef or state to hold the new session for the modal
+  const [createdSession, setCreatedSession] = useState(null);
+
+  // Update handleBook to store session
+  const handleBookFixed = async () => {
+    const duration = getDurationMinutes();
+    if (duration <= 0) {
+      setError("Please set a valid time");
+      return;
+    }
+
+    try {
+      setBooking(true);
+      setError("");
+
+      const response = await activeTablesAPI.start({
+        table_id: tableId,
+        game_id: tableInfo?.gameid || tableInfo?.game_id,
+        duration_minutes: duration,
+        cart: cart.map((item) => ({
+          menu_item_id: item.id,
+          quantity: item.qty,
+        })),
+      });
+
+      const newSession = response?.session;
+      setCreatedSession(newSession);
+      setShowSuccess(true);
+      
+      // Auto-navigate after delay if user doesn't click
+      // BUT make sure we don't double navigate.
+      // Easiest: Don't use Timeout. Just show modal. User clicks "Go to Table" (or similar).
+      // Or just navigate immediately and show success THERE?
+      // Let's stick to Modal then Navigate.
+      
     } catch (err) {
       console.error("Booking failed:", err);
       setError(err.message || "Failed to book table");
     } finally {
       setBooking(false);
     }
-  };
-
-  // Handle success modal close
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    navigate(`/session/${game}/${tableId}`);
   };
 
   return (

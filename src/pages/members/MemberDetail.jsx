@@ -175,6 +175,10 @@ const MemberDetail = () => {
                     <span>{member?.phone || "N/A"}</span>
                   </div>
                   <div className="info-item">
+                    <label>Member ID</label>
+                    <span>{member?.id || "N/A"}</span>
+                  </div>
+                  <div className="info-item">
                     <label>Email</label>
                     <span>{member?.email || "N/A"}</span>
                   </div>

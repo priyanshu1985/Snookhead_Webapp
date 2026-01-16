@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { menuAPI, activeTablesAPI, tablesAPI, billingAPI } from "../../services/api";
+import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 
 import "../../styles/activeSession.css";
@@ -72,27 +72,41 @@ const ActiveSession = () => {
   // Initialize session from passed state or fetch from API
   useEffect(() => {
     const initializeSession = (sessionData) => {
-      setSession(sessionData);
+      // Normalize session data keys to handle both snake_case (frontend state) and lowercase (DB response)
+      // The backend returns lowercase column names (starttime, bookingendtime, durationminutes)
+      const data = {
+        ...sessionData,
+        active_id: sessionData.activeid || sessionData.active_id,
+        table_id: sessionData.tableid || sessionData.table_id,
+        game_id: sessionData.gameid || sessionData.game_id,
+        start_time: sessionData.starttime || sessionData.start_time,
+        booking_end_time: sessionData.bookingendtime || sessionData.booking_end_time,
+        duration_minutes: sessionData.durationminutes || sessionData.duration_minutes,
+      };
 
-      const startTime = new Date(sessionData.start_time);
+      setSession(data);
+
+      const startTime = new Date(data.start_time);
       const now = new Date();
       const elapsed = Math.floor((now - startTime) / 1000);
       setElapsedSeconds(Math.max(0, elapsed));
 
       // Check if session has booking_end_time or duration_minutes (countdown mode)
-      const hasDuration = sessionData.booking_end_time || sessionData.duration_minutes;
+      const hasDuration = data.booking_end_time || data.duration_minutes;
 
       if (hasDuration) {
         setIsTimerMode(true);
 
         let remaining;
-        if (sessionData.booking_end_time) {
+        const now = new Date();
+
+        if (data.booking_end_time) {
           // Calculate from booking_end_time
-          const endTime = new Date(sessionData.booking_end_time);
+          const endTime = new Date(data.booking_end_time);
           remaining = Math.floor((endTime - now) / 1000);
-        } else if (sessionData.duration_minutes) {
+        } else if (data.duration_minutes) {
           // Calculate from duration_minutes
-          const totalDurationSeconds = sessionData.duration_minutes * 60;
+          const totalDurationSeconds = data.duration_minutes * 60;
           remaining = totalDurationSeconds - elapsed;
         } else {
           remaining = 0;
@@ -100,7 +114,7 @@ const ActiveSession = () => {
 
         if (remaining <= 0) {
           setRemainingSeconds(0);
-          handleAutoRelease(sessionData);
+          handleAutoRelease(data);
         } else {
           setRemainingSeconds(remaining);
         }
@@ -123,9 +137,15 @@ const ActiveSession = () => {
 
         // Find session by tableId (string comparison) or sessionId
         const currentSession = sessions.find((s) => {
-          const matchByTableId = String(s.table_id) === String(tableId);
-          const matchBySessionId = sessionId && s.active_id === Number(sessionId);
-          return matchByTableId || matchBySessionId;
+          const sTableId = s.tableid || s.table_id;
+          const sActiveId = s.activeid || s.active_id;
+          
+          // CRITICAL FIX: If sessionId is provided in URL, ONLY match that specific session.
+          // Otherwise, fall back to matching by tableId.
+          if (sessionId) {
+            return String(sActiveId) === String(sessionId);
+          }
+          return String(sTableId) === String(tableId);
         });
 
         if (currentSession) {
@@ -144,6 +164,50 @@ const ActiveSession = () => {
     fetchSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableId, sessionId, passedSession]);
+
+  // Fetch linked order to restore cart if needed
+  useEffect(() => {
+    const fetchLinkedOrder = async () => {
+      if (!session || !session.active_id) return;
+      
+      try {
+        // Fetch order linked to this session
+        // Using ORDERS API
+        const response = await ordersAPI.getBySession(session.active_id);
+        
+        // If we have items in the order, and our local cart is effectively empty (or initial), merge them?
+        // Actually, we should prioritise server items if it's a restore (page refresh).
+        // But if user just booked, local cart might be same as server items.
+        // Let's assume server is truth.
+        if (response && response.consolidated_items && response.consolidated_items.length > 0) {
+          const serverItems = response.consolidated_items.map(item => ({
+             id: item.id,
+             name: item.name,
+             price: item.price,
+             qty: item.quantity
+          }));
+          
+          // Only update if we are seemingly starting fresh/empty or if items differ substantially
+          // Optimization: If cart is empty, set it.
+          // If cart has items, we might be double adding?
+          // If this runs on mount/session-load, cart is likely just initialCart from nav state.
+          // If nav state is present, use that?
+          // If passedSession is missing (refresh), then nav state is undefined.
+          
+          // Strategy: Always prioritize server items as the source of truth.
+          // This ensures that items booked in the previous step (saved to DB) appear correctly,
+          // and also handles page refreshes.
+          setCart(serverItems);
+        }
+      } catch (err) {
+        console.error("Failed to fetch linked order:", err);
+      }
+    };
+    
+    if (session) {
+        fetchLinkedOrder();
+    }
+  }, [session, passedSession]);
 
   // Fetch table info
   useEffect(() => {

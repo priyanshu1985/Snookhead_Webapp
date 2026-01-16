@@ -25,6 +25,7 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
       try {
         setLoadingGames(true);
         const data = await gamesAPI.getAll();
+        console.log("DEBUG: Fetched games in PopUp:", data);
         setGames(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch games:", err);
@@ -45,12 +46,13 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
 
     if (value.trim()) {
       // Find matching game (case-insensitive)
-      const matchedGame = games.find(
-        (g) => g.game_name.toLowerCase() === value.toLowerCase()
-      );
+      const matchedGame = games.find((g) => {
+        const name = g.game_name || g.gamename;
+        return name && name.toLowerCase() === value.toLowerCase();
+      });
 
       if (matchedGame) {
-        setGameId(matchedGame.game_id);
+        setGameId(matchedGame.game_id || matchedGame.gameid);
         setGameError("");
       }
     }
@@ -58,12 +60,14 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
 
   // Handle game selection from datalist
   const handleGameSelect = (selectedName) => {
-    const matchedGame = games.find(
-      (g) => g.game_name.toLowerCase() === selectedName.toLowerCase()
-    );
+    if (!selectedName) return;
+    const matchedGame = games.find((g) => {
+        const name = g.game_name || g.gamename;
+        return name && name.toLowerCase() === selectedName.toLowerCase();
+    });
     if (matchedGame) {
-      setGameId(matchedGame.game_id);
-      setGameName(matchedGame.game_name);
+      setGameId(matchedGame.game_id || matchedGame.gameid);
+      setGameName(matchedGame.game_name || matchedGame.gamename);
       setGameError("");
     }
   };
@@ -134,8 +138,8 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
               autoComplete="off"
             />
             <datalist id="games-list">
-              {games.map((game) => (
-                <option key={game.game_id} value={game.game_name} />
+              {games.map((game, index) => (
+                <option key={game.game_id || game.gameid || index} value={game.game_name || game.gamename} />
               ))}
             </datalist>
             {gameId && (

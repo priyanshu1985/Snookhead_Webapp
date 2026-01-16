@@ -29,19 +29,19 @@ const TableGames = () => {
 
   /* ---------------- ADD / UPDATE ---------------- */
 
-  const handleCreateOrUpdate = async ({ name, image_key }) => {
+  const handleCreateOrUpdate = async ({ game_name, image_key }) => {
     try {
       setSubmitting(true);
       setError("");
 
       if (editingGame) {
-        await gamesAPI.update(editingGame.game_id, {
-          game_name: name,
+        await gamesAPI.update(editingGame.game_id || editingGame.gameid, {
+          game_name: game_name,
           image_key: image_key,
         });
       } else {
         await gamesAPI.create({
-          game_name: name,
+          game_name: game_name,
           image_key: image_key,
         });
       }
@@ -107,20 +107,25 @@ const TableGames = () => {
         <p className="no-data">No games created yet. Add your first game!</p>
       )}
 
-      {games.map((game, index) => (
-        <div className="game-box" key={game.game_id || `game-${index}`}>
-          {game.image_key && (
+      {games.map((game, index) => {
+         const gameId = game.game_id || game.gameid;
+         const gameName = game.game_name || game.gamename;
+         const imageKey = game.image_key || game.imagekey;
+         
+         return (
+        <div className="game-box" key={gameId || `game-${index}`}>
+          {imageKey && (
             <div className="game-image">
               <img
-                src={getGameImageUrl(game.image_key)}
-                alt={game.game_name}
+                src={getGameImageUrl(imageKey)}
+                alt={gameName}
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
               />
             </div>
           )}
-          <span className="game-name">{game.game_name}</span>
+          <span className="game-name">{gameName}</span>
 
           <div className="game-actions">
             <button className="btn-edit" onClick={() => openEditModal(game)}>
@@ -129,13 +134,13 @@ const TableGames = () => {
 
             <button
               className="btn-delete"
-              onClick={() => handleDeleteGame(game.game_id)}
+              onClick={() => handleDeleteGame(gameId)}
             >
               Delete
             </button>
           </div>
         </div>
-      ))}
+      )})}
 
       <button className="add-btn" onClick={openAddModal}>
         + Add New Game

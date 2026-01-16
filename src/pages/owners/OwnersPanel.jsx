@@ -2,21 +2,11 @@ import { useState, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { LayoutContext } from "../../context/LayoutContext";
+import OwnerSafetyPanel from "../../components/owner/OwnerSafetyPanel";
 import "../../styles/owners.css";
 
 const OwnersPanel = () => {
   const { isSidebarCollapsed } = useContext(LayoutContext);
-  const [passcode, setPasscode] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
-
-  const handleSubmit = () => {
-    // TEMP: frontend-only validation
-    if (passcode === "1234") {
-      setAuthenticated(true);
-    } else {
-      alert("Incorrect passcode");
-    }
-  };
 
   return (
     <div className="dashboard-wrapper">
@@ -27,33 +17,7 @@ const OwnersPanel = () => {
       <div className="dashboard-main">
         <Navbar />
 
-        {/* =========================
-            PASSCODE SCREEN
-        ========================= */}
-        {!authenticated && (
-          <div className="owners-auth">
-            <h5>← Owners panel</h5>
-
-            <p className="title">Please enter passcode</p>
-
-            <input
-              type="password"
-              maxLength="4"
-              placeholder="Enter 4 digit passcode"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-            />
-
-            <span className="forgot">Forgot your password?</span>
-
-            <button onClick={handleSubmit}>Fetch Data</button>
-          </div>
-        )}
-
-        {/* =========================
-            OWNERS DASHBOARD
-        ========================= */}
-        {authenticated && (
+        <OwnerSafetyPanel>
           <div className="owners-dashboard">
             <h5>← Owners panel</h5>
 
@@ -105,7 +69,7 @@ const OwnersPanel = () => {
               </div>
             </div>
           </div>
-        )}
+        </OwnerSafetyPanel>
       </div>
     </div>
   );

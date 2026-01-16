@@ -10,6 +10,9 @@ const DigitalGames = () => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  // Helper to safely get game ID
+  const getGameId = (game) => game?.game_id || game?.gameid;
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -41,7 +44,11 @@ const DigitalGames = () => {
   }, []);
 
   const getTablesForGame = (gameId) => {
-    return tables.filter((table) => table.game_id === gameId);
+    // Some tables might use game_id, some gameid. Normalized check.
+    return tables.filter((table) => {
+        const tGameId = table.game_id || table.gameid;
+        return String(tGameId) === String(gameId);
+    });
   };
 
   const openAddModal = () => {
@@ -83,8 +90,9 @@ const DigitalGames = () => {
   if (loading) {
     return <div className="setup-grid"><p>Loading...</p></div>;
   }
-
-  const gameTables = selectedGame ? getTablesForGame(selectedGame.game_id) : [];
+  
+  const selectedGameId = getGameId(selectedGame);
+  const gameTables = selectedGame ? getTablesForGame(selectedGameId) : [];
 
   return (
     <div className="digital-games-container">
@@ -97,11 +105,11 @@ const DigitalGames = () => {
         ) : (
           games.map((game, index) => (
             <button
-              key={game.game_id || `game-${index}`}
-              className={`game-tab ${selectedGame?.game_id === game.game_id ? "active" : ""}`}
+              key={game.game_id || game.gameid || `game-${index}`}
+              className={`game-tab ${selectedGame?.game_id === (game.game_id || game.gameid) ? "active" : ""}`}
               onClick={() => setSelectedGame(game)}
             >
-              {game.game_name}
+              {game.game_name || game.gamename}
             </button>
           ))
         )}
@@ -110,7 +118,7 @@ const DigitalGames = () => {
       {/* Tables Grid */}
       {selectedGame && (
         <div className="tables-section">
-          <h6>Tables for {selectedGame.game_name}</h6>
+          <h6>Tables for {selectedGame.game_name || selectedGame.gamename}</h6>
 
           <div className="setup-grid">
             {gameTables.length === 0 ? (
@@ -122,8 +130,8 @@ const DigitalGames = () => {
                   {selectedGame?.image_key && (
                     <div className="game-image">
                       <img
-                        src={getGameImageUrl(selectedGame.image_key)}
-                        alt={selectedGame.game_name}
+                      src={getGameImageUrl(selectedGame.image_key || selectedGame.imagekey)}
+                        alt={selectedGame.game_name || selectedGame.gamename}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}

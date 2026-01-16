@@ -64,6 +64,12 @@ const ENDPOINTS = {
   // Wallets
   WALLETS: "/wallets",
   WALLET_BY_ID: (id) => `/wallets/${id}`,
+  
+  // Inventory
+  INVENTORY: "/inventory",
+  INVENTORY_BY_ID: (id) => `/inventory/${id}`,
+  INVENTORY_QUANTITY: (id) => `/inventory/${id}/quantity`,
+  INVENTORY_LOW_STOCK: "/inventory/alerts/low-stock",
 
   // Health
   HEALTH: "/health",
@@ -83,6 +89,12 @@ const ENDPOINTS = {
   ADMIN_STATION_PAUSE: (id) => `/admin/stations/${id}/pause-subscription`,
   ADMIN_STATION_UPGRADE: (id) => `/admin/stations/${id}/upgrade-subscription`,
   ADMIN_STATION_REMOVE: (id) => `/admin/stations/${id}/remove`,
+
+  // Owner Panel Security
+  OWNER_CHECK_SETUP: "/owner/panel/check-setup-status",
+  OWNER_SETUP_PASSWORD: "/owner/panel/setup-password",
+  OWNER_VERIFY_PASSWORD: "/owner/panel/verify-password",
+  OWNER_CHANGE_PASSWORD: "/owner/panel/change-password",
 };
 
 // Image base URL for constructing full image URLs
@@ -359,6 +371,8 @@ export const ordersAPI = {
     return apiRequest(url);
   },
 
+  getBySession: (sessionId) => apiRequest(`${ENDPOINTS.ORDERS}/by-session/${sessionId}`),
+
   getById: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id)),
 
   create: (orderData) =>
@@ -482,6 +496,42 @@ export const walletsAPI = {
     }),
 };
 
+// Inventory API
+export const inventoryAPI = {
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.INVENTORY}?${queryString}` : ENDPOINTS.INVENTORY;
+    return apiRequest(url);
+  },
+
+  getById: (id) => apiRequest(ENDPOINTS.INVENTORY_BY_ID(id)),
+
+  create: (itemData) =>
+    apiRequest(ENDPOINTS.INVENTORY, {
+      method: "POST",
+      body: JSON.stringify(itemData),
+    }),
+
+  update: (id, itemData) =>
+    apiRequest(ENDPOINTS.INVENTORY_BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(itemData),
+    }),
+
+  updateQuantity: (id, changeData) =>
+    apiRequest(ENDPOINTS.INVENTORY_QUANTITY(id), {
+      method: "PATCH",
+      body: JSON.stringify(changeData),
+    }),
+
+  delete: (id, permanent = false) => 
+    apiRequest(`${ENDPOINTS.INVENTORY_BY_ID(id)}?permanent=${permanent}`, { 
+      method: "DELETE" 
+    }),
+
+  getLowStock: () => apiRequest(ENDPOINTS.INVENTORY_LOW_STOCK),
+};
+
 // Health API
 export const healthAPI = {
   check: () => apiRequest(ENDPOINTS.HEALTH),
@@ -523,6 +573,29 @@ export const bugsAPI = {
   delete: (id) => apiRequest(ENDPOINTS.BUG_BY_ID(id), { method: "DELETE" }),
 
   getStats: () => apiRequest(ENDPOINTS.BUGS_STATS),
+};
+
+// Owner Security API
+export const ownerAPI = {
+  checkSetupStatus: () => apiRequest(ENDPOINTS.OWNER_CHECK_SETUP, { method: "POST" }),
+
+  setupPassword: (password, confirmPassword) =>
+    apiRequest(ENDPOINTS.OWNER_SETUP_PASSWORD, {
+      method: "POST",
+      body: JSON.stringify({ password, confirmPassword }),
+    }),
+
+  verifyPassword: (password) =>
+    apiRequest(ENDPOINTS.OWNER_VERIFY_PASSWORD, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+
+  changePassword: (data) =>
+    apiRequest(ENDPOINTS.OWNER_CHANGE_PASSWORD, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Admin Stations API (for admin panel to manage stations/cafes)
@@ -581,7 +654,9 @@ const api = {
   wallets: walletsAPI,
   health: healthAPI,
   stockImages: stockImagesAPI,
+  inventory: inventoryAPI,
   bugs: bugsAPI,
+  owner: ownerAPI,
   adminStations: adminStationsAPI,
 };
 

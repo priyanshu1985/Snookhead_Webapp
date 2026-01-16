@@ -1,26 +1,24 @@
 const InventoryTabs = ({ activeTab, setActiveTab }) => {
+  const tabs = [
+    { id: "Cafe Asset", label: "CAFE ASSET" },
+    { id: "Packed Food", label: "PACKED FOOD" },
+    { id: "Prepared Food", label: "PREPARED FOOD" },
+    { id: "Sticks", label: "STICKS" },
+    { id: "Tables", label: "TABLES" },
+    { id: "Other", label: "OTHER" },
+  ];
+
   return (
-    <div className="inventory-tabs">
-      <button
-        className={activeTab === "cafe" ? "active" : ""}
-        onClick={() => setActiveTab("cafe")}
-      >
-        CAFE ASSET
-      </button>
-
-      <button
-        className={activeTab === "packed" ? "active" : ""}
-        onClick={() => setActiveTab("packed")}
-      >
-        PACKED FOOD
-      </button>
-
-      <button
-        className={activeTab === "prepared" ? "active" : ""}
-        onClick={() => setActiveTab("prepared")}
-      >
-        PREPARED FOOD
-      </button>
+    <div className="inventory-tabs" style={{overflowX: 'auto', whiteSpace: 'nowrap'}}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          className={activeTab === tab.id ? "active" : ""}
+          onClick={() => setActiveTab(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 };

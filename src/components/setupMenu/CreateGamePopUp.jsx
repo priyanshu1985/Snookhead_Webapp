@@ -35,7 +35,7 @@ const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
     }
 
     const payload = {
-      name: gameName.trim(),
+      game_name: gameName.trim(),
       image_key: selectedImageKey,
     };
 
