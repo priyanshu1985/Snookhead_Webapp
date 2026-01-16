@@ -8,6 +8,12 @@
   padding: 16px;
 }
 
+/* Fix for spacing issue - Remove excessive top margin from dashboard-main */
+.dashboard-main.setup-dashboard-main {
+  margin-top: 0 !important;
+  padding-top: 80px !important;
+}
+
 /* =========================
    HEADER
 ========================= */

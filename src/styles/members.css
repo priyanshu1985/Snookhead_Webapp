@@ -33,11 +33,11 @@
 }
 
 .members-tab:hover {
-  color: #1a73e8;
+  color: #ff8800;
 }
 
 .members-tab.active {
-  color: #1a73e8;
+  color: #ff8800;
   font-weight: 600;
 }
 
@@ -48,7 +48,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #1a73e8;
+  background: #ff8800;
   border-radius: 2px 2px 0 0;
 }
 

@@ -110,10 +110,11 @@ const InventoryTracking = () => {
 
           {/* Stats - Global or Tab specific? API returns summary for fetched fetch. 
              If we want global stats we might need a separate call, but current summary is fine.*/}
-          {!loading && <InventoryStats summary={summary} lowStockAlerts={{
+          {/* Stats removed as per user request */}
+          {/* {!loading && <InventoryStats summary={summary} lowStockAlerts={{
               out_of_stock: items.filter(i => i.currentquantity === 0).length,
               total_low_stock: items.filter(i => i.currentquantity <= i.minimumthreshold).length
-          }} />}
+          }} />} */}
 
           {/* Filters */}
           <InventoryFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />

@@ -322,7 +322,11 @@ export const queueAPI = {
 
 // Menu API
 export const menuAPI = {
-  getAll: () => apiRequest(ENDPOINTS.MENU),
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.MENU}?${queryString}` : ENDPOINTS.MENU;
+    return apiRequest(url);
+  },
 
   getById: (id) => apiRequest(ENDPOINTS.MENU_BY_ID(id)),
 

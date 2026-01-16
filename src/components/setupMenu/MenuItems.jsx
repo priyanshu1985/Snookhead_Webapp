@@ -11,7 +11,10 @@ import {
   SnacksIcon,
   DessertsIcon,
   LoadingIcon,
+  EditIcon,
+  DeleteIcon,
 } from "../common/Icons";
+import "../../styles/setupMenuCardList.css";
 
 const categories = [
   { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
@@ -30,12 +33,14 @@ const MenuItems = () => {
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("prepared");
   const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null); // New state for editing
   const categoriesRef = useRef(null);
 
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const data = await menuAPI.getAll();
+      // Fetch ALL items, including unavailable ones, for the setup menu
+      const data = await menuAPI.getAll({ includeUnavailable: true });
       const itemsList = data?.data || (Array.isArray(data) ? data : []);
       setItems(itemsList);
       setError("");
@@ -70,21 +75,33 @@ const MenuItems = () => {
 
   const openAddModal = () => {
     setError("");
+    setEditingItem(null); // Reset editing item
+    setShowModal(true);
+  };
+
+  const openEditModal = (item) => {
+    setError("");
+    setEditingItem(item); // Set item to edit
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
+    setEditingItem(null);
   };
 
-  const handleCreateItem = async (payload) => {
+  const handleCreateOrUpdateItem = async (payload) => {
     try {
       setError("");
-      await menuAPI.create(payload);
+      if (editingItem) {
+        await menuAPI.update(editingItem.id, payload);
+      } else {
+        await menuAPI.create(payload);
+      }
       closeModal();
       fetchItems();
     } catch (err) {
-      setError(err.message || "Failed to add menu item");
+      setError(err.message || `Failed to ${editingItem ? "update" : "create"} menu item`);
     }
   };
 
@@ -96,6 +113,27 @@ const MenuItems = () => {
       fetchItems();
     } catch (err) {
       setError(err.message || "Failed to delete menu item");
+    }
+  };
+
+  const handleToggleAvailability = async (id, currentStatus) => {
+    try {
+      // Optimistic update
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === id ? { ...item, is_available: !currentStatus } : item
+        )
+      );
+
+      await menuAPI.update(id, { is_available: !currentStatus });
+    } catch (err) {
+      // Revert on failure
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === id ? { ...item, is_available: currentStatus } : item
+        )
+      );
+      setError(err.message || "Failed to update availability");
     }
   };
 
@@ -139,8 +177,18 @@ const MenuItems = () => {
         </div>
       </div>
 
-      {/* Menu Items List */}
-      <div className="menu-list">
+      {/* Menu Items List - New Card Design */}
+      <div className="setup-card-list">
+        {/* Header Row */}
+        {categoryItems.length > 0 && (
+          <div className="setup-list-header">
+            <span>#</span>
+            <span style={{ flex: 2 }}>Item Details</span>
+            <span>Availability</span>
+            <span style={{ justifyContent: "flex-end" }}>Actions</span>
+          </div>
+        )}
+
         {categoryItems.length === 0 ? (
           <div className="no-data">
             <span className="no-data-icon">
@@ -150,24 +198,61 @@ const MenuItems = () => {
             <small>Add your first item using the button below</small>
           </div>
         ) : (
-          categoryItems.map((item, index) => (
-            <div className="menu-item" key={item.id || `item-${index}`}>
-              <div className="img"></div>
-              <div className="info">
-                <h6>{item.name}</h6>
-                <span>₹{item.price}</span>
+          categoryItems.map((item, index) => {
+            const isAvailable = item.is_available ?? true;
+            
+            return (
+              <div className="setup-card-item" key={item.id || `item-${index}`}>
+                <div className="setup-card-index">{index + 1}</div>
+                
+                <div className="setup-card-details">
+                  <div className="card-title-row">
+                    <span className="card-icon-small">
+                       <PlateIcon size={14} />
+                    </span>
+                    <h6>{item.name}</h6>
+                  </div>
+                  <div className="card-subtitle-row">
+                    <span>₹{item.price}</span>
+                    <span className="separator">•</span>
+                    <span>{item.unit || 'piece'}</span>
+                  </div>
+                </div>
+
+                {/* Availability Toggle Section */}
+                <div className="setup-card-status">
+                   <span className={`status-badge ${isAvailable ? 'status-available' : 'status-maintenance'}`}>
+                      {isAvailable ? 'Available' : 'Unavailable'}
+                   </span>
+                   <label className="toggle-switch">
+                      <input 
+                        type="checkbox" 
+                        checked={isAvailable} 
+                        onChange={() => handleToggleAvailability(item.id, isAvailable)}
+                      />
+                      <span className="slider round"></span>
+                   </label>
+                </div>
+
+                <div className="setup-card-actions">
+                  <button 
+                    className="action-btn edit"
+                    onClick={() => openEditModal(item)}
+                    title="Edit"
+                  >
+                    <EditIcon size={16} />
+                  </button>
+                  <button 
+                    className="action-btn delete" 
+                    onClick={() => handleDeleteItem(item.id)}
+                    title="Delete"
+                  >
+                    <DeleteIcon size={16} />
+                  </button>
+                </div>
               </div>
-              <div className="item-actions">
-                <button
-                  className="btn-delete"
-                  onClick={() => handleDeleteItem(item.id)}
-                  title="Delete"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -179,7 +264,8 @@ const MenuItems = () => {
       {showModal && (
         <CreateMenuPopUp
           onClose={closeModal}
-          onSubmit={handleCreateItem}
+          onSubmit={handleCreateOrUpdateItem}
+          initialData={editingItem}
         />
       )}
     </div>

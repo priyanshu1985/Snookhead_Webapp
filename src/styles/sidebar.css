@@ -18,6 +18,7 @@
   transition: transform 0.3s ease;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Collapsed state */
@@ -32,20 +33,32 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
-.brand {
-  font-size: 22px;
-  font-weight: 800;
-  color: #f08626;
+.brand-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
-.brand::before {
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Optional: if you want it circular */
+  object-fit: cover;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a2e; /* Dark Blue */
+  margin: 0;
+}
+
+/* Removed old emoji logo */
+/* .brand::before {
   content: "🎱";
   font-size: 24px;
-}
+} */
 
 /* USER CARD - Profile Card with Orange Accent */
 .user-card {

@@ -12,12 +12,23 @@ const CATEGORIES = [
   { value: "cigarette", label: "Cigarette" },
 ];
 
-const CreateMenuPopUp = ({ onClose, onSubmit }) => {
+const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
     price: "",
   });
+
+  // Populate form if editing
+  useState(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        category: initialData.category || "",
+        price: initialData.price || "",
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +67,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit }) => {
       <div className="create-game-modal">
         {/* Header */}
         <div className="create-game-header">
-          <h5>Create New Menu Item</h5>
+          <h5>{initialData ? "Edit Menu Item" : "Create New Menu Item"}</h5>
           <button className="close-btn" onClick={onClose}>
             ×
           </button>
@@ -116,7 +127,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit }) => {
               Back
             </button>
             <button type="submit" className="submit-btn">
-              Create Item
+              {initialData ? "Update Item" : "Create Item"}
             </button>
           </div>
         </form>

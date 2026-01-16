@@ -74,7 +74,7 @@
 }
 
 .submit-btn {
-  background: #2e7dff;
+  background: #ff8800;
   color: #fff;
   border: none;
   padding: 8px 14px;
@@ -83,7 +83,7 @@
 }
 
 .submit-btn:hover {
-  background: #1c5fe0;
+  background: #e67a00;
 }
 
 /* Image Grid Styles */

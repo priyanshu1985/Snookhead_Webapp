@@ -1,0 +1,192 @@
+/* Card List Layout for Manage Games & Tables */
+.setup-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.setup-card-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 10px 16px; /* Reduced from 16px 20px */
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #ffe0b2;
+  border-left: 4px solid #ff8800; /* Thinner accent */
+  transition: all 0.2s ease;
+  min-height: 60px; /* Enforce smaller height */
+}
+
+.setup-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.setup-card-index {
+  width: 40px;
+  height: 40px;
+  background: #ff8800;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.setup-card-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.setup-card-subtitle {
+  font-size: 13px;
+  color: #888;
+}
+
+.setup-card-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.setup-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.setup-action-btn.edit {
+  color: #ff8800;
+  border-color: #ffe0b2;
+}
+
+.setup-action-btn.edit:hover {
+  background: #fff3e0;
+}
+
+.setup-action-btn.delete {
+  color: #ff4444;
+  border-color: #ffcdd2;
+}
+
+.setup-action-btn.delete:hover {
+  background: #ffebee;
+}
+
+.setup-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.setup-count-badge {
+  background: #ff8800;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Toggle Switch Styling */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px; /* Reduced width */
+  height: 24px; /* Reduced height */
+  margin-left: 12px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px; /* Adjusted thumb size */
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #ff8800;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #ff8800;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.setup-card-status {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.status-available {
+  color: #2e7d32;
+  background: #e8f5e9;
+}
+
+.status-maintenance {
+  color: #c62828;
+  background: #ffebee;
+}

@@ -28,7 +28,7 @@ const SetupMenu = () => {
 
       <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
 
-      <div className="dashboard-main">
+      <div className="dashboard-main setup-dashboard-main">
         <Navbar />
 
         <div className="setup-menu-page">

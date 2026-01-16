@@ -33,13 +33,20 @@ const Sidebar = () => {
           ×
         </button>
 
-        {/* Desktop Collapse Toggle */}
-        <button className="sidebar-toggle" onClick={toggleSidebarCollapse}>
+        {/* Toggle Button Removed as per request */}
+        {/* <button className="sidebar-toggle" onClick={toggleSidebarCollapse}>
           <span className="toggle-arrow">‹</span>
-        </button>
+        </button> */}
 
         <div className="sidebar-top">
-          <h5 className="brand">SNOKEHEAD</h5>
+          <div className="brand-container">
+            <img 
+              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/static/app-logo/logo.jpg`} 
+              alt="Snokehead Logo" 
+              className="brand-logo"
+            />
+            <h5 className="brand">SNOKEHEAD</h5>
+          </div>
           <div className="user-card">
             <div className="user-avatar">
               <img

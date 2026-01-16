@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { gamesAPI } from "../../services/api";
 import "../../styles/creategame.css";
 
-const CreateTablePopUp = ({ onClose, onSubmit }) => {
+const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
   const [formData, setFormData] = useState({
     name: "",
     dimension: "",
@@ -25,8 +25,19 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
       try {
         setLoadingGames(true);
         const data = await gamesAPI.getAll();
-        console.log("DEBUG: Fetched games in PopUp:", data);
-        setGames(Array.isArray(data) ? data : []);
+        const gamesList = Array.isArray(data) ? data : [];
+        setGames(gamesList);
+
+        // If editing, try to match game
+        if (editingTable && gamesList.length > 0) {
+          const tableGameId = editingTable.game_id || editingTable.gameid;
+          const matched = gamesList.find(g => (g.game_id || g.gameid) == tableGameId);
+          if (matched) {
+             setGameId(matched.game_id || matched.gameid);
+             setGameName(matched.game_name || matched.gamename);
+          }
+        }
+
       } catch (err) {
         console.error("Failed to fetch games:", err);
         setGameError("Failed to load games");
@@ -35,7 +46,27 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
       }
     };
     fetchGames();
-  }, []);
+  }, []); // Only run once on mount
+
+  // Populate form if editingTable provided (run when editingTable or games loads - handled above for games, but needed here for form fields)
+  useEffect(() => {
+    if (editingTable) {
+      setFormData({
+        name: editingTable.name || "",
+        dimension: editingTable.dimension || "",
+        type: editingTable.type || "",
+        pricePerMin: editingTable.pricePerMin || "",
+        frameCharge: editingTable.frameCharge || "",
+        status: editingTable.status || "available",
+      });
+      // Game ID logic is handled in fetchGames to ensure games list is ready, 
+      // but if games are already loaded (e.g. if we move fetching up), we might need it here.
+      // Since we fetch inside this component, the dependency on games in the other useEffect handles it? 
+      // No, fetchGames is async. 
+      // Let's rely on the fetchGames logic for game mapping, or add a separate effect.
+    }
+  }, [editingTable]);
+
 
   // Find game ID when game name changes
   const handleGameNameChange = (e) => {
@@ -105,7 +136,7 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
       game_id: gameId,
     };
 
-    console.log("Creating table with payload:", payload);
+    console.log("Submitting table payload:", payload);
     onSubmit?.(payload);
   };
 
@@ -114,7 +145,7 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
       <div className="create-game-modal">
         {/* Header */}
         <div className="create-game-header">
-          <h5>Create New Table</h5>
+          <h5>{editingTable ? "Edit Table" : "Create New Table"}</h5>
           <button className="close-btn" onClick={onClose}>
             ×
           </button>
@@ -236,7 +267,7 @@ const CreateTablePopUp = ({ onClose, onSubmit }) => {
               Back
             </button>
             <button type="submit" className="submit-btn" disabled={!gameId}>
-              Create Table
+              {editingTable ? "Update Table" : "Create Table"}
             </button>
           </div>
         </form>
