@@ -1,6 +1,6 @@
 // API configuration and utilities for the Snooker Management System
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://snookhead.onrender.com/api";
 
 // API endpoints
 const ENDPOINTS = {
@@ -98,7 +98,7 @@ const ENDPOINTS = {
 };
 
 // Image base URL for constructing full image URLs
-export const IMAGE_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || "http://localhost:4000";
+export const IMAGE_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || "https://snookhead.onrender.com";
 
 // Request interceptor to add auth token
 const getAuthToken = () => {

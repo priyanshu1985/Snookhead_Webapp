@@ -83,7 +83,7 @@ const searchablePages = [
 ];
 
 const Navbar = ({ onMemberAdded }) => {
-  const { toggleSidebarCollapse, isSidebarCollapsed } =
+  const { toggleSidebarCollapse, isSidebarCollapsed, toggleSidebar } =
     useContext(LayoutContext);
   const navigate = useNavigate();
 
@@ -164,7 +164,7 @@ const Navbar = ({ onMemberAdded }) => {
         {/* Mobile hamburger (hidden on desktop) */}
         <button
           className="hamburger-btn"
-          onClick={toggleSidebarCollapse}
+          onClick={toggleSidebar}
           aria-label="Open menu"
         >
           <HamburgerIcon size={20} />
