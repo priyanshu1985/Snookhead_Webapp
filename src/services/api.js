@@ -273,6 +273,11 @@ export const reservationsAPI = {
 
   delete: (id) => apiRequest(ENDPOINTS.RESERVATION_BY_ID(id), { method: "DELETE" }),
 
+  cancel: (id) =>
+    apiRequest(`${ENDPOINTS.RESERVATIONS}/${id}/cancel`, {
+      method: "POST",
+    }),
+
   autoassign: (data) =>
     apiRequest(ENDPOINTS.AUTOASSIGN, {
       method: "POST",

@@ -4,8 +4,9 @@
 
 .dashboard-wrapper {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: #f5f5f5;
+  overflow: hidden;
 }
 
 /* Spacer for fixed sidebar */
@@ -26,10 +27,18 @@
   padding: 20px;
   padding-top: 90px; /* Space for fixed navbar */
   overflow-y: auto;
+  overflow-x: hidden;
   transition: margin-left 0.3s ease;
   margin-top: 60px;
   position: relative;
   z-index: 1; /* Keep below navbar (z-index: 50) */
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dashboard-main::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Content area with spacing from navbar */
