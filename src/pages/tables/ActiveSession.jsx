@@ -28,7 +28,8 @@ const ActiveSession = () => {
   const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isTimerMode, setIsTimerMode] = useState(false);
+  const [isTimerMode, setIsTimerMode] = useState(false); // true = countdown timer
+  const [isStopwatchMode, setIsStopwatchMode] = useState(false); // true = count up stopwatch
   const timerRef = useRef(null);
   const hasAutoReleased = useRef(false);
 
@@ -84,6 +85,7 @@ const ActiveSession = () => {
         start_time: sessionData.starttime || sessionData.start_time,
         booking_end_time: sessionData.bookingendtime || sessionData.booking_end_time,
         duration_minutes: sessionData.durationminutes || sessionData.duration_minutes,
+        booking_type: sessionData.bookingtype || sessionData.booking_type || 'timer', // Default to timer for backward compatibility
       };
 
       setSession(data);
@@ -93,32 +95,46 @@ const ActiveSession = () => {
       const elapsed = Math.floor((now - startTime) / 1000);
       setElapsedSeconds(Math.max(0, elapsed));
 
-      // Check if session has booking_end_time or duration_minutes (countdown mode)
-      const hasDuration = data.booking_end_time || data.duration_minutes;
+      // Check booking type to determine timer behavior
+      // 'set' = stopwatch mode (count UP, no auto-release)
+      // 'timer' or 'frame' = countdown mode (count DOWN, auto-release at 0)
+      const bookingType = data.booking_type;
 
-      if (hasDuration) {
-        setIsTimerMode(true);
+      if (bookingType === 'set') {
+        // Stopwatch mode - just count up, no countdown, no auto-release
+        setIsStopwatchMode(true);
+        setIsTimerMode(false);
+        // No remaining seconds for stopwatch - it only counts up
+      } else {
+        // Timer or Frame mode - countdown with auto-release
+        setIsStopwatchMode(false);
 
-        let remaining;
-        const now = new Date();
+        // Check if session has booking_end_time or duration_minutes (countdown mode)
+        const hasDuration = data.booking_end_time || data.duration_minutes;
 
-        if (data.booking_end_time) {
-          // Calculate from booking_end_time
-          const endTime = new Date(data.booking_end_time);
-          remaining = Math.floor((endTime - now) / 1000);
-        } else if (data.duration_minutes) {
-          // Calculate from duration_minutes
-          const totalDurationSeconds = data.duration_minutes * 60;
-          remaining = totalDurationSeconds - elapsed;
-        } else {
-          remaining = 0;
-        }
+        if (hasDuration) {
+          setIsTimerMode(true);
 
-        if (remaining <= 0) {
-          setRemainingSeconds(0);
-          handleAutoRelease(data);
-        } else {
-          setRemainingSeconds(remaining);
+          let remaining;
+
+          if (data.booking_end_time) {
+            // Calculate from booking_end_time
+            const endTime = new Date(data.booking_end_time);
+            remaining = Math.floor((endTime - now) / 1000);
+          } else if (data.duration_minutes) {
+            // Calculate from duration_minutes
+            const totalDurationSeconds = data.duration_minutes * 60;
+            remaining = totalDurationSeconds - elapsed;
+          } else {
+            remaining = 0;
+          }
+
+          if (remaining <= 0) {
+            setRemainingSeconds(0);
+            handleAutoRelease(data);
+          } else {
+            setRemainingSeconds(remaining);
+          }
         }
       }
     };
@@ -246,21 +262,22 @@ const ActiveSession = () => {
     cartRef.current = cart;
   }, [cart]);
 
-  // Timer effect - handles both countdown and elapsed time
+  // Timer effect - handles both countdown and elapsed time (stopwatch)
   useEffect(() => {
     if (!isPaused && session && !hasAutoReleased.current) {
       timerRef.current = setInterval(() => {
-        // Update elapsed time
+        // Update elapsed time (always counts up for both modes)
         setElapsedSeconds((prev) => prev + 1);
 
-        // Update countdown if in timer mode
-        if (isTimerMode) {
+        // Update countdown if in timer mode (NOT stopwatch mode)
+        // In stopwatch mode, we only count up - no countdown, no auto-release
+        if (isTimerMode && !isStopwatchMode) {
           setRemainingSeconds((prev) => {
             if (prev === null || prev <= 0) return 0;
 
             const newValue = prev - 1;
 
-            // Auto-release when timer hits zero
+            // Auto-release when timer hits zero (only for countdown timer mode)
             if (newValue <= 0) {
               clearInterval(timerRef.current);
               handleAutoRelease(session, cartRef.current);
@@ -278,7 +295,7 @@ const ActiveSession = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPaused, session, isTimerMode]);
+  }, [isPaused, session, isTimerMode, isStopwatchMode]);
 
   // Format time display (HH:MM:SS)
   const formatTime = (totalSeconds) => {
@@ -339,8 +356,9 @@ const ActiveSession = () => {
   // Calculate totals
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
   const elapsedMinutes = Math.ceil(elapsedSeconds / 60);
-  // For timer mode, use the booked duration; for open-ended, use elapsed time
-  const billingMinutes = isTimerMode && session?.duration_minutes
+  // For timer/frame mode, use the booked duration; for stopwatch mode, use elapsed time
+  // Stopwatch mode (booking_type === 'set') always uses elapsed time
+  const billingMinutes = (isTimerMode && !isStopwatchMode && session?.duration_minutes)
     ? session.duration_minutes
     : elapsedMinutes;
   const tableCost = billingMinutes * (tableInfo?.pricePerMin || 0);
@@ -433,7 +451,18 @@ const ActiveSession = () => {
             <div className="session-left-column">
               {/* Timer Section */}
               <div className="timer-section">
-                {isTimerMode ? (
+                {isStopwatchMode ? (
+                  <>
+                    {/* Stopwatch Mode - Count UP */}
+                    <p className="timer-label">Stopwatch Mode</p>
+                    <div className="timer-display stopwatch">
+                      {formatTime(elapsedSeconds)}
+                    </div>
+                    <p className="stopwatch-hint">
+                      Click "Generate Bill" when done to calculate charges
+                    </p>
+                  </>
+                ) : isTimerMode ? (
                   <>
                     {/* Countdown Timer Display */}
                     <p className="timer-label">Time Remaining</p>
@@ -475,7 +504,7 @@ const ActiveSession = () => {
               {/* Pricing Summary - Desktop Only in Left Column */}
               <div className="pricing-summary desktop-pricing">
                 <div className="price-row">
-                  <span>Table Time ({billingMinutes} mins{isTimerMode ? " - booked" : ""})</span>
+                  <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
                   <span>₹{tableCost.toFixed(2)}</span>
                 </div>
                 {cartTotal > 0 && (
@@ -580,7 +609,7 @@ const ActiveSession = () => {
           {/* Mobile Only - Pricing Summary */}
           <div className="pricing-summary mobile-pricing">
             <div className="price-row">
-              <span>Table Time ({billingMinutes} mins{isTimerMode ? " - booked" : ""})</span>
+              <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
               <span>₹{tableCost.toFixed(2)}</span>
             </div>
             {cartTotal > 0 && (

@@ -212,7 +212,7 @@
   color: #fff;
 }
 
-/* Set Time Input */
+/* Set Time Input - Stopwatch Mode */
 .set-time-input input {
   width: 100%;
   padding: 14px;
@@ -225,6 +225,31 @@
 .set-time-input input:focus {
   outline: none;
   border-color: #f08626;
+}
+
+/* Stopwatch Info Section */
+.stopwatch-info {
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.stopwatch-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.stopwatch-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f08626;
+  margin: 0 0 10px 0;
+}
+
+.stopwatch-description {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* Frame Input */

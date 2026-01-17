@@ -122,6 +122,22 @@
   margin-bottom: 20px;
 }
 
+/* Stopwatch Mode Styling */
+.timer-display.stopwatch {
+  font-size: 56px;
+  color: #fff;
+}
+
+.stopwatch-hint {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  display: inline-block;
+}
+
 /* TIMER CONTROLS */
 .timer-controls {
   display: flex;

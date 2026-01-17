@@ -76,25 +76,20 @@ const TableBooking = () => {
   });
 
   // Calculate duration in minutes
+  // For "set" mode (stopwatch), duration is 0 - timer will count UP
   const getDurationMinutes = () => {
     if (timeMode === "timer") return timerMinutes;
     if (timeMode === "frame") return frameCount * 15; // Approx 15 mins per frame
-    
-    if (timeMode === "set" && setTimeValue) {
-      const now = new Date();
-      const [hours, minutes] = setTimeValue.split(":").map(Number);
-      const target = new Date();
-      target.setHours(hours, minutes, 0, 0);
-      
-      // If target is earlier than now, assume next day? Or just error?
-      // Simple logic: if target < now, maybe user meant tomorrow, but for cafe usually today.
-      // Let's assume same day. If negative, return 0.
-      if (target < now) return 0; // Invalid time
-      
-      const diffMs = target - now;
-      return Math.floor(diffMs / 60000);
-    }
+    if (timeMode === "set") return 0; // Stopwatch mode - no preset duration, will count up
     return 0;
+  };
+
+  // Check if booking is valid based on mode
+  const isBookingValid = () => {
+    if (timeMode === "timer") return timerMinutes > 0;
+    if (timeMode === "frame") return frameCount > 0;
+    if (timeMode === "set") return true; // Stopwatch mode is always valid - no duration needed
+    return false;
   };
 
   // Add item to cart
@@ -126,22 +121,25 @@ const TableBooking = () => {
       return;
     }
 
-    const duration = getDurationMinutes();
-    if (duration <= 0) {
+    // Validate booking based on mode
+    if (!isBookingValid()) {
       setError("Please set a valid time");
       return;
     }
+
+    const duration = getDurationMinutes();
 
     try {
       setBooking(true);
       setError("");
 
-      // Start active table session with duration
+      // Start active table session with duration and booking type
       await activeTablesAPI.start({
         table_id: tableId,
         game_id: tableInfo?.gameid || tableInfo?.game_id,
         duration_minutes: duration,
         customer_name: customerName,
+        booking_type: timeMode, // 'timer' = countdown, 'set' = stopwatch (count up), 'frame' = frame-based
         cart: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
@@ -270,12 +268,14 @@ const TableBooking = () => {
 
                 {timeMode === "set" && (
                   <div className="set-time-input">
-                    <label>Set End Time</label>
-                    <input
-                      type="time"
-                      value={setTimeValue}
-                      onChange={(e) => setSetTimeValue(e.target.value)}
-                    />
+                    <div className="stopwatch-info">
+                      <div className="stopwatch-icon">⏱</div>
+                      <p className="stopwatch-label">Stopwatch Mode</p>
+                      <p className="stopwatch-description">
+                        Timer will count UP from 00:00 when the session starts.
+                        Click "Generate Bill" when the customer is done to calculate charges based on actual time spent.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -306,10 +306,17 @@ const TableBooking = () => {
                         <span>₹{tableInfo.frameCharge}</span>
                       </div>
                     )}
-                    <div className="estimate">
-                      <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
-                      <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
-                    </div>
+                    {timeMode === "set" ? (
+                      <div className="estimate">
+                        <span>Table Cost:</span>
+                        <span>Based on actual time (Stopwatch)</span>
+                      </div>
+                    ) : (
+                      <div className="estimate">
+                        <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
+                        <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -339,7 +346,11 @@ const TableBooking = () => {
                 {tableInfo && (
                   <div className="grand-total">
                     <strong>Grand Total:</strong>
-                    <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
+                    {timeMode === "set" ? (
+                      <strong>₹{cartTotal.toFixed(2)} + Time</strong>
+                    ) : (
+                      <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
+                    )}
                   </div>
                 )}
 
