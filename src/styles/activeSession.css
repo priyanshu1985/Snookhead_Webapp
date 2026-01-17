@@ -138,6 +138,12 @@
   display: inline-block;
 }
 
+/* Frame Mode Styling */
+.timer-display.frame-display {
+  font-size: 48px;
+  color: #fff;
+}
+
 /* TIMER CONTROLS */
 .timer-controls {
   display: flex;

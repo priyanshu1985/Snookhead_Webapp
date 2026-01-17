@@ -28,8 +28,9 @@ const ActiveSession = () => {
   const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isTimerMode, setIsTimerMode] = useState(false); // true = countdown timer
-  const [isStopwatchMode, setIsStopwatchMode] = useState(false); // true = count up stopwatch
+  const [isTimerMode, setIsTimerMode] = useState(false); // true = countdown timer (auto-release)
+  const [isStopwatchMode, setIsStopwatchMode] = useState(false); // true = count up stopwatch (manual release)
+  const [isFrameMode, setIsFrameMode] = useState(false); // true = frame-based billing (manual release)
   const timerRef = useRef(null);
   const hasAutoReleased = useRef(false);
 
@@ -86,6 +87,7 @@ const ActiveSession = () => {
         booking_end_time: sessionData.bookingendtime || sessionData.booking_end_time,
         duration_minutes: sessionData.durationminutes || sessionData.duration_minutes,
         booking_type: sessionData.bookingtype || sessionData.booking_type || 'timer', // Default to timer for backward compatibility
+        frame_count: sessionData.framecount || sessionData.frame_count || null, // Frame count for frame-based bookings
       };
 
       setSession(data);
@@ -96,18 +98,28 @@ const ActiveSession = () => {
       setElapsedSeconds(Math.max(0, elapsed));
 
       // Check booking type to determine timer behavior
-      // 'set' = stopwatch mode (count UP, no auto-release)
-      // 'timer' or 'frame' = countdown mode (count DOWN, auto-release at 0)
+      // 'timer' = countdown mode (count DOWN, auto-release at 0)
+      // 'set' = stopwatch mode (count UP, no auto-release, manual bill)
+      // 'frame' = frame mode (count UP, no auto-release, manual bill, billing by frames)
       const bookingType = data.booking_type;
 
       if (bookingType === 'set') {
         // Stopwatch mode - just count up, no countdown, no auto-release
         setIsStopwatchMode(true);
         setIsTimerMode(false);
+        setIsFrameMode(false);
         // No remaining seconds for stopwatch - it only counts up
-      } else {
-        // Timer or Frame mode - countdown with auto-release
+      } else if (bookingType === 'frame') {
+        // Frame mode - count up elapsed time, no countdown, no auto-release
+        // Billing is based on frame count, not time
+        setIsFrameMode(true);
         setIsStopwatchMode(false);
+        setIsTimerMode(false);
+        // No remaining seconds for frame mode - owner manually generates bill
+      } else {
+        // Timer mode - countdown with auto-release
+        setIsStopwatchMode(false);
+        setIsFrameMode(false);
 
         // Check if session has booking_end_time or duration_minutes (countdown mode)
         const hasDuration = data.booking_end_time || data.duration_minutes;
@@ -356,12 +368,21 @@ const ActiveSession = () => {
   // Calculate totals
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
   const elapsedMinutes = Math.ceil(elapsedSeconds / 60);
-  // For timer/frame mode, use the booked duration; for stopwatch mode, use elapsed time
-  // Stopwatch mode (booking_type === 'set') always uses elapsed time
-  const billingMinutes = (isTimerMode && !isStopwatchMode && session?.duration_minutes)
+
+  // For timer mode, use the booked duration
+  // For stopwatch mode, use elapsed time
+  // For frame mode, billing is by frames (not time)
+  const billingMinutes = (isTimerMode && session?.duration_minutes)
     ? session.duration_minutes
     : elapsedMinutes;
-  const tableCost = billingMinutes * (tableInfo?.pricePerMin || 0);
+
+  // Calculate table cost based on mode
+  // Frame mode: frameCount * frameCharge
+  // Timer/Stopwatch mode: billingMinutes * pricePerMin
+  const frameCount = session?.frame_count || 0;
+  const tableCost = isFrameMode
+    ? frameCount * (tableInfo?.frameCharge || 0)
+    : billingMinutes * (tableInfo?.pricePerMin || 0);
   const grandTotal = tableCost + cartTotal;
 
   // Toggle pause
@@ -384,15 +405,20 @@ const ActiveSession = () => {
       setError("");
 
       // Create comprehensive bill with table charges + food items
-      // Use billingMinutes (booked duration for timer mode, elapsed for open-ended)
-      // Only include frame charges if it's a frame-based booking (not timer mode)
+      // For frame mode: use frame_count * frameCharge (no time-based billing)
+      // For timer mode: use booked duration * pricePerMin
+      // For stopwatch mode: use elapsed time * pricePerMin
       await billingAPI.create({
-        customer_name: "Walk-in Customer",
+        customer_name: session.customer_name || "Walk-in Customer",
         table_id: tableId,
         session_id: session.active_id,
-        session_duration: billingMinutes,
-        table_price_per_min: tableInfo?.pricePerMin || 0,
-        frame_charges: 0, // Frame charges only apply to frame-based bookings, not timer mode
+        // For frame mode, session_duration is 0 (billing is by frames, not time)
+        session_duration: isFrameMode ? 0 : billingMinutes,
+        table_price_per_min: isFrameMode ? 0 : (tableInfo?.pricePerMin || 0),
+        // Frame charges: frameCount * frameCharge for frame mode, 0 for other modes
+        frame_charges: isFrameMode ? (frameCount * (tableInfo?.frameCharge || 0)) : 0,
+        frame_count: isFrameMode ? frameCount : null,
+        booking_type: session.booking_type,
         selected_menu_items: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
@@ -451,7 +477,19 @@ const ActiveSession = () => {
             <div className="session-left-column">
               {/* Timer Section */}
               <div className="timer-section">
-                {isStopwatchMode ? (
+                {isFrameMode ? (
+                  <>
+                    {/* Frame Mode - Show frame count */}
+                    <p className="timer-label">Frame Mode</p>
+                    <div className="timer-display frame-display">
+                      {frameCount} Frame{frameCount !== 1 ? 's' : ''}
+                    </div>
+                    <p className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</p>
+                    <p className="stopwatch-hint">
+                      Click "Generate Bill" when done
+                    </p>
+                  </>
+                ) : isStopwatchMode ? (
                   <>
                     {/* Stopwatch Mode - Count UP */}
                     <p className="timer-label">Stopwatch Mode</p>
@@ -504,8 +542,17 @@ const ActiveSession = () => {
               {/* Pricing Summary - Desktop Only in Left Column */}
               <div className="pricing-summary desktop-pricing">
                 <div className="price-row">
-                  <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
-                  <span>₹{tableCost.toFixed(2)}</span>
+                  {isFrameMode ? (
+                    <>
+                      <span>Frame Charges ({frameCount} frame{frameCount !== 1 ? 's' : ''})</span>
+                      <span>₹{tableCost.toFixed(2)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
+                      <span>₹{tableCost.toFixed(2)}</span>
+                    </>
+                  )}
                 </div>
                 {cartTotal > 0 && (
                   <div className="price-row">
@@ -609,8 +656,17 @@ const ActiveSession = () => {
           {/* Mobile Only - Pricing Summary */}
           <div className="pricing-summary mobile-pricing">
             <div className="price-row">
-              <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
-              <span>₹{tableCost.toFixed(2)}</span>
+              {isFrameMode ? (
+                <>
+                  <span>Frame Charges ({frameCount} frame{frameCount !== 1 ? 's' : ''})</span>
+                  <span>₹{tableCost.toFixed(2)}</span>
+                </>
+              ) : (
+                <>
+                  <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
+                  <span>₹{tableCost.toFixed(2)}</span>
+                </>
+              )}
             </div>
             {cartTotal > 0 && (
               <div className="price-row">

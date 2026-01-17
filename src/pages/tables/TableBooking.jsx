@@ -140,6 +140,7 @@ const TableBooking = () => {
         duration_minutes: duration,
         customer_name: customerName,
         booking_type: timeMode, // 'timer' = countdown, 'set' = stopwatch (count up), 'frame' = frame-based
+        frame_count: timeMode === "frame" ? frameCount : null, // Send frame count for frame mode
         cart: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
@@ -287,7 +288,9 @@ const TableBooking = () => {
                       <span>{frameCount}</span>
                       <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
                     </div>
-                    <small>~{frameCount * 15} minutes</small>
+                    <p className="frame-mode-hint">
+                      Billing based on frames, not time. Click "Generate Bill" when done.
+                    </p>
                   </div>
                 )}
               </div>
@@ -296,25 +299,45 @@ const TableBooking = () => {
               <div className="pricing-info">
                 {tableInfo && (
                   <>
-                    <div>
-                      <span>Price per minute:</span>
-                      <span>₹{tableInfo.pricePerMin || 0}</span>
-                    </div>
-                    {tableInfo.frameCharge > 0 && (
+                    {/* Show price per minute for Timer mode */}
+                    {timeMode === "timer" && (
                       <div>
-                        <span>Frame charge:</span>
-                        <span>₹{tableInfo.frameCharge}</span>
+                        <span>Price per minute:</span>
+                        <span>₹{tableInfo.pricePerMin || 0}</span>
                       </div>
                     )}
-                    {timeMode === "set" ? (
+                    {/* Show price per minute for Stopwatch mode */}
+                    {timeMode === "set" && (
+                      <div>
+                        <span>Price per minute:</span>
+                        <span>₹{tableInfo.pricePerMin || 0}</span>
+                      </div>
+                    )}
+                    {/* Show frame charge for Frame mode */}
+                    {timeMode === "frame" && (
+                      <div>
+                        <span>Price per frame:</span>
+                        <span>₹{tableInfo.frameCharge || 0}</span>
+                      </div>
+                    )}
+
+                    {/* Cost estimate based on mode */}
+                    {timeMode === "timer" && (
+                      <div className="estimate">
+                        <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
+                        <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {timeMode === "set" && (
                       <div className="estimate">
                         <span>Table Cost:</span>
                         <span>Based on actual time (Stopwatch)</span>
                       </div>
-                    ) : (
+                    )}
+                    {timeMode === "frame" && (
                       <div className="estimate">
-                        <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
-                        <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                        <span>Frame Cost ({frameCount} frame{frameCount > 1 ? 's' : ''}):</span>
+                        <span>₹{(frameCount * (tableInfo.frameCharge || 0)).toFixed(2)}</span>
                       </div>
                     )}
                   </>
@@ -346,10 +369,14 @@ const TableBooking = () => {
                 {tableInfo && (
                   <div className="grand-total">
                     <strong>Grand Total:</strong>
-                    {timeMode === "set" ? (
-                      <strong>₹{cartTotal.toFixed(2)} + Time</strong>
-                    ) : (
+                    {timeMode === "timer" && (
                       <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
+                    )}
+                    {timeMode === "set" && (
+                      <strong>₹{cartTotal.toFixed(2)} + Time</strong>
+                    )}
+                    {timeMode === "frame" && (
+                      <strong>₹{((frameCount * (tableInfo.frameCharge || 0)) + cartTotal).toFixed(2)}</strong>
                     )}
                   </div>
                 )}

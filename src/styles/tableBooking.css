@@ -298,6 +298,16 @@
   border-radius: 15px;
 }
 
+.frame-mode-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 140, 26, 0.1);
+  border-radius: 8px;
+}
+
 /* FOOD SEARCH BAR */
 .food-search-bar {
   display: flex;
