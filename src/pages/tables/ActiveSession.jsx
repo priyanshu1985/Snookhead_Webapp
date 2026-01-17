@@ -5,6 +5,7 @@ import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
+import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
 
 import "../../styles/activeSession.css";
 
@@ -36,6 +37,7 @@ const ActiveSession = () => {
   const [cart, setCart] = useState(initialCart); // Initialize with items from booking
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const cartRef = useRef(initialCart); // Ref to access cart in timer callbacks
 
   // Action states
@@ -308,10 +310,12 @@ const ActiveSession = () => {
     return "";
   };
 
-  // Filter menu by search query
-  const filteredMenu = menuItems.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter menu by search query AND category
+  const filteredMenu = menuItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase());
+    return matchesSearch && matchesCategory;
+  });
 
   // Add item to cart
   const addToCart = (item) => {
@@ -499,6 +503,12 @@ const ActiveSession = () => {
 
             {/* Right Column - Food Selection */}
             <div className="session-right-column">
+              {/* Category Tabs */}
+              <FoodCategoryTabs 
+                selectedCategory={selectedCategory} 
+                onSelectCategory={setSelectedCategory} 
+              />
+              
               {/* Search Bar */}
               <div className="food-search-bar">
                 <span className="search-icon">🔍</span>

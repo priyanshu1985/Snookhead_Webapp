@@ -43,7 +43,26 @@ const Billing = () => {
   const activeBills = bills.filter((bill) => bill.status === "pending");
   const paidBills = bills.filter((bill) => bill.status === "paid");
 
-  const billsToRender = activeTab === "active" ? activeBills : paidBills;
+  // Search and Date Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const currentTabBills = activeTab === "active" ? activeBills : paidBills;
+  
+  const billsToRender = currentTabBills.filter((bill) => {
+      // Search by Name or Bill Number
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = (bill.customer_name || "").toLowerCase().includes(searchLower) ||
+                            (bill.bill_number || "").toLowerCase().includes(searchLower);
+      
+      // Filter by Date
+      let matchesDate = true;
+      if (dateFilter) {
+          const billDate = new Date(bill.createdAt).toISOString().split('T')[0];
+          matchesDate = billDate === dateFilter;
+      }
+      return matchesSearch && matchesDate;
+  });
 
   // Format date
   const formatDate = (dateString) => {
@@ -55,7 +74,12 @@ const Billing = () => {
   // Get tags from bill items
   const getTags = (bill) => {
     const tags = [];
-    if (bill.table_info?.game_name) tags.push(bill.table_info.game_name);
+    // Only push game name if valid and NOT "Unknown Game" (optional, but requested to fix unknown)
+    // Backend now attempts to resolve it. If it's still "Unknown Game", maybe hide it?
+    // User said "instead of it there should be the name of game".
+    if (bill.table_info?.game_name && bill.table_info.game_name !== "Unknown Game") {
+        tags.push(bill.table_info.game_name);
+    }
     if (bill.items_summary) {
       const items = bill.items_summary.split(", ").slice(0, 3);
       tags.push(...items);
@@ -110,6 +134,33 @@ const Billing = () => {
               BILL HISTORY ({paidBills.length})
             </button>
           </div>
+          
+          {/* Filters Bar */}
+          <div className="filters-bar" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+             <input 
+                type="text" 
+                placeholder="Search by name..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="form-control"
+                style={{ flex: 1 }}
+             />
+             <input 
+                type="date" 
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="form-control"
+                style={{ width: 'auto' }}
+             />
+             {(searchQuery || dateFilter) && (
+                 <button 
+                    className="btn btn-outline-secondary"
+                    onClick={() => { setSearchQuery(""); setDateFilter(""); }}
+                 >
+                    Clear
+                 </button>
+             )}
+          </div>
 
           {/* List */}
           <div className="billing-list">
@@ -118,8 +169,8 @@ const Billing = () => {
             ) : billsToRender.length === 0 ? (
               <p className="empty-text">
                 {activeTab === "active"
-                  ? "No active bills"
-                  : "No bill history"}
+                  ? "No active bills found"
+                  : "No bill history found"}
               </p>
             ) : (
               billsToRender.map((bill, index) => (
@@ -130,7 +181,8 @@ const Billing = () => {
                     <div>
                       <small className="date">{formatDate(bill.createdAt)}</small>
                       <div className="name">{bill.customer_name || "Customer"}</div>
-                      <small className="bill-number">{bill.bill_number}</small>
+                      {/* Removed Bill Number display as requested */}
+                      {/* <small className="bill-number">{bill.bill_number}</small> */}
                     </div>
                   </div>
 

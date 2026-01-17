@@ -6,6 +6,7 @@ import Navbar from "../../components/layout/Navbar";
 import TableBookedModal from "../../components/tables/TableBookedModel";
 import { menuAPI, activeTablesAPI, tablesAPI } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
+import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
 
 import "../../styles/tableBooking.css";
 
@@ -26,6 +27,7 @@ const TableBooking = () => {
   const [cart, setCart] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Table info
   const [tableInfo, setTableInfo] = useState(null);
@@ -34,6 +36,7 @@ const TableBooking = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
+  const [customerName, setCustomerName] = useState("");
 
   // Fetch menu items
   useEffect(() => {
@@ -58,26 +61,41 @@ const TableBooking = () => {
       try {
         const data = await tablesAPI.getById(tableId);
         setTableInfo(data);
-        
-        // If table is already reserved, redirect to active session
-        if (data && data.status === "reserved") {
-          // We need to find the session ID if possible, but redirecting to session root 
-          // (which fetches session by tableId) works too
-          // Use setTimeout to ensure state is set before navigating (optional, but good for UX)
-          console.log("Table is reserved, redirecting to session...");
-          navigate(`/session/${game}/${tableId}`, { replace: true });
-        }
       } catch (err) {
-        console.error("Failed to fetch table info:", err);
+        console.error("Failed to fetch table:", err);
       }
     };
     if (tableId) fetchTable();
   }, [tableId]);
 
-  // Filter menu by search query
-  const filteredMenu = menuItems.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter menu
+  const filteredMenu = menuItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase());
+    return matchesSearch && matchesCategory;
+  });
+
+  // Calculate duration in minutes
+  const getDurationMinutes = () => {
+    if (timeMode === "timer") return timerMinutes;
+    if (timeMode === "frame") return frameCount * 15; // Approx 15 mins per frame
+    
+    if (timeMode === "set" && setTimeValue) {
+      const now = new Date();
+      const [hours, minutes] = setTimeValue.split(":").map(Number);
+      const target = new Date();
+      target.setHours(hours, minutes, 0, 0);
+      
+      // If target is earlier than now, assume next day? Or just error?
+      // Simple logic: if target < now, maybe user meant tomorrow, but for cafe usually today.
+      // Let's assume same day. If negative, return 0.
+      if (target < now) return 0; // Invalid time
+      
+      const diffMs = target - now;
+      return Math.floor(diffMs / 60000);
+    }
+    return 0;
+  };
 
   // Add item to cart
   const addToCart = (item) => {
@@ -98,31 +116,16 @@ const TableBooking = () => {
     );
   };
 
-  // Calculate total
+  // Calculate totals
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-
-  // Get duration in minutes based on mode
-  const getDurationMinutes = () => {
-    switch (timeMode) {
-      case "timer":
-        return timerMinutes;
-      case "set":
-        // Parse time like "1:30" to minutes
-        if (setTimeValue) {
-          const [hours, mins] = setTimeValue.split(":").map(Number);
-          return (hours || 0) * 60 + (mins || 0);
-        }
-        return 0;
-      case "frame":
-        // Assume 15 minutes per frame
-        return frameCount * 15;
-      default:
-        return 0;
-    }
-  };
 
   // Handle booking
   const handleBook = async () => {
+    if (!customerName.trim()) {
+      setError("Please enter customer name");
+      return;
+    }
+
     const duration = getDurationMinutes();
     if (duration <= 0) {
       setError("Please set a valid time");
@@ -134,10 +137,11 @@ const TableBooking = () => {
       setError("");
 
       // Start active table session with duration
-      const response = await activeTablesAPI.start({
+      await activeTablesAPI.start({
         table_id: tableId,
         game_id: tableInfo?.gameid || tableInfo?.game_id,
         duration_minutes: duration,
+        customer_name: customerName,
         cart: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
@@ -153,64 +157,15 @@ const TableBooking = () => {
     }
   };
 
-  // Handle success modal close - Navigate with state
   const handleSuccessClose = () => {
     setShowSuccess(false);
-    // Find the session info from local state if needed, but safe to fetch latest or passed from response
-    // Actually we need the 'newSession' from the scope of handleBook.
-    // Since we can't easily access it here without state, we should probably refactor.
-    // BETTER: Navigate immediately, or store session in state var.
-  };
-
-  // REFACTOR: Use a sessionRef or state to hold the new session for the modal
-  const [createdSession, setCreatedSession] = useState(null);
-
-  // Update handleBook to store session
-  const handleBookFixed = async () => {
-    const duration = getDurationMinutes();
-    if (duration <= 0) {
-      setError("Please set a valid time");
-      return;
-    }
-
-    try {
-      setBooking(true);
-      setError("");
-
-      const response = await activeTablesAPI.start({
-        table_id: tableId,
-        game_id: tableInfo?.gameid || tableInfo?.game_id,
-        duration_minutes: duration,
-        cart: cart.map((item) => ({
-          menu_item_id: item.id,
-          quantity: item.qty,
-        })),
-      });
-
-      const newSession = response?.session;
-      setCreatedSession(newSession);
-      setShowSuccess(true);
-      
-      // Auto-navigate after delay if user doesn't click
-      // BUT make sure we don't double navigate.
-      // Easiest: Don't use Timeout. Just show modal. User clicks "Go to Table" (or similar).
-      // Or just navigate immediately and show success THERE?
-      // Let's stick to Modal then Navigate.
-      
-    } catch (err) {
-      console.error("Booking failed:", err);
-      setError(err.message || "Failed to book table");
-    } finally {
-      setBooking(false);
-    }
+    navigate("/dashboard");
   };
 
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
-
       <div className={`sidebar-spacer ${isSidebarCollapsed ? "collapsed" : ""}`} />
-
       <div className="dashboard-main">
         <Navbar />
 
@@ -228,6 +183,26 @@ const TableBooking = () => {
           <div className="booking-content">
             {/* Left Column - Time Selection */}
             <div className="booking-left-column">
+              
+              {/* Customer Name Input */}
+              <div className="customer-name-section" style={{marginBottom: '20px'}}>
+                <p className="section-title">Customer Details</p>
+                <input
+                  type="text"
+                  placeholder="Enter Customer Name *"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="form-control"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+
               <p className="section-title">Select Time</p>
               <div className="radio-row">
                 <label className={timeMode === "timer" ? "active" : ""}>
@@ -338,7 +313,7 @@ const TableBooking = () => {
                   </>
                 )}
 
-                {/* Food Items in Same Card */}
+                {/* Food Items in Same Card if Cart has items */}
                 {cart.length > 0 && (
                   <div className="food-items-section">
                     <p className="food-items-title">Food Items</p>
@@ -377,22 +352,29 @@ const TableBooking = () => {
 
             {/* Right Column - Food Selection */}
             <div className="booking-right-column">
-              <p className="section-title">Add Food</p>
+              {/* Category Tabs */}
+              <FoodCategoryTabs 
+                selectedCategory={selectedCategory} 
+                onSelectCategory={setSelectedCategory} 
+              />
 
-              {/* Search Bar */}
-              <div className="food-search-bar">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search food items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button className="clear-search" onClick={() => setSearchQuery("")}>
-                    ✕
-                  </button>
-                )}
+              <div className="menu-header">
+                <h6>Food & Drinks</h6>
+                {/* Search Bar */}
+                <div className="food-search-bar">
+                  <span className="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search food items..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button className="clear-search" onClick={() => setSearchQuery("")}>
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Menu Items */}
@@ -415,8 +397,8 @@ const TableBooking = () => {
                   ))
                 )}
               </div>
-
             </div>
+
           </div>
         </div>
 
