@@ -18,39 +18,103 @@ const Dashboard = () => {
   const [error, setError] = useState("");
 
   // Fetch games, tables, and active sessions from API
+  const fetchData = async () => {
+    try {
+      // Only set loading on first load to avoid flickering during auto-refresh
+      if (games.length === 0) setLoading(true);
+      
+      const [gamesData, tablesData, sessionsData] = await Promise.all([
+        gamesAPI.getAll(),
+        tablesAPI.getAll(),
+        activeTablesAPI.getAll().catch(() => []), // Don't fail if no active sessions
+      ]);
+
+      const gamesList = Array.isArray(gamesData) ? gamesData : [];
+      const tablesList = tablesData?.data || (Array.isArray(tablesData) ? tablesData : []);
+      let sessionsList = Array.isArray(sessionsData) ? sessionsData : [];
+
+      // Normalize session keys to handle DB lowercase vs frontend camelCase
+      sessionsList = sessionsList.map(s => ({
+        ...s,
+        active_id: s.activeid || s.active_id,
+        table_id: s.tableid || s.table_id,
+        game_id: s.gameid || s.game_id,
+        start_time: s.starttime || s.start_time,
+        // endtimer is often what DB returns for 'endtimer' column, but be robust
+        end_time: s.endtimer || s.bookingendtime || s.booking_end_time,
+        booking_type: s.bookingtype || s.booking_type || 'timer',
+        duration_minutes: s.durationminutes || s.duration_minutes,
+      }));
+
+      setGames(gamesList);
+      setTables(tablesList);
+      setActiveSessions(sessionsList);
+
+      // Select first game by default if not set
+      if (!selectedGame && gamesList.length > 0) {
+        setSelectedGame(gamesList[0]);
+      }
+      setError("");
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+      setError(err.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [gamesData, tablesData, sessionsData] = await Promise.all([
-          gamesAPI.getAll(),
-          tablesAPI.getAll(),
-          activeTablesAPI.getAll().catch(() => []), // Don't fail if no active sessions
-        ]);
+    fetchData();
+  }, []);
 
-        const gamesList = Array.isArray(gamesData) ? gamesData : [];
-        const tablesList = tablesData?.data || (Array.isArray(tablesData) ? tablesData : []);
-        const sessionsList = Array.isArray(sessionsData) ? sessionsData : [];
+  // Auto-release check interval
+  useEffect(() => {
+    const checkExpiredSessions = async () => {
+      const now = new Date();
+      let hasChanges = false;
+      
+      console.log(`[Auto-Release] Checking ${activeSessions.length} sessions at ${now.toLocaleTimeString()}`);
 
-        setGames(gamesList);
-        setTables(tablesList);
-        setActiveSessions(sessionsList);
+      for (const session of activeSessions) {
+        // Check only active sessions that are timer type
+        if (session.status !== 'active') continue;
 
-        // Select first game by default
-        if (gamesList.length > 0) {
-          setSelectedGame(gamesList[0]);
+        // Use normalized keys
+        const bookingType = session.booking_type || 'timer';
+        const endTimerStr = session.end_time;
+        
+        console.log(`[Auto-Release] Session ${session.active_id}: Type=${bookingType}, End=${endTimerStr}`);
+
+        if (bookingType === 'timer' && endTimerStr) {
+           const endTime = new Date(endTimerStr);
+           const diff = endTime - now;
+           console.log(`[Auto-Release] Session ${session.active_id}: Diff=${diff}ms`);
+
+           // Add a small buffer (e.g. 1 sec) to ensure we don't preempt too aggressively
+           if (endTime < now) {
+               console.log(`[Auto-Release] EXPIRED! Auto-releasing session ${session.active_id}`);
+               try {
+                   await activeTablesAPI.autoRelease({ 
+                       active_id: session.active_id 
+                   });
+                   hasChanges = true;
+               } catch (e) {
+                   console.error("[Auto-Release] Auto-release failed", e);
+               }
+           }
         }
-        setError("");
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to load data");
-      } finally {
-        setLoading(false);
+      }
+
+      if (hasChanges) {
+          console.log("[Auto-Release] Changes detected, refreshing data...");
+          fetchData();
       }
     };
 
-    fetchData();
-  }, []);
+    // Run check every 10 seconds
+    const intervalId = setInterval(checkExpiredSessions, 10000);
+    return () => clearInterval(intervalId);
+  }, [activeSessions]);
 
   // Filter tables by selected game
   const getTablesForGame = (gameId) => {
@@ -184,30 +248,63 @@ const Dashboard = () => {
                         </button>
                       </div>
                     ) : (
-                      currentTables.map((table, index) => (
-                        <div
-                          className={`table-card ${getStatusClass(table.status)}`}
-                          key={table.id || `table-${index}`}
-                          onClick={() => handleTableClick(table)}
-                        >
-                          {/* Game Image */}
-                          {(selectedGame?.image_key || selectedGame?.imagekey) && (
-                            <img
-                              className="table-card-img"
-                              src={getGameImageUrl(selectedGame.image_key || selectedGame.imagekey)}
-                              alt={selectedGame.game_name || selectedGame.gamename}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          )}
+                      currentTables.map((table, index) => {
+                        // Find active session for this table
+                        const session = getActiveSession(table.id);
+                        const hasActiveSession = !!session;
+                        // For queue booking, we can check a flag or order_source, or just treat all active as "Playing"
+                        // If user specifically wants to identify "Queue" booked sessions:
+                        // We need to verify if session has metadata. 
+                        // Assuming 'order_source' or similar isn't in top level session usually, but let's just show "Playing" for now
+                        // OR check if query param/data allows distinguishing.
+                        
+                        // For now, if there is a session, it is OCCUPIED.
+                        // The user said "show me exact details which is of queue person...". 
+                        // Just displaying the name is a good start.
 
-                          {/* Table Number */}
-                          <div className="table-number">
-                            {String(index + 1).padStart(2, "0")}
+                        const bookedBy = session ? (session.customer_name || session.customername) : null;
+                        const displayStatus = hasActiveSession ? "occupied" : table.status;
+                        
+                        // Optional: distinguishing label
+                        // If we want "Queue", we'd need to know source. 
+                        // But "Playing" is safe for all active sessions.
+                        const bookingLabel = "Playing"; 
+
+                        return (
+                          <div
+                            className={`table-card ${getStatusClass(displayStatus)}`}
+                            key={table.id || `table-${index}`}
+                            onClick={() => handleTableClick(table)}
+                          >
+                            {/* Game Image */}
+                            {(selectedGame?.image_key || selectedGame?.imagekey) && (
+                              <img
+                                className="table-card-img"
+                                src={getGameImageUrl(selectedGame.image_key || selectedGame.imagekey)}
+                                alt={selectedGame.game_name || selectedGame.gamename}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            )}
+
+                            {/* Table Number */}
+                            <div className="table-number">
+                              {String(index + 1).padStart(2, "0")}
+                            </div>
+
+                            {/* Show booked by info if active session exists */}
+                            {hasActiveSession && bookedBy && (
+                              <div className="table-booked-info">
+                                <span className="booked-label">
+                                  {bookingLabel}
+                                </span>
+                                <span className="booked-name">{bookedBy}</span>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </>

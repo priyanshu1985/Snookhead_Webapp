@@ -33,8 +33,15 @@ const ENDPOINTS = {
 
   // Queue
   QUEUE: "/queue",
+  QUEUE_SUMMARY: "/queue/summary",
   QUEUE_NEXT: "/queue/next",
   QUEUE_CLEAR: "/queue/clear",
+  QUEUE_BY_ID: (id) => `/queue/${id}`,
+  QUEUE_ASSIGN: (id) => `/queue/${id}/assign`,
+  QUEUE_COMPLETE: (id) => `/queue/${id}/complete`,
+  QUEUE_CANCEL: (id) => `/queue/${id}/cancel`,
+  QUEUE_NOSHOW: (id) => `/queue/${id}/noshow`,
+  QUEUE_TABLES: (gameid) => `/queue/tables/${gameid}`,
 
   // Menu
   MENU: "/menu",
@@ -312,17 +319,57 @@ export const activeTablesAPI = {
 
 // Queue API
 export const queueAPI = {
-  getAll: () => apiRequest(ENDPOINTS.QUEUE),
+  // Get queue list (optional filters: gameid, status)
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.QUEUE}?${queryString}` : ENDPOINTS.QUEUE;
+    return apiRequest(url);
+  },
 
+  // Get queue summary for dashboard
+  getSummary: () => apiRequest(ENDPOINTS.QUEUE_SUMMARY),
+
+  // Get single queue entry
+  getById: (id) => apiRequest(ENDPOINTS.QUEUE_BY_ID(id)),
+
+  // Add to queue (walk-in)
   add: (queueData) =>
     apiRequest(ENDPOINTS.QUEUE, {
       method: "POST",
       body: JSON.stringify(queueData),
     }),
 
-  next: () => apiRequest(ENDPOINTS.QUEUE_NEXT, { method: "POST" }),
+  // Assign table to queue entry (start game)
+  assign: (id, tableid) =>
+    apiRequest(ENDPOINTS.QUEUE_ASSIGN(id), {
+      method: "POST",
+      body: JSON.stringify({ tableid }),
+    }),
 
+  // Seat next in queue (auto-assign)
+  next: (gameid = null) =>
+    apiRequest(ENDPOINTS.QUEUE_NEXT, {
+      method: "POST",
+      body: JSON.stringify({ gameid }),
+    }),
+
+  // Complete game (end session)
+  complete: (id) =>
+    apiRequest(ENDPOINTS.QUEUE_COMPLETE(id), { method: "POST" }),
+
+  // Cancel queue entry
+  cancel: (id) =>
+    apiRequest(ENDPOINTS.QUEUE_CANCEL(id), { method: "POST" }),
+
+  // Mark as no-show
+  noshow: (id) =>
+    apiRequest(ENDPOINTS.QUEUE_NOSHOW(id), { method: "POST" }),
+
+  // Clear all waiting entries
   clear: () => apiRequest(ENDPOINTS.QUEUE_CLEAR, { method: "POST" }),
+
+  // Get available tables for a game
+  getTables: (gameid) => apiRequest(ENDPOINTS.QUEUE_TABLES(gameid)),
 };
 
 // Menu API

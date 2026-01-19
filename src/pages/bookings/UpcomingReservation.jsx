@@ -16,6 +16,7 @@ const UpcomingReservation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch reservations
   const fetchReservations = async () => {
@@ -94,6 +95,26 @@ const UpcomingReservation = () => {
     fetchReservations();
   };
 
+  // Filter based on search query
+  const filteredReservations = reservations.filter((item) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    
+    // Match customer name
+    const customerName = item.customerName || item.customer_name || item.User?.name || "Guest";
+    if (customerName.toLowerCase().includes(lowerQuery)) return true;
+
+    // Match table name
+    const tableName = item.TableAsset?.name || item.table?.name || `Table ${item.tableId || item.table_id}`;
+    if (tableName.toLowerCase().includes(lowerQuery)) return true;
+    
+    // Match game name
+    const gameName = item.TableAsset?.Game?.gamename || item.TableAsset?.Game?.game_name || "";
+    if (gameName.toLowerCase().includes(lowerQuery)) return true;
+
+    return false;
+  });
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
@@ -115,6 +136,18 @@ const UpcomingReservation = () => {
             <button className="active">UPCOMING RESERVATION</button>
           </div>
 
+          {/* Search Bar */}
+          <div className="reservation-search" style={{ marginBottom: "20px" }}>
+             <input
+              type="text"
+              placeholder="Search by customer, table, or game..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+              style={{ padding: "10px", width: "100%", maxWidth: "400px" }}
+            />
+          </div>
+
           {/* Error Message */}
           {error && <div className="alert alert-danger">{error}</div>}
 
@@ -123,15 +156,15 @@ const UpcomingReservation = () => {
             <div className="loading-state">
               <p>Loading reservations...</p>
             </div>
-          ) : reservations.length === 0 ? (
+          ) : filteredReservations.length === 0 ? (
             <div className="empty-state">
-              <p>No upcoming reservations</p>
-              <span>Click the button below to create a new reservation</span>
+              <p>{searchQuery ? `No reservations matching "${searchQuery}"` : "No upcoming reservations"}</p>
+              {!searchQuery && <span>Click the button below to create a new reservation</span>}
             </div>
           ) : (
             /* Reservation List */
             <div className="reservation-list">
-              {reservations.map((item, index) => {
+              {filteredReservations.map((item, index) => {
                 const reservationTime = item.reservationtime || item.reservation_time || item.fromTime;
                 const customerName = item.customerName || item.customer_name || item.User?.name || "Guest";
                 const tableName = item.TableAsset?.name || item.table?.name || `Table ${item.tableId || item.table_id}`;
