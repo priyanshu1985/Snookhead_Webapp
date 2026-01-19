@@ -47,14 +47,17 @@ const ActiveSession = () => {
 
   // Auto-release handler - generates bill when timer ends and releases table
   const handleAutoRelease = async (sessionToRelease, cartItems = []) => {
+    console.log("handleAutoRelease triggered", { sessionToRelease, hasReleased: hasAutoReleased.current });
+    
     if (!sessionToRelease || hasAutoReleased.current) return;
 
     hasAutoReleased.current = true;
 
     try {
+      console.log("Calling autoRelease API...");
       // Use auto-release endpoint which stops session, generates bill, and sets table to available
       // Pass cart items so they are included in the bill
-      await activeTablesAPI.autoRelease({
+      const response = await activeTablesAPI.autoRelease({
         active_id: sessionToRelease.active_id,
         cart_items: cartItems.map((item) => ({
           id: item.id,
@@ -63,12 +66,14 @@ const ActiveSession = () => {
           qty: item.qty,
         })),
       });
+      console.log("Auto-release successful", response);
 
       // Navigate to billing page
       navigate("/billing");
     } catch (err) {
       console.error("Auto-release failed:", err);
-      // Still navigate to billing even if there's an error
+      alert("Auto-release failed check console. Redirecting to billing anyway."); 
+      // Still navigate to billing even if there's an error so user isn't stuck
       navigate("/billing");
     }
   };
@@ -285,15 +290,20 @@ const ActiveSession = () => {
         // In stopwatch mode, we only count up - no countdown, no auto-release
         if (isTimerMode && !isStopwatchMode) {
           setRemainingSeconds((prev) => {
-            if (prev === null || prev <= 0) return 0;
+            // Safety check
+            if (prev === null) return 0;
+            
+            // If already at 0, don't keep decrementing, just return 0
+            if (prev <= 0) return 0;
 
             const newValue = prev - 1;
 
             // Auto-release when timer hits zero (only for countdown timer mode)
             if (newValue <= 0) {
+              console.log("Timer hit zero, triggering auto-release");
               clearInterval(timerRef.current);
               handleAutoRelease(session, cartRef.current);
-              return 0;
+              return 0; // Set state to 0
             }
             return newValue;
           });

@@ -545,7 +545,7 @@
   /* Two-column layout */
   .session-content {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px;
     align-items: start;
   }
@@ -654,7 +654,6 @@
   }
 
   .session-content {
-    grid-template-columns: 450px 1fr;
     gap: 40px;
   }
 

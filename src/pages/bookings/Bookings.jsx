@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { LayoutContext } from "../../context/LayoutContext";
-import { queueAPI, gamesAPI } from "../../services/api";
+import { queueAPI, gamesAPI, activeTablesAPI } from "../../services/api";
 import QueueModal from "../../components/queue/QueueModal";
 import "../../styles/queue.css";
 import { useNavigate } from "react-router-dom";
@@ -21,35 +21,77 @@ const Bookings = () => {
   const [showModal, setShowModal] = useState(false);
   const [summary, setSummary] = useState({ totalWaiting: 0, totalPlaying: 0, nextPlayer: null });
 
-  // Fetch queue data
+  // Fetch active sessions
+  const [activeSessions, setActiveSessions] = useState([]);
+
+  // Fetch queue data and active sessions
   const fetchQueue = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Fetch queue summary
-      const summaryData = await queueAPI.getSummary();
+      // Fetch queue summary, active sessions, waiting queue, playing list in parallel
+      const [summaryData, activeSessionsData, waitingData, playingData] = await Promise.all([
+        queueAPI.getSummary(),
+        activeTablesAPI.getAll().catch(() => []),
+        queueAPI.getAll(selectedGame ? { gameid: selectedGame } : {}),
+        queueAPI.getAll({ ...(selectedGame ? { gameid: selectedGame } : {}), status: "playing" })
+      ]);
+
       setSummary(summaryData);
+      
+      // Normalize active sessions
+      const sessions = (Array.isArray(activeSessionsData) ? activeSessionsData : []).map(s => ({
+         ...s,
+         table_id: s.tableid || s.table_id,
+         active_id: s.activeid || s.active_id,
+         end_time: s.endtimer || s.bookingendtime || s.booking_end_time,
+         game_id: s.gameid || s.game_id
+      }));
+      setActiveSessions(sessions);
 
-      // Fetch waiting queue
-      const params = {};
-      if (selectedGame) {
-        params.gameid = selectedGame;
-      }
-      const waitingData = await queueAPI.getAll(params);
       setQueueList(Array.isArray(waitingData) ? waitingData : []);
-
-      // Fetch playing entries
-      const playingData = await queueAPI.getAll({ ...params, status: "playing" });
       setPlayingList(Array.isArray(playingData) ? playingData : []);
 
     } catch (err) {
-      console.error("Failed to fetch queue:", err);
+      console.error("Failed to fetch data:", err);
       setError("Failed to load queue data");
     } finally {
       setLoading(false);
     }
   };
+
+  // Calculate estimated time helper
+  const getEstimatedTime = (item) => {
+      // 1. Check if preferred table is set
+      if (item.PreferredTable || item.preferredtableid) {
+          const tableId = item.PreferredTable?.id || item.preferredtableid;
+          
+          // Find active session for this table
+          const session = activeSessions.find(s => String(s.table_id) === String(tableId) && s.status === 'active');
+          
+          if (!session) {
+              return "Table Available";
+          }
+          
+          // Check if session has a fixed end time
+          if (session.end_time) {
+              const endTime = new Date(session.end_time);
+              const now = new Date();
+              
+              if (endTime < now) return "Table Available"; // Should be auto-released soon
+
+              return `Expected at ${endTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}`;
+          } else {
+              // Stopwatch mode or undetermined
+              return "Currently Playing";
+          }
+      }
+      
+      // 2. If no preferred table, we *could* find the earliest available table for this game
+      return `~${item.estimatedwaitminutes} min wait`; 
+  };
+
 
   // Fetch games for filter
   const fetchGames = async () => {
@@ -266,9 +308,7 @@ const Bookings = () => {
                       </div>
                       <div>
                         <span className="queue-time">{formatTime(item.createdat)}</span>
-                        {item.estimatedwaitminutes > 0 && (
-                          <div className="queue-wait">~{item.estimatedwaitminutes} min wait</div>
-                        )}
+                        <div className="queue-wait">{getEstimatedTime(item)}</div>
                       </div>
                       <span className="queue-status waiting">Waiting</span>
                       <div className="queue-actions">

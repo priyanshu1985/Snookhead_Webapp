@@ -27,9 +27,9 @@ const ENDPOINTS = {
   AUTOASSIGN: "/reservations/autoassign",
 
   // Active Tables
-  ACTIVE_TABLES: "/activeTables",
-  START_SESSION: "/activeTables/start",
-  STOP_SESSION: "/activeTables/stop",
+  ACTIVE_TABLES: "/activetables",
+  START_SESSION: "/activetables/start",
+  STOP_SESSION: "/activetables/stop",
 
   // Queue
   QUEUE: "/queue",

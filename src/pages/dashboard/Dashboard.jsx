@@ -18,10 +18,10 @@ const Dashboard = () => {
   const [error, setError] = useState("");
 
   // Fetch games, tables, and active sessions from API
-  const fetchData = async () => {
+  const fetchData = async (isBackground = false) => {
     try {
-      // Only set loading on first load to avoid flickering during auto-refresh
-      if (games.length === 0) setLoading(true);
+      // Only set loading on first load or manual refresh
+      if (!isBackground && games.length === 0) setLoading(true);
       
       const [gamesData, tablesData, sessionsData] = await Promise.all([
         gamesAPI.getAll(),
@@ -67,54 +67,27 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // Auto-release check interval
+  // Auto-refresh data every 5 seconds to keep UI in sync
   useEffect(() => {
-    const checkExpiredSessions = async () => {
-      const now = new Date();
-      let hasChanges = false;
-      
-      console.log(`[Auto-Release] Checking ${activeSessions.length} sessions at ${now.toLocaleTimeString()}`);
+    const intervalId = setInterval(() => {
+        // Only fetch if not already loading to avoid overlap
+        if (!loading) fetchData(true);
+    }, 5000);
 
-      for (const session of activeSessions) {
-        // Check only active sessions that are timer type
-        if (session.status !== 'active') continue;
-
-        // Use normalized keys
-        const bookingType = session.booking_type || 'timer';
-        const endTimerStr = session.end_time;
-        
-        console.log(`[Auto-Release] Session ${session.active_id}: Type=${bookingType}, End=${endTimerStr}`);
-
-        if (bookingType === 'timer' && endTimerStr) {
-           const endTime = new Date(endTimerStr);
-           const diff = endTime - now;
-           console.log(`[Auto-Release] Session ${session.active_id}: Diff=${diff}ms`);
-
-           // Add a small buffer (e.g. 1 sec) to ensure we don't preempt too aggressively
-           if (endTime < now) {
-               console.log(`[Auto-Release] EXPIRED! Auto-releasing session ${session.active_id}`);
-               try {
-                   await activeTablesAPI.autoRelease({ 
-                       active_id: session.active_id 
-                   });
-                   hasChanges = true;
-               } catch (e) {
-                   console.error("[Auto-Release] Auto-release failed", e);
-               }
-           }
-        }
-      }
-
-      if (hasChanges) {
-          console.log("[Auto-Release] Changes detected, refreshing data...");
-          fetchData();
-      }
+    // Listen for global updates (e.g. auto-release) to refresh immediately
+    const handleTableUpdate = () => {
+        console.log("Received table update event, refreshing Dashboard...");
+        fetchData(true);
     };
+    window.addEventListener('table-data-changed', handleTableUpdate);
 
-    // Run check every 10 seconds
-    const intervalId = setInterval(checkExpiredSessions, 10000);
-    return () => clearInterval(intervalId);
-  }, [activeSessions]);
+    return () => {
+        clearInterval(intervalId);
+        window.removeEventListener('table-data-changed', handleTableUpdate);
+    };
+  }, [loading]);
+
+
 
   // Filter tables by selected game
   const getTablesForGame = (gameId) => {
