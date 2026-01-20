@@ -178,7 +178,7 @@ const Bookings = () => {
         <div className="queue-page">
           {/* Header */}
           <div className="queue-header">
-            <h5 onClick={() => navigate(-1)}>← Queue Management</h5>
+            <h5 onClick={() => navigate(-1)}> Queue Management</h5>
           </div>
 
           {/* Tabs */}

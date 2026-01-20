@@ -89,7 +89,7 @@ const ReportBugs = () => {
 
         <div className="bugs-page">
           <div className="bugs-header">
-            <h5>← List of Bugs reported</h5>
+            <h5> List of Bugs reported</h5>
             <div className="filter-tabs">
               <button
                 className={filter === "all" ? "active" : ""}

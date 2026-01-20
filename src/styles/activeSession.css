@@ -600,8 +600,8 @@
 
   /* Menu items grid layout for larger screens */
   .menu-items-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 14px;
     max-height: 450px;
     overflow-y: auto;
@@ -658,7 +658,6 @@
   }
 
   .menu-items-list {
-    grid-template-columns: repeat(2, 1fr);
     max-height: 550px;
   }
 

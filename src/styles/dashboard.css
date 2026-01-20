@@ -24,8 +24,8 @@
 
 .dashboard-main {
   flex: 1;
-  padding: 20px;
-  padding-top: 90px; /* Space for fixed navbar */
+  padding: 0px;
+  padding-top: 40px; /* Space for fixed navbar */
   overflow-y: auto;
   overflow-x: hidden;
   transition: margin-left 0.3s ease;
@@ -43,7 +43,7 @@
 
 /* Content area with spacing from navbar */
 .dashboard-content {
-  margin-top: 24px;
+  margin-top: 8px;
 }
 
 /* LOADING & ERROR */

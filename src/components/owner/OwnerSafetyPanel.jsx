@@ -81,7 +81,7 @@ const OwnerSafetyPanel = ({ children }) => {
   // Mimicking the style from OwnersPanel.jsx
   return (
     <div className="owners-auth">
-       <h5>← Owners panel</h5>
+       <h5>Owners panel</h5>
 
       {needsSetup ? (
         <>

@@ -424,6 +424,11 @@ const TableBooking = () => {
                 ) : (
                   filteredMenu.map((item) => (
                     <div className="menu-item-card" key={item.id}>
+                      {item.imageUrl ? (
+                        <div className="item-image" style={{ width: "60px", height: "60px", borderRadius: "8px", overflow: "hidden", marginRight: "12px", flexShrink: 0 }}>
+                           <img src={item.imageUrl} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </div>
+                      ) : null}
                       <div className="menu-item-info">
                         <span className="item-name">{item.name}</span>
                         <span className="item-price">₹{item.price}</span>

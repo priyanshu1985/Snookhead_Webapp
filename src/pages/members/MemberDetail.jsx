@@ -150,7 +150,7 @@ const MemberDetail = () => {
         <div className="member-detail-page">
           <div className="member-detail-header">
             <button className="back-btn" onClick={() => navigate("/members")}>
-              ← Back to Members
+              ← 
             </button>
             <h4>Member Details</h4>
           </div>

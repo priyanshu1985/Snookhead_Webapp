@@ -648,8 +648,8 @@
 
   /* Menu grid layout for larger screens */
   .menu-items-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 12px;
     max-height: 400px;
     overflow-y: auto;
@@ -712,7 +712,6 @@
   }
 
   .menu-items-grid {
-    grid-template-columns: repeat(2, 1fr);
     max-height: 500px;
   }
 }

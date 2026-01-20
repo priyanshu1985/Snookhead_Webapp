@@ -233,6 +233,28 @@ const ActiveSession = () => {
           // This ensures that items booked in the previous step (saved to DB) appear correctly,
           // and also handles page refreshes.
           setCart(serverItems);
+          
+          // Populate savedItems map for delta calculation
+          const savedMap = {};
+          serverItems.forEach(item => {
+              savedMap[item.id] = item.qty;
+          });
+          setSavedItems(savedMap);
+        }
+        
+        // Store the order ID if available (usually the first one from consolidated response or we might need to fetch raw orders)
+        // ordersAPI.getBySession returns { orders: [...] }
+        if (response && response.orders && response.orders.length > 0) {
+            // Use the first pending order as the active one to append to
+            const pendingOrder = response.orders.find(o => o.status === 'pending');
+            if (pendingOrder) {
+                setActiveOrderId(pendingOrder.id);
+            } else if (response.orders.length > 0) {
+                // Should we append to a completed order? Probably not.
+                // If all are completed, maybe we need a new order?
+                // For now, assume a session has one main order.
+                setActiveOrderId(response.orders[0].id);
+            }
         }
       } catch (err) {
         console.error("Failed to fetch linked order:", err);
@@ -400,10 +422,58 @@ const ActiveSession = () => {
     setIsPaused(!isPaused);
   };
 
-  // Handle update (confirm items added - keep them in cart for final bill)
+  // Track saved item quantities to calculate deltas
+  const [savedItems, setSavedItems] = useState({});
+  const [activeOrderId, setActiveOrderId] = useState(null);
+
+  // Handle update (confirm items added - sync to backend order)
   const handleUpdate = async () => {
-    alert("Items confirmed! They will be included in the final bill.");
-    // Don't clear cart - items should remain for final bill calculation
+    if (!activeOrderId) {
+        alert("No active order found for this session. Please try refreshing.");
+        return;
+    }
+
+    // Calculate items to add (delta between current cart and savedItems)
+    const itemsToAdd = [];
+    
+    cart.forEach(item => {
+        const savedQty = savedItems[item.id] || 0;
+        const currentQty = item.qty;
+        
+        if (currentQty > savedQty) {
+            const delta = currentQty - savedQty;
+            itemsToAdd.push({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                qty: delta
+            });
+        }
+    });
+
+    if (itemsToAdd.length === 0) {
+        alert("No new items to update.");
+        return;
+    }
+
+    try {
+        setGenerating(true); // Reuse generating state for loading
+        await ordersAPI.addItems(activeOrderId, itemsToAdd);
+        
+        // Update saved items reference
+        const newSavedItems = { ...savedItems };
+        itemsToAdd.forEach(item => {
+            newSavedItems[item.id] = (newSavedItems[item.id] || 0) + item.qty;
+        });
+        setSavedItems(newSavedItems);
+        
+        alert("Order updated successfully!");
+    } catch (err) {
+        console.error("Failed to update order:", err);
+        alert("Failed to update order. Please try again.");
+    } finally {
+        setGenerating(false);
+    }
   };
 
   // Handle generate bill
@@ -623,7 +693,11 @@ const ActiveSession = () => {
                     return (
                       <div className="menu-item-row" key={item.id}>
                         <div className="item-image">
-                          <div className="placeholder-img">🍽</div>
+                          {item.imageUrl ? (
+                             <img src={item.imageUrl} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} />
+                          ) : (
+                             <div className="placeholder-img">🍽</div>
+                          )}
                         </div>
                         <div className="item-details">
                           <span className="item-name">{item.name}</span>

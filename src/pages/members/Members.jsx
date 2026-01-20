@@ -26,13 +26,19 @@ const Members = () => {
         const customersData = await customersAPI.getAll();
         setMembers(customersData);
 
-        // Fetch all wallets and create a map by customer_id
+            // Fetch all wallets and create a map by customer_id
         try {
           const walletsData = await walletsAPI.getAll();
+          
           const walletMap = {};
           walletsData.forEach((w) => {
-            walletMap[w.customer_id] = w;
+            // Backend might return lowercase keys (customerid) from direct DB query
+            const cId = w.customer_id || w.customerid;
+            if (cId) {
+                walletMap[cId] = w;
+            }
           });
+          
           setWallets(walletMap);
         } catch (walletErr) {
           console.log("Could not fetch wallets:", walletErr.message);
@@ -62,9 +68,9 @@ const Members = () => {
   const formatCurrency = (amount) => {
     const num = Number(amount);
     if (num < 0) {
-      return `-$${Math.abs(num).toFixed(2)}`;
+      return `-₹${Math.abs(num).toFixed(2)}`;
     }
-    return `$${num.toFixed(2)}`;
+    return `₹${num.toFixed(2)}`;
   };
 
   // Get contact info (prefer phone, fallback to email)
@@ -76,11 +82,11 @@ const Members = () => {
   const getFilteredMembers = () => {
     switch (activeTab) {
       case "credits":
-        // Members with positive balance (credits)
-        return members.filter((m) => getBalance(m.id) > 0);
-      case "balance":
-        // Members with negative balance (owe money)
+        // User Request: < 0 goes to Credits
         return members.filter((m) => getBalance(m.id) < 0);
+      case "balance":
+        // User Request: > 0 goes to Balance
+        return members.filter((m) => getBalance(m.id) > 0);
       default:
         return members;
     }

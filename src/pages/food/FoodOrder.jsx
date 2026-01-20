@@ -377,7 +377,15 @@ const FoodOrder = () => {
                         <div className="food-item-card" key={item.id}>
                           {/* Food Image Placeholder */}
                           <div className="food-item-image">
-                            <div className="food-placeholder-img">
+                            {item.imageUrl ? (
+                               <img 
+                                 src={item.imageUrl} 
+                                 alt={item.name} 
+                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
+                               />
+                            ) : null}
+                            <div className="food-placeholder-img" style={{ display: item.imageUrl ? 'none' : 'flex' }}>
                               <PlateIcon size={40} color="#ccc" />
                             </div>
                             {/* Veg/Non-Veg Indicator */}

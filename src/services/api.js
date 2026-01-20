@@ -46,6 +46,7 @@ const ENDPOINTS = {
   // Menu
   MENU: "/menu",
   MENU_BY_ID: (id) => `/menu/${id}`,
+  UPDATE_STOCK: (id) => `/menu/${id}/stock`,
 
   // Food
   FOOD: "/food",
@@ -83,6 +84,7 @@ const ENDPOINTS = {
 
   // Stock Images
   STOCK_IMAGES_GAMES: "/stock-images/games",
+  STOCK_IMAGES_MENU: "/stock-images/menu",
 
   // Bugs
   BUGS: "/bugs",
@@ -395,6 +397,12 @@ export const menuAPI = {
     }),
 
   delete: (id) => apiRequest(ENDPOINTS.MENU_BY_ID(id), { method: "DELETE" }),
+
+  updateStock: (id, quantity) => 
+    apiRequest(ENDPOINTS.UPDATE_STOCK(id), {
+      method: "PATCH",
+      body: JSON.stringify({ quantity }),
+    }),
 };
 
 // Food API
@@ -450,6 +458,12 @@ export const ordersAPI = {
     }),
 
   delete: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id), { method: "DELETE" }),
+
+  addItems: (id, items) =>
+    apiRequest(`${ENDPOINTS.ORDERS}/${id}/items`, {
+      method: "POST",
+      body: JSON.stringify({ items }),
+    }),
 };
 
 // Billing API
@@ -596,6 +610,7 @@ export const healthAPI = {
 // Stock Images API
 export const stockImagesAPI = {
   getGameImages: () => apiRequest(ENDPOINTS.STOCK_IMAGES_GAMES),
+  getMenuImages: () => apiRequest(ENDPOINTS.STOCK_IMAGES_MENU),
 };
 
 // Bugs API

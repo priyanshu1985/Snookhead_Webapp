@@ -19,7 +19,7 @@ const OwnersPanel = () => {
 
         <OwnerSafetyPanel>
           <div className="owners-dashboard">
-            <h5>← Owners panel</h5>
+            <h5>Owners panel</h5>
 
             {/* TOP CARDS */}
             <div className="owners-cards">
