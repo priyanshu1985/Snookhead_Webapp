@@ -5,7 +5,6 @@ import "../../styles/creategame.css";
 const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
   const [formData, setFormData] = useState({
     name: "",
-    dimension: "",
     type: "",
     pricePerMin: "",
     frameCharge: "",
@@ -53,7 +52,6 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
     if (editingTable) {
       setFormData({
         name: editingTable.name || "",
-        dimension: editingTable.dimension || "",
         type: editingTable.type || "",
         pricePerMin: editingTable.pricePerMin || "",
         frameCharge: editingTable.frameCharge || "",
@@ -126,13 +124,23 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
       return;
     }
 
+    if (!formData.pricePerMin) {
+      alert("Please enter Price Per Minute");
+      return;
+    }
+
+    if (!formData.frameCharge) {
+      alert("Please enter Frame Charge");
+      return;
+    }
+
     const payload = {
       name: formData.name,
-      dimension: formData.dimension || null,
       type: formData.type || null,
       pricePerMin: formData.pricePerMin ? parseFloat(formData.pricePerMin) : null,
       frameCharge: formData.frameCharge ? parseFloat(formData.frameCharge) : null,
       status: formData.status,
+      gameid: gameId,
       game_id: gameId,
     };
 
@@ -195,17 +203,7 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
             />
           </div>
 
-          {/* Dimension */}
-          <div className="form-group">
-            <label>Dimension</label>
-            <input
-              type="text"
-              name="dimension"
-              placeholder="e.g., 12x6 ft"
-              value={formData.dimension}
-              onChange={handleChange}
-            />
-          </div>
+
 
           {/* Type */}
           <div className="form-group">
@@ -221,7 +219,7 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
 
           {/* Price Per Minute */}
           <div className="form-group">
-            <label>Price Per Minute (₹)</label>
+            <label>Price Per Minute (₹) *</label>
             <input
               type="number"
               name="pricePerMin"
@@ -230,12 +228,13 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
               step="0.01"
               value={formData.pricePerMin}
               onChange={handleChange}
+              required
             />
           </div>
 
           {/* Frame Charge */}
           <div className="form-group">
-            <label>Frame Charge (₹)</label>
+            <label>Frame Charge (₹) *</label>
             <input
               type="number"
               name="frameCharge"
@@ -244,22 +243,11 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
               step="0.01"
               value={formData.frameCharge}
               onChange={handleChange}
+              required
             />
           </div>
 
-          {/* Status */}
-          <div className="form-group">
-            <label>Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <option value="available">Available</option>
-              <option value="reserved">Reserved</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-          </div>
+
 
           {/* Actions */}
           <div className="modal-actions">

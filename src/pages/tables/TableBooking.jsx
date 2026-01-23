@@ -4,7 +4,7 @@ import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import TableBookedModal from "../../components/tables/TableBookedModel";
-import { menuAPI, activeTablesAPI, tablesAPI } from "../../services/api";
+import { menuAPI, activeTablesAPI, tablesAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
 
@@ -45,7 +45,18 @@ const TableBooking = () => {
         setLoadingMenu(true);
         const data = await menuAPI.getAll();
         const items = data?.data || (Array.isArray(data) ? data : []);
-        setMenuItems(items);
+        
+        // Sanitize image URLs: Replace localhost:4000 with current backend URL
+        const processedItems = items.map(item => {
+          if (item.imageUrl && item.imageUrl.includes('localhost:4000')) {
+             // Replace both http and https variants just in case
+             const cleanUrl = item.imageUrl.replace(/https?:\/\/localhost:4000/g, IMAGE_BASE_URL);
+             return { ...item, imageUrl: cleanUrl };
+          }
+          return item;
+        });
+
+        setMenuItems(processedItems);
       } catch (err) {
         console.error("Failed to fetch menu:", err);
       } finally {
@@ -116,10 +127,7 @@ const TableBooking = () => {
 
   // Handle booking
   const handleBook = async () => {
-    if (!customerName.trim()) {
-      setError("Please enter customer name");
-      return;
-    }
+    // Customer Name is Optional - will default to "Walk-in Customer" if empty
 
     // Validate booking based on mode
     if (!isBookingValid()) {
@@ -128,6 +136,7 @@ const TableBooking = () => {
     }
 
     const duration = getDurationMinutes();
+    const finalCustomerName = customerName.trim() || "Walk-in Customer";
 
     try {
       setBooking(true);
@@ -138,7 +147,7 @@ const TableBooking = () => {
         table_id: tableId,
         game_id: tableInfo?.gameid || tableInfo?.game_id,
         duration_minutes: duration,
-        customer_name: customerName,
+        customer_name: finalCustomerName,
         booking_type: timeMode, // 'timer' = countdown, 'set' = stopwatch (count up), 'frame' = frame-based
         frame_count: timeMode === "frame" ? frameCount : null, // Send frame count for frame mode
         cart: cart.map((item) => ({
@@ -188,7 +197,7 @@ const TableBooking = () => {
                 <p className="section-title">Customer Details</p>
                 <input
                   type="text"
-                  placeholder="Enter Customer Name *"
+                  placeholder="Enter Customer Name (Optional)"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   className="form-control"
@@ -422,22 +431,36 @@ const TableBooking = () => {
                 ) : filteredMenu.length === 0 ? (
                   <p className="empty-text">{searchQuery ? `No items found for "${searchQuery}"` : "No food items available"}</p>
                 ) : (
-                  filteredMenu.map((item) => (
-                    <div className="menu-item-card" key={item.id}>
-                      {item.imageUrl ? (
-                        <div className="item-image" style={{ width: "60px", height: "60px", borderRadius: "8px", overflow: "hidden", marginRight: "12px", flexShrink: 0 }}>
-                           <img src={item.imageUrl} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  filteredMenu.map((item) => {
+                    const cartItem = cart.find(c => c.id === item.id);
+                    const quantity = cartItem ? cartItem.qty : 0;
+
+                    return (
+                      <div className="menu-item-card" key={item.id}>
+                        {item.imageUrl ? (
+                          <div className="item-image">
+                             <img src={item.imageUrl} alt={item.name} />
+                          </div>
+                        ) : null}
+                        <div className="menu-item-info">
+                          <span className="item-name">{item.name}</span>
+                          <span className="item-price">₹{item.price}</span>
                         </div>
-                      ) : null}
-                      <div className="menu-item-info">
-                        <span className="item-name">{item.name}</span>
-                        <span className="item-price">₹{item.price}</span>
+                        
+                        {quantity > 0 ? (
+                          <div className="qty-controls-card">
+                            <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                            <span>{quantity}</span>
+                            <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                          </div>
+                        ) : (
+                          <button className="add-btn" onClick={() => addToCart(item)}>
+                            ADD
+                          </button>
+                        )}
                       </div>
-                      <button className="add-btn" onClick={() => addToCart(item)}>
-                        ADD
-                      </button>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

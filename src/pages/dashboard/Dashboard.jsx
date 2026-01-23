@@ -98,7 +98,9 @@ const Dashboard = () => {
   };
 
   const selectedGameId = selectedGame ? (selectedGame.game_id || selectedGame.gameid) : null;
-  const currentTables = selectedGameId ? getTablesForGame(selectedGameId) : [];
+  const currentTables = selectedGameId 
+    ? getTablesForGame(selectedGameId).sort((a, b) => a.id - b.id) 
+    : [];
 
   // Get status color class
   const getStatusClass = (status) => {
@@ -263,7 +265,7 @@ const Dashboard = () => {
 
                             {/* Table Number */}
                             <div className="table-number">
-                              {String(index + 1).padStart(2, "0")}
+                              {table.name}
                             </div>
 
                             {/* Show booked by info if active session exists */}

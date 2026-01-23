@@ -49,7 +49,8 @@ const Billing = () => {
 
   const currentTabBills = activeTab === "active" ? activeBills : paidBills;
   
-  const billsToRender = currentTabBills.filter((bill) => {
+  const billsToRender = currentTabBills
+    .filter((bill) => {
       // Search by Name or Bill Number
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = (bill.customer_name || "").toLowerCase().includes(searchLower) ||
@@ -62,7 +63,8 @@ const Billing = () => {
           matchesDate = billDate === dateFilter;
       }
       return matchesSearch && matchesDate;
-  });
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by newest first
 
   // Format date
   const formatDate = (dateString) => {

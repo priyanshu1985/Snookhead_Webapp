@@ -29,9 +29,6 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
         name: initialData.name || "",
         category: initialData.category || "",
         price: initialData.price || "",
-        name: initialData.name || "",
-        category: initialData.category || "",
-        price: initialData.price || "",
         purchasePrice: initialData.purchasePrice || "",
         image_url: initialData.imageUrl || initialData.image_url || initialData.imageurl || "",
       });
