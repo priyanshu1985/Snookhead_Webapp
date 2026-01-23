@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { menuAPI, ordersAPI } from "../../services/api";
+import { menuAPI, ordersAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import {
   PlateIcon,
@@ -87,7 +87,17 @@ const FoodOrder = () => {
         setLoading(true);
         const data = await menuAPI.getAll();
         const items = data?.data || (Array.isArray(data) ? data : []);
-        setMenuItems(items);
+        
+        // Sanitize image URLs
+        const processedItems = items.map(item => {
+          if (item.imageUrl && item.imageUrl.includes('localhost:4000')) {
+             const cleanUrl = item.imageUrl.replace(/https?:\/\/localhost:4000/g, IMAGE_BASE_URL);
+             return { ...item, imageUrl: cleanUrl };
+          }
+          return item;
+        });
+
+        setMenuItems(processedItems);
         setError("");
       } catch (err) {
         console.error("Failed to fetch menu items:", err);
