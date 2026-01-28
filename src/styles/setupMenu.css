@@ -27,20 +27,23 @@
 }
 
 .setup-header .back-btn {
-  background: #fff;
+  background: transparent;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 0;
+  margin-right: 8px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  color: #333;
 }
 
 .setup-header .back-btn:hover {
-  background: #FEF3E7;
+  background: transparent;
   color: #F08626;
-  transform: translateX(-2px);
+  transform: translateX(-4px);
 }
 
 .setup-header h5 {

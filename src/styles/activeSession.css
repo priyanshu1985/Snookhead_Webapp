@@ -1,37 +1,44 @@
+
+@import "./tableBooking.css";
 /* =========================
    ACTIVE SESSION PAGE
 ========================= */
 
+/* Unified Booking Panel Overrides */
 .active-session-page {
-  max-width: 500px;
+  padding: 0 20px 20px; /* Removed top padding to fix negative space */
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
-  padding-bottom: 30px;
 }
 
-/* HEADER */
+/* HEADER - FIXED ALIGNMENT */
 .session-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .session-header .back-btn {
-  background: #fff;
+  background: transparent;
   border: none;
-  font-size: 20px;
+  font-size: 28px; /* High visibility */
   cursor: pointer;
-  padding: 10px 14px;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 0;
+  margin-right: 8px;
+  box-shadow: none;
+  display: flex; /* Flex center for the character */
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  line-height: 1;
+  transform: translateY(-5px); /* LIFT ARROW UP to match text optical center */
 }
 
 .session-header .back-btn:hover {
-  background: #FEF3E7;
-  color: #F08626;
-  transform: translateX(-2px);
+  background: transparent;
+  color: #f08626;
+  transform: translateY(-3px) translateX(-4px); /* Maintain lift on hover */
 }
 
 .session-header h5 {
@@ -39,6 +46,9 @@
   margin: 0;
   font-weight: 600;
   color: #333;
+  line-height: 1; /* Tight line height for alignment */
+  display: flex;
+  align-items: center;
 }
 
 .session-header .table-code {
@@ -238,107 +248,185 @@
   color: #fff;
 }
 
-/* MENU ITEMS LIST */
+/* MENU ITEMS GRID */
 .menu-items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px; /* Increased gap for taller cards */
   margin-bottom: 20px;
 }
 
-.menu-item-row {
+.menu-item-card {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: row;
+  justify-content: space-between;
   background: #fff;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  border-radius: 16px;
+  overflow: visible; /* Needed for floating button overlap */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  height: 110px;
+  padding: 12px;
+  position: relative;
 }
 
-.menu-item-row:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.menu-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #e0e0e0;
 }
 
-.item-image {
-  width: 55px;
-  height: 55px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.placeholder-img {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #FEF3E7 0%, #ffe6d0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  border-radius: 10px;
-}
-
-.item-details {
+/* Left Side: Info */
+.menu-item-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: flex-start;
+  padding-right: 12px;
+  height: 100%;
 }
 
-.item-details .item-name {
+.veg-icon, .non-veg-icon {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #1a9f34; /* Green for veg */
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.non-veg-icon {
+  border-color: #e23744; /* Red for non-veg */
+}
+
+.veg-icon::after, .non-veg-icon::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #1a9f34;
+  border-radius: 50%;
+}
+
+.non-veg-icon::after {
+  background: #e23744;
+}
+
+.menu-item-info .item-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.menu-item-info .item-price {
+  font-size: 15px;
   font-weight: 600;
   color: #333;
+  margin-bottom: 8px;
 }
 
-.item-details .item-qty {
+.menu-item-info .item-description {
   font-size: 12px;
   color: #888;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.item-details .item-qty.has-qty {
-  color: #F08626;
-  font-weight: 600;
+/* Right Side: Image + Action */
+.menu-item-image-container {
+  width: 90px;
+  height: 80px;
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
-.item-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+.menu-item-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
-.item-actions .add-btn {
-  background: none;
-  border: 2px solid #F08626;
-  color: #F08626;
-  padding: 6px 18px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* Floating Add Button */
+.add-btn-container {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 36px;
+  z-index: 2;
 }
 
-.item-actions .add-btn:hover {
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
-  border-color: #F08626;
-  color: #fff;
-}
-
-.item-actions .item-price {
-  font-weight: 700;
-  color: #F08626;
-}
-
-/* ORDER SUMMARY */
-.order-summary {
+.menu-item-card .add-btn {
+  width: 100%;
+  height: 100%;
   background: #fff;
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 2px solid #FEF3E7;
+  border: 1px solid #d4d5d9;
+  color: #F08626; /* Brand Orange */
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin: 0;
+}
+
+.menu-item-card .add-btn:hover {
+  background: #f9f9f9;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transform: none;
+}
+
+/* Quantity Controls in same floating position */
+.qty-controls-floating {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #F08626; /* Brand Orange border */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.qty-controls-floating button {
+  width: 30px;
+  height: 100%;
+  border: none;
+  background: #fff;
+  color: #F08626; /* Brand Orange */
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-controls-floating button:hover {
+  background: #FEF3E7; /* Light Orange hover */
+}
+
+.qty-controls-floating span {
+  font-weight: 700;
+  color: #F08626; /* Brand Orange */
+  font-size: 14px;
 }
 
 .order-summary h6 {
@@ -600,12 +688,12 @@
 
   /* Menu items grid layout for larger screens */
   .menu-items-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
     max-height: 450px;
     overflow-y: auto;
-    padding-right: 8px;
+    padding: 4px; /* Space for shadows */
   }
 
   .menu-items-list::-webkit-scrollbar {
@@ -713,4 +801,110 @@
   .session-actions {
     padding: 12px 16px;
   }
+}
+
+/* Unified Booking Panel Overrides */
+.active-session-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Specific Active Session Unified Styles */
+.timer-display-unified {
+  font-size: 56px;
+  font-weight: 800;
+  color: #c2410c; /* Deep Orange */
+  line-height: 1;
+  margin: 10px 0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 12px rgba(240, 134, 38, 0.15);
+}
+
+.timer-display-unified.timer-critical {
+  color: #ef4444;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.elapsed-text-unified {
+  font-size: 13px;
+  color: #9a3412;
+  font-weight: 500;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.session-controls-unified {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.control-btn-unified {
+  padding: 8px 16px;
+  border: 1px solid #fed7aa;
+  background: #fff;
+  color: #ea580c;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.control-btn-unified:hover {
+  background: #fff7ed;
+  border-color: #f08626;
+}
+
+.control-btn-unified.paused {
+  background: #fff7ed;
+  border-color: #f08626;
+  color: #c2410c;
+}
+
+.action-buttons-unified {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.secondary-btn-unified {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-btn-unified:hover:not(:disabled) {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.secondary-btn-unified:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ensure Unified Panel fills height if needed */
+.booking-panel {
+  height: 100%;
 }

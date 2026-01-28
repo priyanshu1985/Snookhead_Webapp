@@ -21,20 +21,24 @@
 }
 
 .back-btn {
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 8px 16px;
-  border-radius: 8px;
-  color: #666;
-  font-size: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  color: #333;
+  font-size: 24px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
 }
 
 .back-btn:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
+  background: transparent;
+  color: #f08626;
+  transform: translateX(-4px);
+  border-color: transparent;
 }
 
 /* Content Grid */

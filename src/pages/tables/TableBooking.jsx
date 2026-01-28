@@ -170,6 +170,17 @@ const TableBooking = () => {
     navigate("/dashboard");
   };
 
+  // Image error handling
+  const [failedImages, setFailedImages] = useState(new Set());
+
+  const handleImageError = (id) => {
+    setFailedImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+  };
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
@@ -191,209 +202,174 @@ const TableBooking = () => {
           <div className="booking-content">
             {/* Left Column - Time Selection */}
             <div className="booking-left-column">
-              
-              {/* Customer Name Input */}
-              <div className="customer-name-section" style={{marginBottom: '20px'}}>
-                <p className="section-title">Customer Details</p>
-                <input
-                  type="text"
-                  placeholder="Enter Customer Name (Optional)"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="form-control"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd',
-                    fontSize: '16px'
-                  }}
-                />
-              </div>
-
-              <p className="section-title">Select Time</p>
-              <div className="radio-row">
-                <label className={timeMode === "timer" ? "active" : ""}>
+              <div className="booking-panel">
+                
+                {/* Section 1: Customer Details */}
+                <div className="panel-section">
+                  <label className="panel-label">Customer Name</label>
                   <input
-                    type="radio"
-                    name="time"
-                    value="timer"
-                    checked={timeMode === "timer"}
-                    onChange={(e) => setTimeMode(e.target.value)}
+                    type="text"
+                    placeholder="Enter Name (Optional)"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="form-control compact-input"
                   />
-                  Timer
-                </label>
+                </div>
 
-                <label className={timeMode === "set" ? "active" : ""}>
-                  <input
-                    type="radio"
-                    name="time"
-                    value="set"
-                    checked={timeMode === "set"}
-                    onChange={(e) => setTimeMode(e.target.value)}
-                  />
-                  Set Time
-                </label>
-
-                <label className={timeMode === "frame" ? "active" : ""}>
-                  <input
-                    type="radio"
-                    name="time"
-                    value="frame"
-                    checked={timeMode === "frame"}
-                    onChange={(e) => setTimeMode(e.target.value)}
-                  />
-                  Select Frame
-                </label>
-              </div>
-
-              {/* Time Input based on mode */}
-              <div className="time-input-section">
-                {timeMode === "timer" && (
-                  <div className="timer-input">
-                    <label>Duration (minutes)</label>
-                    <div className="timer-controls">
-                      <button onClick={() => setTimerMinutes(Math.max(5, timerMinutes - 5))}>-</button>
+                {/* Section 2: Mode Selection */}
+                <div className="panel-section">
+                   <div className="radio-row">
+                    <label className={timeMode === "timer" ? "active" : ""}>
                       <input
-                        type="number"
-                        value={timerMinutes}
-                        onChange={(e) => setTimerMinutes(Math.max(1, Number(e.target.value)))}
-                        min="1"
+                        type="radio"
+                        name="time"
+                        value="timer"
+                        checked={timeMode === "timer"}
+                        onChange={(e) => setTimeMode(e.target.value)}
                       />
-                      <button onClick={() => setTimerMinutes(timerMinutes + 5)}>+</button>
-                    </div>
-                    <div className="quick-times">
-                      {[15, 30, 45, 60, 90, 120].map((mins) => (
-                        <button
-                          key={mins}
-                          className={timerMinutes === mins ? "active" : ""}
-                          onClick={() => setTimerMinutes(mins)}
-                        >
-                          {mins < 60 ? `${mins}m` : `${mins / 60}h`}
-                        </button>
-                      ))}
-                    </div>
+                      Timer
+                    </label>
+
+                    <label className={timeMode === "set" ? "active" : ""}>
+                      <input
+                        type="radio"
+                        name="time"
+                        value="set"
+                        checked={timeMode === "set"}
+                        onChange={(e) => setTimeMode(e.target.value)}
+                      />
+                      Stopwatch
+                    </label>
+
+                    <label className={timeMode === "frame" ? "active" : ""}>
+                      <input
+                        type="radio"
+                        name="time"
+                        value="frame"
+                        checked={timeMode === "frame"}
+                        onChange={(e) => setTimeMode(e.target.value)}
+                      />
+                      Frames
+                    </label>
                   </div>
-                )}
+                </div>
 
-                {timeMode === "set" && (
-                  <div className="set-time-input">
-                    <div className="stopwatch-info">
-                      <div className="stopwatch-icon">⏱</div>
-                      <p className="stopwatch-label">Stopwatch Mode</p>
-                      <p className="stopwatch-description">
-                        Timer will count UP from 00:00 when the session starts.
-                        Click "Generate Bill" when the customer is done to calculate charges based on actual time spent.
-                      </p>
+                {/* Section 3: Variable Input (Controls) */}
+                <div className="panel-section highlight-section">
+                  {timeMode === "timer" && (
+                    <div className="timer-input-compact">
+                      <div className="timer-controls">
+                        <button onClick={() => setTimerMinutes(Math.max(5, timerMinutes - 5))}>-</button>
+                        <input
+                          type="number"
+                          value={timerMinutes}
+                          onChange={(e) => setTimerMinutes(Math.max(1, Number(e.target.value)))}
+                          min="1"
+                        />
+                        <button onClick={() => setTimerMinutes(timerMinutes + 5)}>+</button>
+                        <span className="unit-label">mins</span>
+                      </div>
+                      <div className="quick-times">
+                        {[30, 60, 90, 120].map((mins) => (
+                          <button
+                            key={mins}
+                            className={timerMinutes === mins ? "active" : ""}
+                            onClick={() => setTimerMinutes(mins)}
+                          >
+                            {mins}m
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {timeMode === "frame" && (
-                  <div className="frame-input">
-                    <label>Number of Frames</label>
-                    <div className="frame-controls">
-                      <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
-                      <span>{frameCount}</span>
-                      <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
+                  {timeMode === "set" && (
+                    <div className="info-message">
+                      <span>⏱ Stopwatch Mode</span>
+                      <small>Billing typically starts after booking.</small>
                     </div>
-                    <p className="frame-mode-hint">
-                      Billing based on frames, not time. Click "Generate Bill" when done.
-                    </p>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              {/* Pricing Info & Cart Combined */}
-              <div className="pricing-info">
-                {tableInfo && (
-                  <>
-                    {/* Show price per minute for Timer mode */}
-                    {timeMode === "timer" && (
-                      <div>
-                        <span>Price per minute:</span>
-                        <span>₹{tableInfo.pricePerMin || 0}</span>
+                  {timeMode === "frame" && (
+                    <div className="frame-input-compact">
+                      <div className="frame-controls">
+                        <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
+                        <span>{frameCount}</span>
+                        <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
+                        <span className="unit-label">Frames</span>
                       </div>
-                    )}
-                    {/* Show price per minute for Stopwatch mode */}
-                    {timeMode === "set" && (
-                      <div>
-                        <span>Price per minute:</span>
-                        <span>₹{tableInfo.pricePerMin || 0}</span>
-                      </div>
-                    )}
-                    {/* Show frame charge for Frame mode */}
-                    {timeMode === "frame" && (
-                      <div>
-                        <span>Price per frame:</span>
-                        <span>₹{tableInfo.frameCharge || 0}</span>
-                      </div>
-                    )}
+                    </div>
+                  )}
+                </div>
 
-                    {/* Cost estimate based on mode */}
-                    {timeMode === "timer" && (
-                      <div className="estimate">
-                        <span>Est. Table Cost ({getDurationMinutes()} mins):</span>
-                        <span>₹{(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}</span>
+                {/* Section 4: Bill / Pricing */}
+                <div className="panel-section bill-section">
+                  {tableInfo && (
+                    <div className="bill-details">
+                      {/* Price Rate Line */}
+                      <div className="bill-row">
+                        <span>Rate</span>
+                        <span>
+                          {timeMode === "frame" 
+                            ? `₹${tableInfo.frameCharge || 0}/frame` 
+                            : `₹${tableInfo.pricePerMin || 0}/min`}
+                        </span>
                       </div>
-                    )}
-                    {timeMode === "set" && (
-                      <div className="estimate">
-                        <span>Table Cost:</span>
-                        <span>Based on actual time (Stopwatch)</span>
-                      </div>
-                    )}
-                    {timeMode === "frame" && (
-                      <div className="estimate">
-                        <span>Frame Cost ({frameCount} frame{frameCount > 1 ? 's' : ''}):</span>
-                        <span>₹{(frameCount * (tableInfo.frameCharge || 0)).toFixed(2)}</span>
-                      </div>
-                    )}
-                  </>
-                )}
 
-                {/* Food Items in Same Card if Cart has items */}
-                {cart.length > 0 && (
-                  <div className="food-items-section">
-                    <p className="food-items-title">Food Items</p>
-                    {cart.map((item) => (
-                      <div className="food-item-row" key={item.id}>
-                        <span className="food-item-name">{item.name}</span>
-                        <div className="food-item-controls">
-                          <button onClick={() => updateCartQty(item.id, -1)}>-</button>
-                          <span>{item.qty}</span>
-                          <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                      {/* Estimated Cost Line */}
+                      {timeMode !== "set" && (
+                         <div className="bill-row highlight">
+                           <span>{timeMode === "frame" ? "Frame Cost" : "Time Cost"}</span>
+                           <span>
+                             {timeMode === "frame" 
+                               ? `₹${(frameCount * (tableInfo.frameCharge || 0)).toFixed(2)}`
+                               : `₹${(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}`
+                             }
+                           </span>
+                         </div>
+                      )}
+
+                      {/* Food Items List */}
+                      {cart.length > 0 && (
+                        <div className="bill-food-list">
+                          <label>Food Items</label>
+                          {cart.map((item) => (
+                            <div className="bill-food-row" key={item.id}>
+                              <span className="name">{item.name}</span>
+                              <span className="qty">{item.qty} x</span>
+                              <span className="price">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                            </div>
+                          ))}
                         </div>
-                        <span className="food-item-price">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                      )}
+                      
+                      {/* Total Divider */}
+                      <div className="panel-divider"></div>
+
+                      {/* Grand Total */}
+                      <div className="bill-total-row">
+                        <span>Total to Pay</span>
+                         {timeMode === "set" ? (
+                            <span>₹{cartTotal.toFixed(2)} + Time</span>
+                          ) : (
+                            <span>
+                              ₹{((timeMode === "frame" 
+                                  ? (frameCount * (tableInfo.frameCharge || 0)) 
+                                  : (getDurationMinutes() * (tableInfo.pricePerMin || 0))
+                                ) + cartTotal).toFixed(2)
+                              }
+                            </span>
+                          )}
                       </div>
-                    ))}
-                    <div className="food-total">
-                      <span>Food Total:</span>
-                      <span>₹{cartTotal.toFixed(2)}</span>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Grand Total */}
-                {tableInfo && (
-                  <div className="grand-total">
-                    <strong>Grand Total:</strong>
-                    {timeMode === "timer" && (
-                      <strong>₹{((getDurationMinutes() * (tableInfo.pricePerMin || 0)) + cartTotal).toFixed(2)}</strong>
-                    )}
-                    {timeMode === "set" && (
-                      <strong>₹{cartTotal.toFixed(2)} + Time</strong>
-                    )}
-                    {timeMode === "frame" && (
-                      <strong>₹{((frameCount * (tableInfo.frameCharge || 0)) + cartTotal).toFixed(2)}</strong>
-                    )}
-                  </div>
-                )}
+                  {/* Action Button */}
+                  <button className="book-btn-unified" onClick={handleBook} disabled={booking}>
+                    {booking ? "Processing..." : "Confirm Booking"}
+                  </button>
+                </div>
 
-                {/* Book Button */}
-                <button className="book-btn" onClick={handleBook} disabled={booking}>
-                  {booking ? "Booking..." : "Book Table"}
-                </button>
               </div>
             </div>
 
@@ -434,30 +410,52 @@ const TableBooking = () => {
                   filteredMenu.map((item) => {
                     const cartItem = cart.find(c => c.id === item.id);
                     const quantity = cartItem ? cartItem.qty : 0;
+                    const hasValidImage = item.imageUrl && item.imageUrl.trim() !== "" && !failedImages.has(item.id);
 
                     return (
                       <div className="menu-item-card" key={item.id}>
-                        {item.imageUrl ? (
-                          <div className="item-image">
-                             <img src={item.imageUrl} alt={item.name} />
-                          </div>
-                        ) : null}
+                        {/* LEFT: Info */}
                         <div className="menu-item-info">
+                          <div className={item.isVeg === false ? "non-veg-icon" : "veg-icon"}></div>
                           <span className="item-name">{item.name}</span>
                           <span className="item-price">₹{item.price}</span>
+                          <p className="item-description">{item.description || "Delicious food item"}</p>
                         </div>
-                        
-                        {quantity > 0 ? (
-                          <div className="qty-controls-card">
-                            <button onClick={() => updateCartQty(item.id, -1)}>-</button>
-                            <span>{quantity}</span>
-                            <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+
+                        {/* RIGHT: Image + Floating Action */}
+                        <div className="menu-item-image-container">
+                          {item.imageUrl ? (
+                             <img 
+                               src={item.imageUrl} 
+                               alt={item.name} 
+                               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                             />
+                          ) : null}
+                          <div className="placeholder-img" style={{
+                            height: '100%', 
+                            borderRadius: '12px', 
+                            display: item.imageUrl ? 'none' : 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            background: '#f8f8f8', 
+                            fontSize: '32px'
+                          }}>🍽</div>
+
+                          {/* Floating Button Overlap */}
+                          <div className="add-btn-container">
+                             {quantity > 0 ? (
+                               <div className="qty-controls-floating">
+                                 <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                                 <span>{quantity}</span>
+                                 <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                               </div>
+                             ) : (
+                               <button className="add-btn" onClick={() => addToCart(item)}>
+                                 ADD
+                               </button>
+                             )}
                           </div>
-                        ) : (
-                          <button className="add-btn" onClick={() => addToCart(item)}>
-                            ADD
-                          </button>
-                        )}
+                        </div>
                       </div>
                     );
                   })

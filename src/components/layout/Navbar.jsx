@@ -255,7 +255,7 @@ const Navbar = ({ onMemberAdded }) => {
           className="btn btn-warning btn-sm"
           onClick={() => setIsAddMemberModalOpen(true)}
         >
-          New Registration
+          New Member
         </button>
       </div>
 

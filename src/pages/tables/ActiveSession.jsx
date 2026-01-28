@@ -10,6 +10,7 @@ import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
 import "../../styles/activeSession.css";
 
 
+
 const ActiveSession = () => {
   const { game, tableId, sessionId } = useParams();
   const navigate = useNavigate();
@@ -44,6 +45,17 @@ const ActiveSession = () => {
 
   // Action states
   const [generating, setGenerating] = useState(false);
+  
+  // Image error handling
+  const [failedImages, setFailedImages] = useState(new Set());
+
+  const handleImageError = (id) => {
+    setFailedImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+  };
 
   // Auto-release handler - generates bill when timer ends and releases table
   const handleAutoRelease = async (sessionToRelease, cartItems = []) => {
@@ -542,6 +554,7 @@ const ActiveSession = () => {
     );
   }
 
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
@@ -564,106 +577,97 @@ const ActiveSession = () => {
           {/* Main Content - Two Column Layout for Laptop */}
           <div className="session-content">
             {/* Left Column - Timer & Pricing */}
+            {/* Left Column - Unified Booking Panel Style */}
             <div className="session-left-column">
-              {/* Timer Section */}
-              <div className="timer-section">
-                {isFrameMode ? (
-                  <>
-                    {/* Frame Mode - Show frame count */}
-                    <p className="timer-label">Frame Mode</p>
-                    <div className="timer-display frame-display">
-                      {frameCount} Frame{frameCount !== 1 ? 's' : ''}
-                    </div>
-                    <p className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</p>
-                    <p className="stopwatch-hint">
-                      Click "Generate Bill" when done
-                    </p>
-                  </>
-                ) : isStopwatchMode ? (
-                  <>
-                    {/* Stopwatch Mode - Count UP */}
-                    <p className="timer-label">Stopwatch Mode</p>
-                    <div className="timer-display stopwatch">
-                      {formatTime(elapsedSeconds)}
-                    </div>
-                    <p className="stopwatch-hint">
-                      Click "Generate Bill" when done to calculate charges
-                    </p>
-                  </>
-                ) : isTimerMode ? (
-                  <>
-                    {/* Countdown Timer Display */}
-                    <p className="timer-label">Time Remaining</p>
-                    <div className={`timer-display countdown ${getTimerColor()}`}>
-                      {formatCountdown(remainingSeconds)}
-                    </div>
-                    {remainingSeconds !== null && remainingSeconds <= 300 && remainingSeconds > 0 && (
+              <div className="booking-panel">
+                
+                {/* Section 1: Session Status & Timer */}
+                <div className="panel-section highlight-section text-center">
+                   <p className="panel-label" style={{textAlign: 'center', marginBottom: '16px'}}>
+                      {isFrameMode ? "Frame Mode" : isStopwatchMode ? "Stopwatch Mode" : "Time Remaining"}
+                   </p>
+                   
+                   {/* Main Timer Display */}
+                   <div className={`timer-display-unified ${isTimerMode && getTimerColor()}`}>
+                      {isFrameMode ? frameCount : 
+                       isStopwatchMode ? formatTime(elapsedSeconds) : 
+                       formatCountdown(remainingSeconds)}
+                      {isFrameMode && <span className="unit-label">Frames</span>}
+                   </div>
+
+                   {/* Secondary Info / warnings */}
+                   {isTimerMode && remainingSeconds !== null && remainingSeconds <= 300 && remainingSeconds > 0 && (
                       <p className="timer-warning-text">
-                        {remainingSeconds <= 60 ? "Session ending soon!" : "Less than 5 minutes remaining"}
+                        {remainingSeconds <= 60 ? "Ending soon!" : "< 5 mins left"}
                       </p>
-                    )}
-                    <p className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</p>
-                  </>
-                ) : (
-                  <>
-                    {/* Elapsed Time Display (no booking end time) */}
-                    <p className="timer-label">Total Time Span</p>
-                    <div className="timer-display">{formatTime(elapsedSeconds)}</div>
-                  </>
-                )}
+                   )}
 
-                <p className="timer-hint">
-                  {isPaused ? "⏸ Session paused" : "● Session active"}
-                </p>
+                   {/* Elapsed / Hint */}
+                   {!isFrameMode && (
+                     <p className="elapsed-text-unified">
+                       Elapsed: {formatTime(elapsedSeconds)}
+                     </p>
+                   )}
+                   {isFrameMode && (
+                     <p className="elapsed-text-unified">
+                       Elapsed Time: {formatTime(elapsedSeconds)}
+                     </p>
+                   )}
 
-                {/* Controls */}
-                <div className="timer-controls">
-                  <button className={`control-btn pause ${isPaused ? "active" : ""}`} onClick={togglePause}>
-                    <span className="icon">{isPaused ? "▶" : "⏸"}</span>
-                    <span>{isPaused ? "Resume" : "Pause"}</span>
-                  </button>
-                  <button className="control-btn switch">
-                    <span className="icon">🔄</span>
-                    <span>Switch</span>
-                  </button>
+                   {/* Session Controls */}
+                   <div className="session-controls-unified">
+                     <button className={`control-btn-unified ${isPaused ? "paused" : ""}`} onClick={togglePause}>
+                        {isPaused ? "▶ Resume" : "⏸ Pause"}
+                     </button>
+                     {/* Switch button placeholder if needed, else redundant */}
+                   </div>
                 </div>
-              </div>
 
-              {/* Pricing Summary - Desktop Only in Left Column */}
-              <div className="pricing-summary desktop-pricing">
-                <div className="price-row">
-                  {isFrameMode ? (
-                    <>
-                      <span>Frame Charges ({frameCount} frame{frameCount !== 1 ? 's' : ''})</span>
-                      <span>₹{tableCost.toFixed(2)}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Table Time ({billingMinutes} mins{isStopwatchMode ? " - elapsed" : isTimerMode ? " - booked" : ""})</span>
-                      <span>₹{tableCost.toFixed(2)}</span>
-                    </>
-                  )}
-                </div>
-                {cartTotal > 0 && (
-                  <div className="price-row">
-                    <span>Food & Beverages</span>
-                    <span>₹{cartTotal.toFixed(2)}</span>
+                {/* Section 2: Bill / Pricing Details */}
+                <div className="panel-section bill-section">
+                  <div className="bill-details">
+                    
+                    {/* Table Charges */}
+                    <div className="bill-row highlight">
+                       <span>
+                         {isFrameMode ? `Frame Charges (${frameCount})` : 
+                          `Table Time (${billingMinutes} mins)`}
+                       </span>
+                       <span>₹{tableCost.toFixed(2)}</span>
+                    </div>
+                    
+                    {/* Itemized Food List */}
+                    {cart.map((item) => (
+                      <div className="bill-row item-row" key={item.id} style={{ fontSize: '13px', color: '#666', marginBottom: '4px', marginTop: '0' }}>
+                        <span style={{flex: 1}}>{item.qty} x {item.name}</span>
+                        <span>₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    
+                    {/* Divider */}
+                    <div className="panel-divider"></div>
+
+                    {/* Total */}
+                    <div className="bill-total-row">
+                       <span>Total</span>
+                       <span>₹{grandTotal.toFixed(2)}</span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="action-buttons-unified">
+
+                       <button 
+                         className="book-btn-unified" 
+                         onClick={handleGenerateBill} 
+                         disabled={generating}
+                       >
+                         {generating ? "Generating..." : "Generate Bill"}
+                       </button>
+                    </div>
+
                   </div>
-                )}
-                <div className="price-row total">
-                  <strong>Total</strong>
-                  <strong>₹{grandTotal.toFixed(2)}</strong>
                 </div>
-              </div>
 
-              {/* Action Buttons - Desktop Only in Left Column */}
-              <div className="session-actions desktop-actions">
-                <button className="update-btn" onClick={handleUpdate} disabled={cart.length === 0}>
-                  Update
-                </button>
-                <button className="generate-bill-btn" onClick={handleGenerateBill} disabled={generating}>
-                  {generating ? "Generating..." : "Generate Bill"}
-                </button>
               </div>
             </div>
 
@@ -700,26 +704,52 @@ const ActiveSession = () => {
                 ) : (
                   filteredMenu.map((item) => {
                     const inCart = cart.find((c) => c.id === item.id);
+                    const quantity = inCart ? inCart.qty : 0;
+                    
                     return (
-                      <div className="menu-item-row" key={item.id}>
-                        <div className="item-image">
-                          {item.imageUrl ? (
-                             <img src={item.imageUrl} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} />
-                          ) : (
-                             <div className="placeholder-img">🍽</div>
-                          )}
-                        </div>
-                        <div className="item-details">
+                      <div className="menu-item-card" key={item.id}>
+                        {/* LEFT: Info */}
+                        <div className="menu-item-info">
+                          <div className={item.isVeg === false ? "non-veg-icon" : "veg-icon"}></div>
                           <span className="item-name">{item.name}</span>
-                          <span className={`item-qty ${inCart ? "has-qty" : ""}`}>
-                            {inCart ? `${inCart.qty} in cart` : "Add to cart"}
-                          </span>
-                        </div>
-                        <div className="item-actions">
-                          <button className="add-btn" onClick={() => addToCart(item)}>
-                            ADD
-                          </button>
                           <span className="item-price">₹{item.price}</span>
+                          <p className="item-description">{item.description || "Delicious food item"}</p>
+                        </div>
+
+                        {/* RIGHT: Image + Floating Action */}
+                        <div className="menu-item-image-container">
+                          {item.imageUrl && !failedImages.has(item.id) ? (
+                             <img 
+                               src={item.imageUrl} 
+                               alt={item.name} 
+                               onError={() => handleImageError(item.id)}
+                             />
+                          ) : (
+                             <div className="placeholder-img" style={{
+                               height: '100%', 
+                               borderRadius: '12px', 
+                               display: 'flex', 
+                               alignItems: 'center', 
+                               justifyContent: 'center', 
+                               background: '#f8f8f8', 
+                               fontSize: '32px'
+                             }}>🍽</div>
+                          )}
+
+                          {/* Floating Button Overlap */}
+                          <div className="add-btn-container">
+                             {quantity > 0 ? (
+                               <div className="qty-controls-floating">
+                                 <button onClick={() => updateCartQty(item.id, -1)}>-</button>
+                                 <span>{quantity}</span>
+                                 <button onClick={() => updateCartQty(item.id, 1)}>+</button>
+                               </div>
+                             ) : (
+                               <button className="add-btn" onClick={() => addToCart(item)}>
+                                 ADD
+                               </button>
+                             )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -727,23 +757,7 @@ const ActiveSession = () => {
                 )}
               </div>
 
-              {/* Cart Summary */}
-              {cart.length > 0 && (
-                <div className="order-summary">
-                  <h6>Order Items</h6>
-                  {cart.map((item) => (
-                    <div className="order-item" key={item.id}>
-                      <span>{item.name}</span>
-                      <div className="qty-controls">
-                        <button onClick={() => updateCartQty(item.id, -1)}>-</button>
-                        <span>{item.qty}</span>
-                        <button onClick={() => updateCartQty(item.id, 1)}>+</button>
-                      </div>
-                      <span>₹{Number(item.price) * item.qty}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Cart Summary removed as per user request */}
             </div>
           </div>
 

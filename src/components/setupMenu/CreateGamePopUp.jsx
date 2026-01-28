@@ -3,7 +3,7 @@ import { stockImagesAPI, IMAGE_BASE_URL } from "../../services/api";
 import "../../styles/creategame.css";
 
 const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
-  const [gameName, setGameName] = useState(editingGame?.game_name || "");
+  const [gameName, setGameName] = useState(editingGame?.game_name || editingGame?.gamename || editingGame?.name || "");
   const [selectedImageKey, setSelectedImageKey] = useState(editingGame?.image_key || null);
   const [stockImages, setStockImages] = useState([]);
   const [imagesLoading, setImagesLoading] = useState(true);

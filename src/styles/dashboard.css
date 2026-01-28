@@ -116,7 +116,7 @@
 /* TABLE GRID */
 .tables-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 30px;
   justify-content: center;
   max-width: 100%;
@@ -128,7 +128,7 @@
 .table-card {
   position: relative;
   width: 100%;
-  max-width: 220px;
+  max-width: 180px;
   margin: 0 auto;
   border-radius: 8px;
   cursor: pointer;
@@ -199,7 +199,7 @@
 ========================= */
 @media (max-width: 1400px) {
   .tables-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 24px;
   }
 }

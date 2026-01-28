@@ -10,58 +10,92 @@
 
 .table-booked-modal {
   background: #fff;
-  width: 320px;
+  width: 360px; /* Slightly wider */
   max-width: 90%;
-  padding: 24px;
-  border-radius: 14px;
+  padding: 32px; /* Increased padding */
+  border-radius: 16px; /* Unified curve */
   text-align: center;
   position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); /* Softer, deeper shadow */
+  animation: modal-enter 0.3s ease-out;
+}
+
+@keyframes modal-enter {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* Close */
 .close-btn {
   position: absolute;
-  top: 10px;
-  right: 14px;
-  background: none;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #666;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%; /* Circular close btn */
   border: none;
   font-size: 18px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000;
 }
 
 /* Success Icon */
 .success-icon {
-  width: 60px;
-  height: 60px;
-  background: #e6f6ee;
-  color: #1aa36f;
-  font-size: 28px;
+  width: 64px;
+  height: 64px;
+  background: #DCFCE7; /* Cleaner light green */
+  color: #16A34A; /* Sharper green */
+  font-size: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 12px auto;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
 }
 
 .table-booked-modal h4 {
-  margin-top: 10px;
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .table-booked-modal p {
-  font-size: 13px;
-  color: #666;
-  margin: 6px 0 16px;
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 24px;
+  line-height: 1.5;
 }
 
-/* OK Button */
+/* OK Button - Matches Generate Booking Button Curve */
 .ok-btn {
-  background: #ff8c1a;
+  width: 100%;
+  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
   border: none;
   color: #fff;
-  padding: 10px 40px;
-  border-radius: 30px;
-  font-weight: 600;
+  padding: 14px;
+  border-radius: 14px; /* MATCHED CURVE as requested */
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(240, 134, 38, 0.3);
+  transition: all 0.2s;
+}
+
+.ok-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(240, 134, 38, 0.4);
 }
 
 /* Mobile */
