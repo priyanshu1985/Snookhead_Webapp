@@ -53,9 +53,7 @@ const CreateGameModal = ({ onClose, onSubmit, editingGame, submitting }) => {
         {/* Header */}
         <div className="create-game-header">
           <h5>{editingGame ? "Edit Game" : "Create New Game"}</h5>
-          <button className="close-btn" onClick={onClose} disabled={submitting}>
-            ×
-          </button>
+          <button className="close-btn" onClick={onClose} disabled={submitting} aria-label="Close"></button>
         </div>
 
         {/* Form */}

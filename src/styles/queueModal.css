@@ -111,7 +111,11 @@
 
 .queue-modal-body .form-control {
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px; /* Reduced vertical padding since height is fixed */
+  height: 48px; /* Fixed height prevents clipping */
+  line-height: normal; /* Browser centers text inside fixed height */
+  display: flex; /* Helps with some browser rendering */
+  align-items: center; 
   border: 2px solid #e8e8e8;
   border-radius: 10px;
   font-size: 14px;

@@ -108,7 +108,9 @@
 
 .form-group .form-control {
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
+  height: 48px;
+  line-height: normal;
   border: 2px solid #e8e8e8;
   border-radius: 10px;
   font-size: 14px;

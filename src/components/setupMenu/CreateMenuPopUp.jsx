@@ -36,7 +36,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
   }, [initialData]);
 
   const [stockImages, setStockImages] = useState([]);
-  const [showImageSelector, setShowImageSelector] = useState(false);
+
 
   // Fetch stock images
   useEffect(() => {
@@ -97,9 +97,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
         {/* Header */}
         <div className="create-game-header">
           <h5>{initialData ? "Edit Menu Item" : "Create New Menu Item"}</h5>
-          <button className="close-btn" onClick={onClose}>
-            ×
-          </button>
+          <button className="close-btn" onClick={onClose} aria-label="Close"></button>
         </div>
 
         {/* Form */}
@@ -164,67 +162,53 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
             />
           </div>
 
-          {/* Image Selection */}
-          <div className="form-group">
-            <label>Image (Optional)</label>
-            
-            {!showImageSelector ? (
-              <div className="image-preview-container" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                {formData.image_url && (
-                  <div className="preview-box" style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd' }}>
-                    <img src={formData.image_url} alt="Selected" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
-                <button 
-                  type="button" 
-                  className="secondary-btn" 
-                  style={{ padding: '8px 12px', fontSize: '13px' }}
-                  onClick={() => setShowImageSelector(true)}
-                >
-                  {formData.image_url ? "Change Image" : "Select Image"}
-                </button>
-                {formData.image_url && (
-                   <button 
-                     type="button"
-                     className="text-btn danger"
-                     style={{ color: '#ff4444', fontSize: '13px', marginLeft: 'auto' }}
-                     onClick={() => setFormData(prev => ({...prev, image_url: ""}))}
-                   >
-                     Remove
-                   </button>
-                )}
-              </div>
-            ) : (
-              <div className="stock-image-selector" style={{ border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginTop: '5px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '12px', color: '#666' }}>Select an image:</span>
-                  <button type="button" onClick={() => setShowImageSelector(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>✕</button>
-                </div>
-                <div className="image-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', maxHeight: '150px', overflowY: 'auto' }}>
-                  {stockImages.map((img) => (
+            {/* Image Selection */}
+            <div className="form-group">
+              <label>Select Content Image</label>
+              
+              {/* Always Visible Grid */}
+              <div className="image-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', maxHeight: '200px', overflowY: 'auto', padding: '4px' }}>
+                {stockImages.map((img) => {
+                  const isSelected = formData.image_url === `${IMAGE_BASE_URL}${img.url}`;
+                  return (
                     <div 
                       key={img.key} 
-                      onClick={() => selectImage(img.url)}
+                      onClick={() => {
+                        const fullUrl = `${IMAGE_BASE_URL}${img.url}`;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          image_url: prev.image_url === fullUrl ? "" : fullUrl 
+                        }));
+                      }}
                       style={{ 
                         cursor: 'pointer', 
-                        border: formData.image_url === `${IMAGE_BASE_URL}${img.url}` ? '2px solid #F08626' : '1px solid #ddd',
-                        borderRadius: '6px',
+                        border: isSelected ? '2px solid #F08626' : '2px solid transparent',
+                        borderRadius: '8px',
                         overflow: 'hidden',
-                        aspectRatio: '1/1'
+                        aspectRatio: '1/1',
+                        position: 'relative',
+                        background: '#f3f4f6',
+                        transition: 'all 0.2s',
+                        transform: isSelected ? 'scale(0.95)' : 'scale(1)'
                       }}
+                      className="stock-image-item"
                     >
                       <img 
                         src={`${IMAGE_BASE_URL}${img.url}`} 
                         alt={img.filename} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: isSelected ? 0.8 : 1 }} 
                       />
+                      {isSelected && (
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <div style={{ width: '24px', height: '24px', background: '#F08626', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>✓</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {stockImages.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', fontSize: '12px', padding: '10px', color: '#999' }}>No images found</p>}
-                </div>
+                  );
+                })}
+                {stockImages.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', fontSize: '13px', padding: '20px', color: '#9ca3af' }}>No images available</p>}
               </div>
-            )}
-          </div>
+            </div>
 
           {/* Actions */}
           <div className="modal-actions">

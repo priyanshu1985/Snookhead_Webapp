@@ -9,7 +9,7 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
   // Form state
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [members, setMembers] = useState(1);
+
   const [selectedGame, setSelectedGame] = useState("");
   const [preferredTable, setPreferredTable] = useState("");
 
@@ -75,7 +75,7 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
   const resetForm = () => {
     setCustomerName("");
     setPhone("");
-    setMembers(1);
+
     setSelectedGame("");
     setPreferredTable("");
     setTimeMode("timer");
@@ -116,7 +116,7 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
       await queueAPI.add({
         customername: customerName.trim(),
         phone: phone.trim(),
-        members: parseInt(members) || 1,
+        members: 1,
         gameid: parseInt(selectedGame),
         preferredtableid: preferredTable ? parseInt(preferredTable) : null,
         booking_type: timeMode,
@@ -180,21 +180,7 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
                 />
               </div>
 
-              {/* Members */}
-              <div className="form-group">
-                <label>Number of Players</label>
-                <select
-                  value={members}
-                  onChange={(e) => setMembers(e.target.value)}
-                  className="form-control"
-                >
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
-                    <option key={num} value={num}>
-                      {num} {num === 1 ? "player" : "players"}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
 
               {/* Booking Type Selection */}
               <div className="form-group">

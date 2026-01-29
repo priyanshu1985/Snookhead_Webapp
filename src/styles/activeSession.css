@@ -819,6 +819,17 @@
   margin: 10px 0;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 4px 12px rgba(240, 134, 38, 0.15);
+  display: flex; /* Fix alignment */
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Fix overlap locally */
+.timer-display-unified .unit-label {
+  margin-left: 0 !important;
+  margin-bottom: 0;
+  align-self: baseline;
 }
 
 .timer-display-unified.timer-critical {

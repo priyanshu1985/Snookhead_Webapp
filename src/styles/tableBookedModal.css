@@ -26,7 +26,7 @@
 }
 
 /* Close */
-.close-btn {
+.table-booked-modal .close-btn {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -44,7 +44,7 @@
   transition: all 0.2s;
 }
 
-.close-btn:hover {
+.table-booked-modal .close-btn:hover {
   background: rgba(0, 0, 0, 0.08);
   color: #000;
 }

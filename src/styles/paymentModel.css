@@ -58,7 +58,7 @@
   color: #888;
 }
 
-.close-btn {
+.payment-header .close-btn {
   border: none;
   background: #f5f5f5;
   width: 36px;
@@ -72,12 +72,12 @@
   color: #666;
 }
 
-.close-btn:hover {
+.payment-header .close-btn:hover {
   background: #eee;
   color: #333;
 }
 
-.close-btn:disabled {
+.payment-header .close-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

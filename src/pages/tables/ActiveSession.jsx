@@ -79,14 +79,16 @@ const ActiveSession = () => {
         })),
       });
       console.log("Auto-release successful", response);
+      
+      const newBillId = response?.bill_id || response?.id || response?.bill?.id || response?.data?.id;
 
       // Navigate to billing page
-      navigate("/billing");
+      navigate("/billing", { state: { billGenerated: true, newBillId } });
     } catch (err) {
       console.error("Auto-release failed:", err);
       alert("Auto-release failed check console. Redirecting to billing anyway."); 
       // Still navigate to billing even if there's an error so user isn't stuck
-      navigate("/billing");
+      navigate("/billing", { state: { billGenerated: true } });
     }
   };
 
@@ -510,7 +512,7 @@ const ActiveSession = () => {
       // For frame mode: use frame_count * frameCharge (no time-based billing)
       // For timer mode: use booked duration * pricePerMin
       // For stopwatch mode: use elapsed time * pricePerMin
-      await billingAPI.create({
+      const billResponse = await billingAPI.create({
         customer_name: session.customer_name || "Walk-in Customer",
         table_id: tableId,
         session_id: session.active_id,
@@ -530,7 +532,11 @@ const ActiveSession = () => {
       // Stop the session and release the table (skip_bill=true to avoid duplicate bill)
       await activeTablesAPI.stop({ active_id: session.active_id, skip_bill: true });
 
-      navigate("/billing");
+      // Pass the new bill ID to the billing page for highlighting
+      // The API likely returns the created bill object, check if it has id or _id or bill_id
+      const newBillId = billResponse?.data?.id || billResponse?.id || billResponse?.bill?.id;
+      
+      navigate("/billing", { state: { billGenerated: true, newBillId } });
     } catch (err) {
       console.error("Failed to generate bill:", err);
       setError(err.message || "Failed to generate bill");

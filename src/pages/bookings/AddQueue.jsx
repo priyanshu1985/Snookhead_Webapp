@@ -13,7 +13,7 @@ const AddQueue = () => {
   // Form state
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [members, setMembers] = useState(1);
+
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
 
@@ -119,7 +119,7 @@ const AddQueue = () => {
       await queueAPI.add({
         customername: customerName.trim(),
         phone: phone.trim(),
-        members: parseInt(members) || 1,
+        members: 1,
         gameid: selectedGame,
         preferredtableid: selectedTable || null,
         booking_type: timeMode,
@@ -194,21 +194,7 @@ const AddQueue = () => {
                     />
                   </div>
                 </div>
-                <div className="form-group">
-                  <label>Number of Players</label>
-                  <div className="members-selector">
-                    {[1, 2, 3, 4, 5, 6].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        className={members === num ? "active" : ""}
-                        onClick={() => setMembers(num)}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
 
               {/* Time Selection */}

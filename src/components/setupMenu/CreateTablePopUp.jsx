@@ -154,9 +154,7 @@ const CreateTablePopUp = ({ onClose, onSubmit, editingTable }) => {
         {/* Header */}
         <div className="create-game-header">
           <h5>{editingTable ? "Edit Table" : "Create New Table"}</h5>
-          <button className="close-btn" onClick={onClose}>
-            ×
-          </button>
+          <button className="close-btn" onClick={onClose} aria-label="Close"></button>
         </div>
 
         {/* Form */}
