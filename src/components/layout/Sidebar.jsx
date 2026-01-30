@@ -45,7 +45,7 @@ const Sidebar = () => {
               alt="Snokehead Logo" 
               className="brand-logo"
             />
-            <h5 className="brand">SNOKEHEAD</h5>
+            <h5 className="brand">SNOOKHEAD</h5>
           </div>
           <div className="user-card">
             <div className="user-avatar">
@@ -89,6 +89,13 @@ const Sidebar = () => {
             onClick={() => closeSidebar()}
           >
             Members
+          </NavLink>
+          <NavLink 
+            to="/reservations" 
+            className="menu-item"
+            onClick={() => closeSidebar()}
+          >
+            Reservations
           </NavLink>
           <NavLink 
             to="/subscription" 

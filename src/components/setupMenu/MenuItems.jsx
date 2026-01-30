@@ -18,13 +18,7 @@ import "../../styles/setupMenuCardList.css";
 
 const categories = [
   { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
-  { key: "packed", label: "Packed Foods", Icon: PackedFoodIcon },
-  { key: "cigarette", label: "Cigarette", Icon: CigaretteIcon },
-  { key: "Beverages", label: "Beverages", Icon: BeveragesIcon },
-  { key: "Food", label: "Food", Icon: PlateIcon },
-  { key: "Fast Food", label: "Fast Food", Icon: FastFoodIcon },
-  { key: "Snacks", label: "Snacks", Icon: SnacksIcon },
-  { key: "Desserts", label: "Desserts", Icon: DessertsIcon },
+  { key: "packed", label: "Packed Food", Icon: PackedFoodIcon },
 ];
 
 const MenuItems = () => {
@@ -35,6 +29,32 @@ const MenuItems = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null); // New state for editing
   const categoriesRef = useRef(null);
+  
+  // Compute categories dynamically based on fetched items
+  // Start with default categories as base to preserve order/icons
+  // Then append any custom categories found in items
+  // Compute categories dynamically based on fetched items - Strict Mode
+  const computedCategories = items.reduce((acc, item) => {
+    // Skip if no category
+    if (!item.category) return acc;
+
+    // Check if category already exists in accumulator
+    const exists = acc.some(cat => cat.key === item.category);
+    if (!exists) {
+        // Use local categories config if available (for icons)
+        const defaultCat = categories.find(c => c.key === item.category);
+        if (defaultCat) {
+             acc.push(defaultCat);
+        } else {
+             acc.push({
+                key: item.category,
+                label: item.category, // Use category name as label
+                Icon: PlateIcon // Default icon for custom categories
+             });
+        }
+    }
+    return acc;
+  }, []); // Seed with EMPTY array
 
   const fetchItems = async () => {
     try {
@@ -54,6 +74,17 @@ const MenuItems = () => {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // Ensure active category is valid
+  useEffect(() => {
+    if (computedCategories.length > 0) {
+        // If current active is not in list, switch to first one
+        const currentExists = computedCategories.some(c => c.key === activeCategory);
+        if (!currentExists) {
+            setActiveCategory(computedCategories[0].key);
+        }
+    }
+  }, [computedCategories, activeCategory]);
 
   // Scroll active category into view
   useEffect(() => {
@@ -159,7 +190,7 @@ const MenuItems = () => {
       {/* Category Tabs with horizontal scroll */}
       <div className="menu-categories-wrapper">
         <div className="menu-categories" ref={categoriesRef}>
-          {categories.map((cat) => {
+          {computedCategories.map((cat) => {
             const IconComponent = cat.Icon;
             return (
               <span

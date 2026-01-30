@@ -6,7 +6,8 @@ import Navbar from "../../components/layout/Navbar";
 import TableBookedModal from "../../components/tables/TableBookedModel";
 import { menuAPI, activeTablesAPI, tablesAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
-import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
+import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
+import { PlateIcon } from "../../components/common/Icons";
 
 import "../../styles/tableBooking.css";
 
@@ -27,7 +28,7 @@ const TableBooking = () => {
   const [cart, setCart] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   // Table info
   const [tableInfo, setTableInfo] = useState(null);
@@ -37,6 +38,30 @@ const TableBooking = () => {
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [customerName, setCustomerName] = useState("");
+
+  // Compute categories - Strict Mode: Only show categories that have items
+  const computedCategories = menuItems.reduce((acc, item) => {
+    // Skip if no category
+    if (!item.category) return acc;
+
+    const exists = acc.some(cat => cat.id === item.category);
+    
+    if (!exists) {
+        // Check if it matches a known default category to get icon/label
+        const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === item.category);
+        
+        if (defaultCat) {
+            acc.push(defaultCat);
+        } else {
+            acc.push({
+                id: item.category,
+                label: item.category,
+                icon: <PlateIcon size={24} />
+            });
+        }
+    }
+    return acc;
+  }, []);
 
   // Fetch menu items
   useEffect(() => {
@@ -66,6 +91,17 @@ const TableBooking = () => {
     fetchMenu();
   }, []);
 
+  // Ensure active category is valid
+  useEffect(() => {
+    if (computedCategories.length > 0) {
+        // If current active is not in list (or empty), switch to first one
+        const currentExists = computedCategories.some(c => c.id === selectedCategory);
+        if (!currentExists) {
+            setSelectedCategory(computedCategories[0].id);
+        }
+    }
+  }, [computedCategories, selectedCategory]);
+
   // Fetch table info
   useEffect(() => {
     const fetchTable = async () => {
@@ -82,7 +118,7 @@ const TableBooking = () => {
   // Filter menu
   const filteredMenu = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase());
+    const matchesCategory = selectedCategory && item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -294,7 +330,7 @@ const TableBooking = () => {
                     <div className="frame-input-compact">
                       <div className="frame-controls">
                         <button onClick={() => setFrameCount(Math.max(1, frameCount - 1))}>-</button>
-                        <span>{frameCount}</span>
+                        <span className="frame-count-val">{frameCount}</span>
                         <button onClick={() => setFrameCount(frameCount + 1)}>+</button>
                         <span className="unit-label">Frames</span>
                       </div>
@@ -379,6 +415,7 @@ const TableBooking = () => {
               <FoodCategoryTabs 
                 selectedCategory={selectedCategory} 
                 onSelectCategory={setSelectedCategory} 
+                categories={computedCategories}
               />
 
               <div className="menu-header">

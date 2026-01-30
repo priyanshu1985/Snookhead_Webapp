@@ -90,11 +90,20 @@
 
 /* FORM CONTAINER */
 .create-game-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Take remaining height */
+  overflow: hidden; /* Contain scroll content */
+  padding: 0; /* Remove padding from container */
+}
+
+.form-scroll-content {
+  flex: 1;
+  overflow-y: auto;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow: visible; /* Disable scroll */
 }
 
 .form-group {
@@ -229,11 +238,14 @@
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: center; /* Crucial for vertical alignment */
+  align-items: center;
   gap: 12px;
-  margin-top: 10px;
-  padding-top: 20px;
+  padding: 20px 24px;
+  background: #fff; /* Ensure white background */
   border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 20px 20px; /* Match modal corners */
+  flex-shrink: 0; /* Prevent shrinking */
+  margin: 0;
 }
 
 /* Common Button Resets */

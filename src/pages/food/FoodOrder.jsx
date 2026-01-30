@@ -31,14 +31,8 @@ import "../../styles/foodOrder.css";
 
 const categories = [
   { key: "all", label: "All", Icon: PlateIcon },
-  { key: "Food", label: "Food", Icon: FoodIcon },
-  { key: "Fast Food", label: "Fast Food", Icon: FastFoodIcon },
-  { key: "Snacks", label: "Snacks", Icon: SnacksIcon },
-  { key: "Beverages", label: "Beverages", Icon: BeveragesIcon },
-  { key: "Desserts", label: "Desserts", Icon: DessertsIcon },
-  { key: "prepared", label: "Prepared", Icon: PreparedFoodIcon },
-  { key: "packed", label: "Packed", Icon: PackedFoodIcon },
-  { key: "cigarette", label: "Cigarette", Icon: CigaretteIcon },
+  { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
+  { key: "packed", label: "Packed Food", Icon: PackedFoodIcon },
 ];
 
 // Source filter options for orders
@@ -61,13 +55,47 @@ const FoodOrder = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cart, setCart] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Active orders state
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
+
+  // Compute filtered categories dynamically
+  // Compute filtered categories dynamically - Strict Mode
+  const computedCategories = menuItems.reduce((acc, item) => {
+    // Skip if no category
+    if (!item.category) return acc;
+
+    const exists = acc.some(cat => cat.key === item.category);
+    if (!exists) {
+        // Use local categories config if available (for icons)
+        const defaultCat = categories.find(c => c.key === item.category);
+        if (defaultCat) {
+             acc.push(defaultCat);
+        } else {
+             acc.push({
+                key: item.category,
+                label: item.category,
+                Icon: PlateIcon
+             });
+        }
+    }
+    return acc;
+  }, []);
+
+  // Ensure active category is valid
+  useEffect(() => {
+    if (computedCategories.length > 0) {
+        // If current active is not in list (or empty), switch to first one
+        const currentExists = computedCategories.some(c => c.key === activeCategory);
+        if (!currentExists) {
+            setActiveCategory(computedCategories[0].key);
+        }
+    }
+  }, [computedCategories, activeCategory]);
 
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -183,7 +211,7 @@ const FoodOrder = () => {
 
   // Filter items by category and search
   const filteredItems = menuItems
-    .filter(item => activeCategory === "all" || item.category === activeCategory)
+    .filter(item => activeCategory && item.category === activeCategory)
     .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Get item quantity in cart
@@ -350,7 +378,7 @@ const FoodOrder = () => {
 
               {/* Category Scroll */}
               <div className="category-scroll">
-                {categories.map((cat) => {
+                {computedCategories.map((cat) => {
                   const IconComponent = cat.Icon;
                   return (
                     <button

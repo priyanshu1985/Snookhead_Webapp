@@ -3,14 +3,9 @@ import { stockImagesAPI, IMAGE_BASE_URL } from "../../services/api";
 import "../../styles/creategame.css";
 
 const CATEGORIES = [
-  { value: "Food", label: "Food" },
-  { value: "Fast Food", label: "Fast Food" },
-  { value: "Beverages", label: "Beverages" },
-  { value: "Snacks", label: "Snacks" },
-  { value: "Desserts", label: "Desserts" },
   { value: "prepared", label: "Prepared Food" },
   { value: "packed", label: "Packed Food" },
-  { value: "cigarette", label: "Cigarette" },
+  { value: "Others", label: "Others" },
 ];
 
 const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
@@ -21,17 +16,25 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
     purchasePrice: "",
     image_url: "",
   });
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
+
 
   // Populate form if editing
   useState(() => {
     if (initialData) {
+      const isStandardCat = CATEGORIES.some(c => c.value === initialData.category);
       setFormData({
         name: initialData.name || "",
-        category: initialData.category || "",
+        category: isStandardCat ? initialData.category : "Others",
         price: initialData.price || "",
         purchasePrice: initialData.purchasePrice || "",
         image_url: initialData.imageUrl || initialData.image_url || initialData.imageurl || "",
       });
+      if (!isStandardCat && initialData.category) {
+        setIsCustomCategory(true);
+        setCustomCategory(initialData.category);
+      }
     }
   }, [initialData]);
 
@@ -53,7 +56,17 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "category") {
+      if (value === "Others") {
+        setIsCustomCategory(true);
+        setFormData((prev) => ({ ...prev, category: "Others" }));
+      } else {
+        setIsCustomCategory(false);
+        setFormData((prev) => ({ ...prev, category: value }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const selectImage = (imageUrl) => {
@@ -70,8 +83,10 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
       return;
     }
 
-    if (!formData.category) {
-      alert("Please select a category");
+    const finalCategory = isCustomCategory ? customCategory.trim() : formData.category;
+
+    if (!finalCategory) {
+      alert("Please select or enter a category");
       return;
     }
 
@@ -82,7 +97,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
 
     const payload = {
       name: formData.name,
-      category: formData.category,
+      category: finalCategory,
       price: parseFloat(formData.price),
       purchasePrice: parseFloat(formData.purchasePrice) || 0,
       imageUrl: formData.image_url,
@@ -102,6 +117,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
 
         {/* Form */}
         <form className="create-game-form" onSubmit={handleSubmit}>
+          <div className="form-scroll-content">
           {/* Item Name */}
           <div className="form-group">
             <label>Item Name *</label>
@@ -130,8 +146,23 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
                   {cat.label}
                 </option>
               ))}
+              <option value="Others">Others (Custom)</option>
             </select>
           </div>
+
+          {/* Custom Category Input */}
+          {isCustomCategory && (
+            <div className="form-group">
+              <label>Custom Category Name *</label>
+              <input
+                type="text"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="Enter new category name"
+                required
+              />
+            </div>
+          )}
 
           {/* Price */}
           <div className="form-group">
@@ -209,6 +240,9 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
                 {stockImages.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', fontSize: '13px', padding: '20px', color: '#9ca3af' }}>No images available</p>}
               </div>
             </div>
+
+            </div>
+
 
           {/* Actions */}
           <div className="modal-actions">

@@ -20,13 +20,7 @@ import "../../styles/setupMenuCardList.css";
 
 const categories = [
   { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
-  { key: "packed", label: "Packed Foods", Icon: PackedFoodIcon },
-  { key: "cigarette", label: "Cigarette", Icon: CigaretteIcon },
-  { key: "Beverages", label: "Beverages", Icon: BeveragesIcon },
-  { key: "Food", label: "Food", Icon: PlateIcon },
-  { key: "Fast Food", label: "Fast Food", Icon: FastFoodIcon },
-  { key: "Snacks", label: "Snacks", Icon: SnacksIcon },
-  { key: "Desserts", label: "Desserts", Icon: DessertsIcon },
+  { key: "packed", label: "Packed Food", Icon: PackedFoodIcon },
 ];
 
 const InventoryTracking = () => {
@@ -37,6 +31,28 @@ const InventoryTracking = () => {
   const [activeCategory, setActiveCategory] = useState("prepared");
   const [search, setSearch] = useState("");
   const categoriesRef = useRef(null);
+
+  // Compute categories dynamically - Strict Mode
+  const computedCategories = items.reduce((acc, item) => {
+    // Skip if no category
+    if (!item.category) return acc;
+
+    const exists = acc.some(cat => cat.key === item.category);
+    if (!exists) {
+        // Use local categories config if available (for icons)
+        const defaultCat = categories.find(c => c.key === item.category);
+        if (defaultCat) {
+             acc.push(defaultCat);
+        } else {
+             acc.push({
+                key: item.category,
+                label: item.category,
+                Icon: PlateIcon
+             });
+        }
+    }
+    return acc;
+  }, []); // Seed with EMPTY array to only show active categories
 
   // Modal State
   const [showStockModal, setShowStockModal] = useState(false);
@@ -60,6 +76,17 @@ const InventoryTracking = () => {
   useEffect(() => {
     fetchItems();
   }, []);
+  
+  // Ensure active category is valid
+  useEffect(() => {
+    if (computedCategories.length > 0) {
+        // If current active is not in list, switch to first one
+        const currentExists = computedCategories.some(c => c.key === activeCategory);
+        if (!currentExists) {
+            setActiveCategory(computedCategories[0].key);
+        }
+    }
+  }, [computedCategories, activeCategory]);
 
   useEffect(() => {
     if (categoriesRef.current) {
@@ -162,7 +189,7 @@ const InventoryTracking = () => {
 
               <div className="menu-categories-wrapper">
                 <div className="menu-categories" ref={categoriesRef}>
-                  {categories.map((cat) => {
+                  {computedCategories.map((cat) => {
                     const IconComponent = cat.Icon;
                     return (
                       <span

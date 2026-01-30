@@ -182,12 +182,7 @@ const Bookings = () => {
           </div>
 
           {/* Tabs */}
-          <div className="queue-tabs">
-            <button className="active">QUEUE</button>
-            <button onClick={() => navigate("/bookings/upcoming-reservation")}>
-              UPCOMING RESERVATION
-            </button>
-          </div>
+
 
           {/* Summary Cards */}
           <div className="queue-summary">

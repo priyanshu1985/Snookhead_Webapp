@@ -33,6 +33,12 @@ const searchablePages = [
     keywords: ["bookings", "waiting", "line"],
   },
   {
+    name: "Reservations",
+    path: "/reservations",
+    Icon: QueueIcon, // Reusing QueueIcon or could use CalendarIcon if available
+    keywords: ["reservation", "booking", "upcoming", "schedule"],
+  },
+  {
     name: "Billing",
     path: "/billing",
     Icon: BillingIcon,

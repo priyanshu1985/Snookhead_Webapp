@@ -50,7 +50,7 @@
 .brand {
   font-size: 22px;
   font-weight: 800;
-  color: #1a1a2e; /* Dark Blue */
+  color: #002169; /* Dark Blue */
   margin: 0;
 }
 
@@ -158,6 +158,10 @@
 .menu-item[href="/members"]::before {
   /* Using inline SVG for consistent icon style - two people/members icon with #F08626 color */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='%23F08626' stroke='none'%3E%3Cpath d='M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'/%3E%3C/svg%3E");
+}
+.menu-item[href="/reservations"]::before {
+  /* SVG Calendar Icon for Reservations with #F08626 color */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F08626' width='20' height='20'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z'/%3E%3C/svg%3E");
 }
 .menu-item[href="/subscription"]::before {
   background-image: url("/subscribtion.png");

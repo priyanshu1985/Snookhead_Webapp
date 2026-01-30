@@ -126,14 +126,8 @@ const UpcomingReservation = () => {
 
         <div className="upcoming-page">
           {/* Header */}
-          <h5 className="page-header" onClick={() => navigate(-1)} style={{ cursor: "pointer" }}>
-            ← Queue Management
-          </h5>
-
-          {/* Tabs */}
-          <div className="queue-tabs">
-            <button onClick={() => navigate("/queue")}>QUEUE</button>
-            <button className="active">UPCOMING RESERVATION</button>
+          <div className="queue-header">
+            <h5 onClick={() => navigate(-1)}> Reservations</h5>
           </div>
 
           {/* Search Bar */}

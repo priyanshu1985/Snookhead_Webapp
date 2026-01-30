@@ -104,6 +104,12 @@ const ENDPOINTS = {
   OWNER_SETUP_PASSWORD: "/owner/panel/setup-password",
   OWNER_VERIFY_PASSWORD: "/owner/panel/verify-password",
   OWNER_CHANGE_PASSWORD: "/owner/panel/change-password",
+  
+  // Owner Dashboard Data
+  OWNER_DASHBOARD_STATS: "/owner/dashboard/stats",
+  OWNER_DASHBOARD_GAME_UTILIZATION: "/owner/dashboard/game-utilization",
+  OWNER_DASHBOARD_REVENUE: "/owner/dashboard/revenue",
+  OWNER_DASHBOARD_SUMMARY: "/owner/dashboard/summary",
 };
 
 // Image base URL for constructing full image URLs
@@ -127,7 +133,11 @@ const handleAuthError = () => {
 };
 
 // Auth endpoints that should NOT trigger redirect on 401
-const AUTH_ENDPOINTS = [ENDPOINTS.LOGIN, ENDPOINTS.REGISTER];
+const AUTH_ENDPOINTS = [
+  ENDPOINTS.LOGIN, 
+  ENDPOINTS.REGISTER,
+  ENDPOINTS.OWNER_VERIFY_PASSWORD
+];
 
 // Generic request handler
 const apiRequest = async (endpoint, options = {}) => {
@@ -316,6 +326,12 @@ export const activeTablesAPI = {
     apiRequest(`${ENDPOINTS.ACTIVE_TABLES}/auto-release`, {
       method: "POST",
       body: JSON.stringify(sessionData),
+    }),
+
+  update: (id, data) =>
+    apiRequest(`${ENDPOINTS.ACTIVE_TABLES}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
     }),
 };
 
@@ -667,6 +683,14 @@ export const ownerAPI = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  getStats: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_STATS}?period=${period}`),
+  
+  getGameUtilization: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_GAME_UTILIZATION}?period=${period}`),
+  
+  getRevenue: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
+  
+  getSummary: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_SUMMARY}?period=${period}`),
 };
 
 // Admin Stations API (for admin panel to manage stations/cafes)

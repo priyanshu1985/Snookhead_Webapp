@@ -5,7 +5,8 @@ import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
-import FoodCategoryTabs from "../../components/common/FoodCategoryTabs";
+import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
+import { PlateIcon } from "../../components/common/Icons";
 
 import "../../styles/activeSession.css";
 
@@ -40,11 +41,55 @@ const ActiveSession = () => {
   const [cart, setCart] = useState(initialCart); // Initialize with items from booking
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const cartRef = useRef(initialCart); // Ref to access cart in timer callbacks
+
+  // Compute categories - Strict Mode: Only show categories that have items
+  const computedCategories = menuItems.reduce((acc, item) => {
+
+    // Skip if no category
+    if (!item.category) return acc;
+    
+    // Check if category already added
+    const exists = acc.some(cat => cat.id === item.category);
+    if (!exists) {
+      // Check if it matches a known default category to get icon/label
+      const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === item.category);
+      
+      if (defaultCat) {
+        acc.push(defaultCat);
+      } else {
+        // Add as proper custom category
+        acc.push({
+          id: item.category,
+          label: item.category,
+          icon: <PlateIcon size={24} />
+        });
+      }
+    }
+    return acc;
+  }, []);
+
+  // Ensure active category is valid
+  useEffect(() => {
+    if (computedCategories.length > 0) {
+        // If current active is not in list (or empty), switch to first one
+        const currentExists = computedCategories.some(c => c.id === selectedCategory);
+        if (!currentExists) {
+            setSelectedCategory(computedCategories[0].id);
+        }
+    }
+  }, [computedCategories, selectedCategory]);
 
   // Action states
   const [generating, setGenerating] = useState(false);
+
+  // Manual Time Add Modal State
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [manualTime, setManualTime] = useState(30);
+
+  // Cancel Booking Modal State
+  const [showCancelModal, setShowCancelModal] = useState(false);
   
   // Image error handling
   const [failedImages, setFailedImages] = useState(new Set());
@@ -89,6 +134,53 @@ const ActiveSession = () => {
       alert("Auto-release failed check console. Redirecting to billing anyway."); 
       // Still navigate to billing even if there's an error so user isn't stuck
       navigate("/billing", { state: { billGenerated: true } });
+    }
+  };
+
+  // Handle Manual Time Addition
+  const handleAddTimeSubmit = async () => {
+    if (!manualTime || manualTime <= 0) return;
+    
+    setShowTimeModal(false);
+    const minutesToAdd = Number(manualTime);
+    
+    try {
+        setGenerating(true);
+        
+        // Calculate new end time
+        // Ensure we work with valid dates
+        const currentEndTime = new Date(session.booking_end_time);
+        if (isNaN(currentEndTime.getTime())) {
+            throw new Error("Invalid current end time");
+        }
+        
+        const newEndTime = new Date(currentEndTime.getTime() + minutesToAdd * 60000);
+        const newDuration = (parseInt(session.duration_minutes) || 0) + minutesToAdd;
+
+        console.log("Adding time:", { minutesToAdd, newEndTime, newDuration });
+
+        // Optimistic Update
+        setSession(prev => ({ 
+            ...prev, 
+            booking_end_time: newEndTime.toISOString(),
+            duration_minutes: newDuration
+        }));
+        
+        // Also update the running timer immediately
+        setRemainingSeconds(prev => (prev || 0) + minutesToAdd * 60);
+        
+        // API Update
+        await activeTablesAPI.update(session.active_id, { 
+            booking_end_time: newEndTime.toISOString(),
+            duration_minutes: newDuration
+        });
+    } catch (err) {
+        console.error("Failed to add time:", err);
+        alert("Failed to add time: " + err.message);
+        // Ideally revert optimistic update here if needed (refetch session)
+        // For now, simpler error handling
+    } finally {
+        setGenerating(false);
     }
   };
 
@@ -398,7 +490,7 @@ const ActiveSession = () => {
   // Filter menu by search query AND category
   const filteredMenu = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase());
+    const matchesCategory = selectedCategory && item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -545,6 +637,33 @@ const ActiveSession = () => {
     }
   };
 
+  // Handle Cancel Booking Click
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
+
+  // Confirm Cancel Booking
+  const confirmCancelBooking = async () => {
+    if (!session) return;
+    
+    try {
+        setGenerating(true);
+        setShowCancelModal(false);
+        // Stop session with skip_bill flag to prevent bill generation
+        await activeTablesAPI.stop({ active_id: session.active_id, skip_bill: true });
+        
+        navigate("/dashboard");
+    } catch (err) {
+        console.error("Failed to cancel booking:", err);
+        alert("Failed to cancel booking: " + err.message);
+    } finally {
+        setGenerating(false);
+    }
+  };
+
+
+
+
   if (loading) {
     return (
       <div className="dashboard-wrapper">
@@ -625,7 +744,49 @@ const ActiveSession = () => {
                      <button className={`control-btn-unified ${isPaused ? "paused" : ""}`} onClick={togglePause}>
                         {isPaused ? "▶ Resume" : "⏸ Pause"}
                      </button>
-                     {/* Switch button placeholder if needed, else redundant */}
+                     
+                     {/* Add Frame Button (Frame Mode) */}
+                     {isFrameMode && (
+                        <button 
+                            className="control-btn-unified action" 
+                            onClick={async () => {
+                                try {
+                                    setGenerating(true);
+                                    const newCount = (session.frame_count || 0) + 1;
+                                    
+                                    // Optimistic update
+                                    setSession(prev => ({ ...prev, frame_count: newCount }));
+                                    
+                                    // API Update
+                                    await activeTablesAPI.update(session.active_id, { frame_count: newCount });
+                                } catch (err) {
+                                    console.error("Failed to add frame:", err);
+                                    alert("Failed to add frame");
+                                    // Revert on error
+                                    setSession(prev => ({ ...prev, frame_count: (prev.frame_count || 1) - 1 }));
+                                } finally {
+                                    setGenerating(false);
+                                }
+                            }}
+                            disabled={generating}
+                        >
+                            + Frame
+                        </button>
+                     )}
+
+                     {/* Add Time Button (Timer Mode) */}
+                     {isTimerMode && !isStopwatchMode && (
+                        <button 
+                            className="control-btn-unified action" 
+                            onClick={() => {
+                                setManualTime(30); // Default start
+                                setShowTimeModal(true);
+                            }}
+                            disabled={generating}
+                        >
+                            + Add Time
+                        </button>
+                     )}
                    </div>
                 </div>
 
@@ -662,6 +823,33 @@ const ActiveSession = () => {
                     {/* Action Buttons */}
                     <div className="action-buttons-unified">
 
+
+                       <button 
+                         className="cancel-btn-unified"
+                         onClick={handleCancelClick}
+                         disabled={generating}
+                         style={{
+                             marginBottom: '8px',
+                             background: 'transparent',
+                             border: '1px solid #ff4d4d',
+                             color: '#ff4d4d',
+                             width: '100%',
+                             padding: '12px',
+                             borderRadius: '12px',
+                             fontWeight: '600',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s'
+                         }}
+                         onMouseOver={(e) => {
+                             e.currentTarget.style.background = '#fff0f0';
+                         }}
+                         onMouseOut={(e) => {
+                             e.currentTarget.style.background = 'transparent';
+                         }}
+                       >
+                         Cancel Booking
+                       </button>
+
                        <button 
                          className="book-btn-unified" 
                          onClick={handleGenerateBill} 
@@ -683,6 +871,7 @@ const ActiveSession = () => {
               <FoodCategoryTabs 
                 selectedCategory={selectedCategory} 
                 onSelectCategory={setSelectedCategory} 
+                categories={computedCategories}
               />
               
               {/* Search Bar */}
@@ -805,6 +994,120 @@ const ActiveSession = () => {
           </div>
         </div>
       </div>
+    {/* Manual Time Add Modal */}
+    {showTimeModal && (
+      <div className="modal-overlay" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backdropFilter: 'blur(4px)'
+      }}>
+        <div className="modal-content" style={{
+          background: 'white', padding: '24px', borderRadius: '20px',
+          width: '90%', maxWidth: '340px', textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <h3 style={{ margin: '0 0 12px 0', color: '#1a1a1a', fontSize: '20px', fontWeight: '700' }}>Add Time</h3>
+          <p style={{ color: '#666', marginBottom: '24px', fontSize: '14px' }}>Enter minutes to extend session</p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+            <button 
+                onClick={() => setManualTime(prev => Math.max(5, Number(prev) - 5))} 
+                style={{
+                  width: '44px', height: '44px', borderRadius: '12px', border: '1px solid #eee', 
+                  background: '#f8f8f8', fontSize: '20px', cursor: 'pointer', color: '#555',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#eee'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#f8f8f8'}
+            >−</button>
+            
+            <div style={{ position: 'relative' }}>
+                <input 
+                type="number" 
+                value={manualTime} 
+                onChange={(e) => setManualTime(e.target.value)}
+                style={{
+                    width: '100px', textAlign: 'center', fontSize: '32px', fontWeight: '800',
+                    border: 'none', outline: 'none', color: '#333', background: 'transparent'
+                }}
+                />
+                <div style={{ position: 'absolute', bottom: '-4px', left: '10px', right: '10px', height: '3px', background: 'linear-gradient(90deg, #f08626 0%, #ff6b00 100%)', borderRadius: '2px' }}></div>
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px', fontWeight: '500' }}>MINS</div>
+            </div>
+
+            <button 
+                onClick={() => setManualTime(prev => Number(prev) + 5)} 
+                style={{
+                  width: '44px', height: '44px', borderRadius: '12px', border: '1px solid #eee', 
+                  background: '#f8f8f8', fontSize: '20px', cursor: 'pointer', color: '#555',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#eee'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#f8f8f8'}
+            >+</button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={() => setShowTimeModal(false)} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: '#f5f5f5', color: '#666', fontWeight: '600', cursor: 'pointer', fontSize: '15px'
+            }}>Cancel</button>
+            
+            <button onClick={handleAddTimeSubmit} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: 'linear-gradient(135deg, #f08626 0%, #ff6b00 100%)', color: 'white', fontWeight: '600', cursor: 'pointer', 
+              boxShadow: '0 4px 12px rgba(240, 134, 38, 0.3)', fontSize: '15px'
+            }}>Confirm</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+
+    {/* Cancel Booking Confirmation Modal */}
+    {showCancelModal && (
+      <div className="modal-overlay" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backdropFilter: 'blur(4px)'
+      }}>
+        <div className="modal-content" style={{
+          background: 'white', padding: '24px', borderRadius: '20px',
+          width: '90%', maxWidth: '340px', textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+              width: '50px', height: '50px', background: '#ffebeb', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px', color: '#ff4d4d', fontSize: '24px'
+          }}>
+              ⚠️
+          </div>
+          <h3 style={{ margin: '0 0 12px 0', color: '#1a1a1a', fontSize: '20px', fontWeight: '700' }}>Cancel Booking?</h3>
+          <p style={{ color: '#666', marginBottom: '24px', fontSize: '14px', lineHeight: '1.5' }}>
+            Are you sure? Use this only for mistakes.<br/>
+            <strong>No bill will be generated</strong> and the table will be released immediately.
+          </p>
+          
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={() => setShowCancelModal(false)} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: '#f5f5f5', color: '#666', fontWeight: '600', cursor: 'pointer', fontSize: '15px'
+            }}>No, Go Back</button>
+            
+            <button onClick={confirmCancelBooking} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: '#ff4d4d', color: 'white', fontWeight: '600', cursor: 'pointer', 
+              boxShadow: '0 4px 12px rgba(255, 77, 77, 0.3)', fontSize: '15px'
+            }}>Yes, Cancel</button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 };

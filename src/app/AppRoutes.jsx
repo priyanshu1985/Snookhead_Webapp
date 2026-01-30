@@ -92,7 +92,7 @@ const AppRoutes = () => {
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/add-queue" element={<AddQueue />} />
         <Route
-          path="/bookings/upcoming-reservation"
+          path="/reservations"
           element={<UpcomingReservation />}
         />
         <Route path="/billing" element={<Billing />} />

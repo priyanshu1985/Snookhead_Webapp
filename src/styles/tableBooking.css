@@ -226,7 +226,7 @@
   transform: translateY(-1px);
 }
 
-.timer-controls input, .frame-controls span {
+.timer-controls input, .frame-controls .frame-count-val {
   font-size: 36px;
   font-weight: 800;
   color: #c2410c; /* Darker orange/rust for high contrast values */
@@ -482,7 +482,7 @@
     font-size: 14px;
   }
 
-  .frame-controls span {
+  .frame-controls .frame-count-val {
     font-size: 44px;
   }
 
@@ -493,6 +493,7 @@
     gap: 10px;
     max-height: 500px;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 4px; /* Space for shadows */
   }
 
