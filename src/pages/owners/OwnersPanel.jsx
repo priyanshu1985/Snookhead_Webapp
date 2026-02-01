@@ -172,7 +172,90 @@ const OwnersPanel = () => {
                     </div>
                 </div>
 
-                {/* 3. WALLET & NETWORK HEALTH */}
+
+                {/* 3. DETAILED REVENUE ANALYSIS */}
+                <h6 style={{ margin: '24px 0 16px 4px', color: '#666', fontWeight: '600' }}>Detailed Revenue Analysis</h6>
+                <div className="analytics-grid">
+                    
+                    {/* By Flow */}
+                    <div className="analytics-card">
+                        <h6>Revenue by Flow</h6>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Dashboard (Direct)</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.flow?.dashboard || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Reservation</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.flow?.reservation || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Queue System</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.flow?.queue || 0).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* By Booking Type */}
+                    <div className="analytics-card">
+                        <h6>Revenue by Booking Type</h6>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Timer Mode</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.bookingType?.timer || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Set Game (Stopwatch)</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.bookingType?.set || 0).toLocaleString()}</span>
+                            </div>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Frame Mode</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.bookingType?.frame || 0).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* By Collection Mode */}
+                    <div className="analytics-card">
+                        <h6>Revenue Collection</h6>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Cash</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.paymentMode?.cash || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>UPI / Online</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.paymentMode?.upi || 0).toLocaleString()}</span>
+                            </div>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Wallet</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.paymentMode?.wallet || 0).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* By Food Source */}
+                    <div className="analytics-card">
+                        <h6>Food & Beverage Source</h6>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Table Orders</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.foodSource?.table || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Direct Orders (POS)</span>
+                                <span style={{ fontWeight: '600' }}>₹{(data?.summary?.breakdown?.foodSource?.order_screen || 0).toLocaleString()}</span>
+                            </div>
+                            <div style={{ height: '1px', background: '#eee', margin: '4px 0' }}></div>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#333', fontWeight: '500' }}>Total Food</span>
+                                <span style={{ fontWeight: '700', color: '#FFA726' }}>{data?.summary?.foodRevenueFormatted}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. WALLET & NETWORK HEALTH */}
                 <h6 style={{ margin: '0 0 16px 4px', color: '#666', fontWeight: '600' }}>Network & Members</h6>
                 <div className="wallet-section" style={{ marginBottom: '32px' }}>
                    {/* Map specific stats manually for better control */}

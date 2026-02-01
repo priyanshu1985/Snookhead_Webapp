@@ -62,7 +62,14 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
     if (selectedGame) {
       const filtered = tables.filter(
         (table) => (table.gameid || table.game_id) === parseInt(selectedGame)
-      );
+      ).sort((a, b) => {
+        const nameA = a.name || `Table ${a.id}`;
+        const nameB = b.name || `Table ${b.id}`;
+        // Extract numbers for robust sorting
+        const numA = parseInt(nameA.replace(/\D/g, '')) || 0;
+        const numB = parseInt(nameB.replace(/\D/g, '')) || 0;
+        return numA - numB;
+      });
       setFilteredTables(filtered);
       setPreferredTable(""); // Reset table selection
     } else {

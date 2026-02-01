@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { menuAPI, ordersAPI, IMAGE_BASE_URL } from "../../services/api";
+import { menuAPI, ordersAPI, walletsAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 import {
   PlateIcon,
   FoodIcon,
@@ -26,6 +27,7 @@ import {
   CashIcon,
   OnlinePayIcon,
   SplitPayIcon,
+  WalletIcon,
 } from "../../components/common/Icons";
 import "../../styles/foodOrder.css";
 
@@ -61,7 +63,9 @@ const FoodOrder = () => {
   // Active orders state
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState(null); // For popup details
 
   // Compute filtered categories dynamically
   // Compute filtered categories dynamically - Strict Mode
@@ -104,6 +108,69 @@ const FoodOrder = () => {
   const [cashAmount, setCashAmount] = useState("");
   const [onlineAmount, setOnlineAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Modal state
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert",
+    onConfirm: null,
+    confirmText: "OK",
+    cancelText: "Cancel"
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const showAlert = (title, message) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "alert",
+      onConfirm: null,
+      confirmText: "OK"
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, confirmText = "Confirm", type = "confirm", isHtml = false) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm,
+      confirmText,
+      cancelText: "Cancel",
+      isHtml
+    });
+  };
+
+  // Wallet specific state
+  const [memberId, setMemberId] = useState("");
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [memberChecked, setMemberChecked] = useState(false);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState("");
+
+  const handleCheckMember = async () => {
+    if (!memberId.trim()) {
+      setWalletError("Please enter a Member ID");
+      return;
+    }
+    setWalletLoading(true);
+    setWalletError("");
+    try {
+      const walletData = await walletsAPI.getByCustomerId(memberId);
+      setWalletBalance(Number(walletData.balance || 0));
+      setMemberChecked(true);
+    } catch (err) {
+      setWalletError("Member not found or no wallet exists");
+      setWalletBalance(null);
+      setMemberChecked(false);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
 
   // Cart drawer state (mobile)
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -248,8 +315,7 @@ const FoodOrder = () => {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-  const tax = subtotal * 0.05;
-  const total = subtotal + tax;
+  const total = subtotal;
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
 
   // Open payment modal
@@ -264,10 +330,7 @@ const FoodOrder = () => {
 
   // Handle order submission
   const handleSubmitOrder = async () => {
-    if (!personName.trim()) {
-      alert("Please enter customer name");
-      return;
-    }
+
 
     if (paymentMethod === "hybrid") {
       const cashAmt = Number(cashAmount) || 0;
@@ -282,8 +345,23 @@ const FoodOrder = () => {
       setSubmitting(true);
       setError("");
 
+      if (paymentMethod === "wallet") {
+        if (!memberChecked || walletBalance === null) {
+           alert("Please verify member ID first");
+           setSubmitting(false);
+           return;
+        }
+        if (walletBalance < total) {
+           alert(`Insufficient wallet balance. Available: ₹${Number(walletBalance).toFixed(2)}`);
+           setSubmitting(false);
+           return;
+        }
+        // Deduct from wallet before creating order
+        await walletsAPI.deductMoney(memberId, total);
+      }
+
       const orderPayload = {
-        personName: personName.trim(),
+        personName: personName.trim() || undefined, // Allow empty for default "Walk-in"
         orderTotal: total,
         paymentMethod,
         cashAmount: paymentMethod === "offline" ? total : (paymentMethod === "hybrid" ? Number(cashAmount) : 0),
@@ -303,7 +381,9 @@ const FoodOrder = () => {
       setPaymentMethod("offline");
       setCashAmount("");
       setOnlineAmount("");
-      alert("Order placed successfully!");
+      setCashAmount("");
+      setOnlineAmount("");
+      showAlert("Success", "Order placed successfully!");
 
     } catch (err) {
       console.error("Order submission failed:", err);
@@ -376,87 +456,99 @@ const FoodOrder = () => {
                 </div>
               </div>
 
-              {/* Category Scroll */}
-              <div className="category-scroll">
-                {computedCategories.map((cat) => {
-                  const IconComponent = cat.Icon;
-                  return (
-                    <button
-                      key={cat.key}
-                      className={`category-chip ${activeCategory === cat.key ? "active" : ""}`}
-                      onClick={() => setActiveCategory(cat.key)}
-                    >
-                      <span className="category-icon">
-                        <IconComponent size={24} color={activeCategory === cat.key ? "#fff" : "#F08626"} />
-                      </span>
-                      <span className="category-label">{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               <div className="food-layout">
-                {/* FOOD GRID */}
-                <div className="food-grid">
-                  {loading ? (
-                    <div className="loading-state">
-                      <div className="loading-spinner"></div>
-                      <p>Loading menu items...</p>
-                    </div>
-                  ) : filteredItems.length === 0 ? (
-                    <div className="empty-state">
-                      <span className="empty-icon"><PlateIcon size={64} color="#ccc" /></span>
-                      <p>{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category"}</p>
-                    </div>
-                  ) : (
-                    filteredItems.map((item) => {
-                      const qty = getItemQty(item.id);
+                <div className="food-content-left">
+                  {/* Category Scroll */}
+                  <div className="category-scroll">
+                    {computedCategories.map((cat) => {
+                      const IconComponent = cat.Icon;
                       return (
-                        <div className="food-item-card" key={item.id}>
-                          {/* Food Image Placeholder */}
-                          <div className="food-item-image">
-                            {item.imageUrl ? (
-                               <img 
-                                 src={item.imageUrl} 
-                                 alt={item.name} 
-                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
-                               />
-                            ) : null}
-                            <div className="food-placeholder-img" style={{ display: item.imageUrl ? 'none' : 'flex' }}>
-                              <PlateIcon size={40} color="#ccc" />
-                            </div>
-                            {/* Veg/Non-Veg Indicator */}
-                            <span className={`food-type-badge ${item.isVeg !== false ? 'veg' : 'non-veg'}`}>
-                              <span className="food-type-dot"></span>
-                            </span>
-                          </div>
-
-                          {/* Food Details */}
-                          <div className="food-item-details">
-                            <h6 className="food-item-name">{item.name}</h6>
-                            <p className="food-item-category">{item.category}</p>
-                            <div className="food-item-footer">
-                              <span className="food-item-price">₹{item.price}</span>
-
-                              {qty === 0 ? (
-                                <button className="add-to-cart-btn" onClick={() => addItem(item)}>
-                                  ADD
-                                  <span className="plus-icon"><PlusIcon size={12} color="#fff" /></span>
-                                </button>
-                              ) : (
-                                <div className="qty-controls">
-                                  <button onClick={() => updateQty(item.id, "dec")}><MinusIcon size={16} color="#F08626" /></button>
-                                  <span>{qty}</span>
-                                  <button onClick={() => updateQty(item.id, "inc")}><PlusIcon size={16} color="#F08626" /></button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                        <button
+                          key={cat.key}
+                          className={`category-chip ${activeCategory === cat.key ? "active" : ""}`}
+                          onClick={() => setActiveCategory(cat.key)}
+                        >
+                          <span className="category-icon">
+                            <IconComponent size={24} color={activeCategory === cat.key ? "#fff" : "#F08626"} />
+                          </span>
+                          <span className="category-label">{cat.label}</span>
+                        </button>
                       );
-                    })
-                  )}
+                    })}
+                  </div>
+
+                  {/* FOOD GRID */}
+                  <div className="food-grid">
+                    {loading ? (
+                      <div className="loading-state">
+                        <div className="loading-spinner"></div>
+                        <p>Loading menu items...</p>
+                      </div>
+                    ) : filteredItems.length === 0 ? (
+                      <div className="empty-state">
+                        <span className="empty-icon"><PlateIcon size={64} color="#ccc" /></span>
+                        <p>{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category"}</p>
+                      </div>
+                    ) : (
+                      filteredItems.map((item) => {
+                        const qty = getItemQty(item.id);
+                        return (
+                          <div className="food-item-card" key={item.id}>
+                            {/* Food Image Placeholder */}
+                            <div className="food-item-image">
+                              {item.imageUrl ? (
+                                <img 
+                                  src={item.imageUrl} 
+                                  alt={item.name} 
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
+                                />
+                              ) : null}
+                              <div className="food-placeholder-img" style={{ display: item.imageUrl ? 'none' : 'flex' }}>
+                                <PlateIcon size={40} color="#ccc" />
+                              </div>
+                              {/* Veg/Non-Veg Indicator */}
+                              <span className={`food-type-badge ${item.isVeg !== false ? 'veg' : 'non-veg'}`}>
+                                <span className="food-type-dot"></span>
+                              </span>
+                            </div>
+
+                            {/* Food Details */}
+                            <div className="food-item-details">
+                              <h6 className="food-item-name">{item.name}</h6>
+                              <p className="food-item-category">{item.category}</p>
+                              <div className="food-item-footer">
+                                <span className="food-item-price">₹{item.price}</span>
+
+                                {qty === 0 ? (
+                                  <button 
+                                    className="add-to-cart-btn" 
+                                    onClick={() => showConfirm(
+                                        `Add ${item.name}?`,
+                                        `Are you sure you want to add <strong>${item.name}</strong> to the cart?`,
+                                        () => addItem(item),
+                                        "Yes, Add",
+                                        "confirm",
+                                        true
+                                    )}
+                                  >
+                                    ADD
+                                    <span className="plus-icon"><PlusIcon size={12} color="#fff" /></span>
+                                  </button>
+                                ) : (
+                                  <div className="qty-controls">
+                                    <button onClick={() => updateQty(item.id, "dec")}><MinusIcon size={16} color="#F08626" /></button>
+                                    <span>{qty}</span>
+                                    <button onClick={() => updateQty(item.id, "inc")}><PlusIcon size={16} color="#F08626" /></button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
 
                 {/* ORDER CART - Desktop */}
@@ -504,10 +596,6 @@ const FoodOrder = () => {
                         <div className="summary-row">
                           <span>Subtotal</span>
                           <span>₹{subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="summary-row">
-                          <span>Tax (5%)</span>
-                          <span>₹{tax.toFixed(2)}</span>
                         </div>
                         <div className="summary-row total">
                           <strong>Total</strong>
@@ -617,74 +705,177 @@ const FoodOrder = () => {
               </div>
 
               {/* Orders Grid */}
-              <div className="orders-grid">
-                {ordersLoading && orders.length === 0 ? (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading orders...</p>
-                  </div>
-                ) : filteredOrders.length === 0 ? (
-                  <div className="empty-state">
-                    <span className="empty-icon"><OrdersIcon size={64} color="#ccc" /></span>
-                    <p>No active orders</p>
-                    <span className="empty-hint">
-                      {sourceFilter !== "all" && "Try selecting 'All Orders'"}
-                    </span>
-                  </div>
-                ) : (
-                  filteredOrders.map((order, index) => (
-                    <div className="order-card-new" key={order.id}>
-                      <div className="order-card-top">
-                        <div className="order-number">#{index + 1}</div>
-                        <div className="order-meta">
-                          <span className="order-time">{formatDate(order.createdAt)}</span>
-                          <span className="order-customer-name">{order.personName || "Customer"}</span>
-                        </div>
-                        <div className="order-tags">
-                          {order.order_source && (
-                            <span className={`order-source-tag ${getSourceClass(order.order_source)}`}>
-                              {getSourceLabel(order.order_source)}
-                            </span>
-                          )}
-                          <span className={`order-status-tag ${order.status || "pending"}`}>
-                            {order.status || "Pending"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="order-card-items-list">
-                        {order.OrderItems && order.OrderItems.map((orderItem, idx) => (
-                          <div className="order-item-row" key={idx}>
-                            <span className="order-item-qty">{orderItem.qty}x</span>
-                            <span className="order-item-name">{orderItem.MenuItem?.name || "Item"}</span>
-                            <span className="order-item-price">₹{(Number(orderItem.priceEach || 0) * orderItem.qty).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="order-card-bottom">
-                        <div className="order-payment-info">
-                          <span className="payment-badge">{order.paymentMethod || "Cash"}</span>
-                        </div>
-                        <div className="order-amount">₹{Number(order.total || 0).toFixed(2)}</div>
-                      </div>
-
-                      <button
-                        className="complete-order-btn"
-                        onClick={() => handleUpdateStatus(order.id, "completed")}
-                      >
-                        <CheckIcon size={16} color="#fff" /> Mark as Completed
-                      </button>
-                    </div>
-                  ))
-                )}
+              <div className="orders-table-container">
+                <table className="orders-table">
+                  <thead>
+                    <tr>
+                      <th>Order No</th>
+                      <th>Order Type</th>
+                      <th>Customer Name</th>
+                      <th>Payment</th>
+                      <th>Grand Total (₹)</th>
+                      <th>Time</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ordersLoading && orders.length === 0 ? (
+                      <tr>
+                        <td colSpan="10" style={{ textAlign: "center", padding: "40px" }}>
+                          <div className="loading-spinner" style={{ margin: "0 auto" }}></div>
+                          <p>Loading orders...</p>
+                        </td>
+                      </tr>
+                    ) : filteredOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan="10" style={{ textAlign: "center", padding: "40px" }}>
+                          <OrdersIcon size={48} color="#ccc" />
+                          <p style={{ marginTop: "10px", color: "#666" }}>No active orders found</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredOrders.map((order, index) => {
+                         const total = Number(order.total || 0);
+                         
+                         return (
+                          <tr key={order.id}>
+                            <td>
+                              <span className="table-order-no">#{index + 1}</span>
+                            </td>
+                            <td>
+                              <div className="table-order-source">
+                                <span className="source-main">{getSourceLabel(order.order_source || "Counter")}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="table-customer-name">
+                                {order.personName || "Walk-in Customer"}
+                              </div>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: 600, color: "#3d4152", textTransform: "capitalize" }}>
+                                {order.paymentMethod === "offline" ? "Cash" : order.paymentMethod === "online" ? "UPI" : order.paymentMethod || "Cash"}
+                              </span>
+                            </td>
+                            <td>
+                                <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
+                                  {total.toFixed(2)}
+                                </span>
+                            </td>
+                            <td>
+                              <div className="table-date-time">
+                                <span style={{ fontSize: "13px", fontWeight: "600", color: "#3d4152" }}>
+                                  {new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                               <div className="table-actions">
+                                   <button 
+                                      className="action-btn" 
+                                      title="View Details"
+                                      onClick={() => setSelectedOrder(order)}
+                                   >
+                                      <SearchIcon size={18} />
+                                   </button>
+                                   <button 
+                                      className="action-btn complete-icon" 
+                                      onClick={() => handleUpdateStatus(order.id, "completed")}
+                                      title="Mark Completed"
+                                   >
+                                      <CheckIcon size={18} color="#fff" />
+                                   </button>
+                                   <button 
+                                      className="action-btn cancel-icon"
+                                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                                      title="Cancel Order"
+                                   >
+                                      <CloseIcon size={18} color="#FF5252" />
+                                   </button>
+                               </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </>
           )}
         </div>
       </div>
 
-      {/* Payment Modal */}
+      {/* Order Details Popup */}
+      {selectedOrder && (
+        <div className="food-payment-overlay">
+          <div className="food-payment-modal" style={{ maxWidth: "600px" }}>
+            <div className="payment-modal-header" style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "16px 24px" }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                 <h5 style={{ margin: 0, color: "#1a1a2e", fontSize: "18px" }}>Order Details</h5>
+                 <span style={{ fontSize: "13px", color: "#888" }}>#{selectedOrder.id ? selectedOrder.id.toString().slice(-6) : "Unknown"} • {selectedOrder.personName}</span>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setSelectedOrder(null)}
+                style={{ background: "#f5f5f5", width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+              >
+                <CloseIcon size={16} />
+              </button>
+            </div>
+            
+            <div className="payment-modal-body" style={{ padding: "0" }}>
+               <div style={{ maxHeight: "400px", overflowY: "auto", padding: "0 24px" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "16px" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #eee" }}>
+                        <th style={{ textAlign: "left", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Item</th>
+                        <th style={{ textAlign: "center", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Qty</th>
+                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Price</th>
+                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const items = selectedOrder.OrderItems || selectedOrder.orderitems || [];
+                        return items.length > 0 ? (
+                          items.map((item, idx) => (
+                            <tr key={idx} style={{ borderBottom: "1px dashed #eee" }}>
+                              <td style={{ padding: "12px 0", fontSize: "14px", fontWeight: "600", color: "#3d4152" }}>
+                                {item.MenuItem?.name || item.menu_item?.name || "Unknown Item"}
+                              </td>
+                              <td style={{ padding: "12px 0", textAlign: "center", fontSize: "14px", color: "#3d4152" }}>
+                                {item.qty}
+                              </td>
+                              <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", color: "#3d4152" }}>
+                                ₹{Number(item.priceEach || item.price_each || 0).toFixed(2)}
+                              </td>
+                              <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", fontWeight: "600", color: "#1a1a2e" }}>
+                                ₹{(Number(item.priceEach || item.price_each || 0) * (item.qty || 1)).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr><td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No items found</td></tr>
+                        );
+                      })()}
+                    </tbody>
+                    <tfoot>
+                       <tr>
+                          <td colSpan="3" style={{ textAlign: "right", padding: "16px 0", fontWeight: "700" }}>Total Amount:</td>
+                          <td style={{ textAlign: "right", padding: "16px 0", fontWeight: "700", fontSize: "16px", color: "#F08626" }}>
+                             ₹{Number(selectedOrder.total || 0).toFixed(2)}
+                          </td>
+                       </tr>
+                    </tfoot>
+                  </table>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal (Existing) */}
       {showPaymentModal && (
         <div className="food-payment-overlay">
           <div className="food-payment-modal">
@@ -701,7 +892,7 @@ const FoodOrder = () => {
 
             <div className="payment-modal-body">
               <div className="form-group">
-                <label>Customer Name *</label>
+                <label>Customer Name</label>
                 <input
                   type="text"
                   placeholder="Enter customer name"
@@ -713,7 +904,7 @@ const FoodOrder = () => {
 
               <div className="form-group">
                 <label>Payment Method *</label>
-                <div className="payment-method-options">
+                <div className="payment-method-options" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <button
                     className={`payment-option ${paymentMethod === "offline" ? "active" : ""}`}
                     onClick={() => setPaymentMethod("offline")}
@@ -726,17 +917,73 @@ const FoodOrder = () => {
                     onClick={() => setPaymentMethod("online")}
                     disabled={submitting}
                   >
-                    <OnlinePayIcon size={18} color={paymentMethod === "online" ? "#F08626" : "#666"} /> Online
+                    <OnlinePayIcon size={18} color={paymentMethod === "online" ? "#F08626" : "#666"} /> UPI
                   </button>
                   <button
-                    className={`payment-option ${paymentMethod === "hybrid" ? "active" : ""}`}
-                    onClick={() => setPaymentMethod("hybrid")}
+                    className={`payment-option ${paymentMethod === "wallet" ? "active" : ""}`}
+                    onClick={() => setPaymentMethod("wallet")}
                     disabled={submitting}
                   >
-                    <SplitPayIcon size={18} color={paymentMethod === "hybrid" ? "#F08626" : "#666"} /> Split
+                    <WalletIcon size={18} color={paymentMethod === "wallet" ? "#F08626" : "#666"} /> Wallet
                   </button>
                 </div>
               </div>
+
+              {/* Wallet Section */}
+              {paymentMethod === "wallet" && (
+                <div style={{ marginTop: "16px", padding: "16px", background: "#f8f9fa", borderRadius: "8px", border: "1px solid #eee" }}>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                    <input
+                      type="text"
+                      value={memberId}
+                      onChange={(e) => {
+                        setMemberId(e.target.value);
+                        setMemberChecked(false);
+                        setWalletError("");
+                      }}
+                      placeholder="Enter Member ID"
+                      disabled={submitting}
+                      style={{ flex: 1, padding: "8px 12px", borderRadius: "6px", border: "1px solid #ddd", fontSize: "14px" }}
+                    />
+                    <button
+                      onClick={handleCheckMember}
+                      disabled={submitting || walletLoading}
+                      style={{ 
+                        padding: "8px 16px", 
+                        background: "#F08626", 
+                        color: "#fff", 
+                        border: "none", 
+                        borderRadius: "6px", 
+                        cursor: "pointer", 
+                        fontWeight: "600",
+                        opacity: walletLoading ? 0.7 : 1
+                      }}
+                    >
+                      {walletLoading ? "..." : "Check"}
+                    </button>
+                  </div>
+
+                  {walletError && <div style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{walletError}</div>}
+
+                  {memberChecked && walletBalance !== null && (
+                    <div style={{ 
+                      marginTop: "12px", 
+                      padding: "12px", 
+                      background: walletBalance >= total ? "#ECFDF5" : "#FEF2F2", 
+                      borderRadius: "6px", 
+                      border: `1px solid ${walletBalance >= total ? "#10B981" : "#EF4444"}` 
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "13px", color: "#666" }}>Wallet Balance:</span>
+                        <span style={{ fontSize: "15px", fontWeight: "700", color: "#1F2937" }}>₹{Number(walletBalance).toFixed(2)}</span>
+                      </div>
+                      {walletBalance < total && (
+                        <div style={{ color: "#DC2626", fontSize: "12px", fontWeight: "600" }}>Insufficient balance</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {paymentMethod === "hybrid" && (
                 <div className="split-payment">
@@ -772,10 +1019,6 @@ const FoodOrder = () => {
                   <span>Items ({totalItems})</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                <div className="summary-line">
-                  <span>Tax (5%)</span>
-                  <span>₹{tax.toFixed(2)}</span>
-                </div>
                 <div className="summary-line total">
                   <strong>Grand Total</strong>
                   <strong>₹{total.toFixed(2)}</strong>
@@ -802,6 +1045,18 @@ const FoodOrder = () => {
           </div>
         </div>
       )}
+      
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        isHtml={modalConfig.isHtml}
+      />
     </div>
   );
 };

@@ -16,7 +16,10 @@ const TableGames = () => {
     try {
       setLoading(true);
       const data = await gamesAPI.getAll();
-      setGames(Array.isArray(data) ? data : []);
+      const gamesList = Array.isArray(data) ? data : [];
+      // Stable sort by ID to prevent jumping
+      gamesList.sort((a, b) => (a.gameid || a.game_id) - (b.gameid || b.game_id));
+      setGames(gamesList);
       setError("");
     } catch (err) {
       setError(err.message || "Failed to fetch games");

@@ -205,6 +205,13 @@
   align-items: start;
 }
 
+.food-content-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 /* FOOD GRID */
 .food-grid {
   display: grid;
@@ -419,11 +426,15 @@
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: sticky;
-  top: 90px;
-  max-height: calc(100vh - 110px);
+  top: 20px;
+  max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  align-self: start !important;
+  margin-top: 0 !important;
+  height: fit-content;
+  z-index: 10;
 }
 
 .cart-header {
@@ -1543,6 +1554,197 @@
   }
 
   .food-item-footer {
-    margin-top: auto;
+    display: none;
+  }
+}
+
+/* =========================
+   ACTIVE ORDERS TABLE REDESIGN
+   ========================= */
+
+.orders-table-container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow-x: auto; /* Allow scrolling if table is too wide */
+  margin-top: 24px;
+  border: 1px solid #eef0f2;
+}
+
+.orders-table {
+  width: 100%;
+  min-width: 1000px; /* Force minimum width to prevent squishing */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.orders-table thead {
+  background: #F08626;
+}
+
+.orders-table th {
+  padding: 20px 24px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  white-space: nowrap;
+  border-bottom: 2px solid #e17516;
+}
+
+.orders-table thead th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.orders-table thead th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
+.orders-table tbody tr {
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.orders-table tbody tr:hover {
+  background-color: #fff8f3;
+}
+
+.orders-table td {
+  padding: 20px 24px;
+  color: #3d4152;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.orders-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Column Specific Widths to prevent squishing */
+.orders-table th:nth-child(1) { width: 80px; } /* Order No */
+.orders-table th:nth-child(2) { width: 150px; } /* Order Type */
+.orders-table th:nth-child(3) { width: 25%; } /* Name - flexible */
+.orders-table th:nth-child(4) { width: 150px; } /* Payment */
+.orders-table th:nth-child(5) { width: 150px; } /* Total */
+.orders-table th:nth-child(6) { width: 120px; } /* Time */
+.orders-table th:nth-child(7) { width: 160px; } /* Actions */
+
+
+.table-order-no {
+  font-weight: 800;
+  color: #F08626;
+  background: rgba(240, 134, 38, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.table-order-source .source-main {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 14px;
+}
+
+.source-sub {
+  font-size: 12px;
+  color: #888;
+}
+
+.table-customer-name {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 15px;
+}
+
+/* STATUS BADGES */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+.status-badge.completed {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.status-badge.cancelled {
+  background: #F8D7DA;
+  color: #721C24;
+}
+
+/* ACTION BUTTONS */
+.table-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  color: #888;
+}
+
+.action-btn:hover {
+  border-color: #F08626;
+  color: #F08626;
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(240, 134, 38, 0.15);
+}
+
+.action-btn.complete-icon {
+  background: #e6fffa;
+  border: 1px solid #b2f5ea;
+  color: #059669;
+}
+
+.action-btn.complete-icon:hover {
+  background: #10B981;
+  border-color: #10B981;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.action-btn.cancel-icon {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  color: #e53e3e;
+}
+
+.action-btn.cancel-icon:hover {
+  background: #FC8181;
+  border-color: #FC8181;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .orders-table-container {
+    overflow-x: auto;
   }
 }

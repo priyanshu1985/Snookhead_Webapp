@@ -3,10 +3,11 @@ import { useState, useEffect, useRef, useContext } from "react";
 
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
-import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI, IMAGE_BASE_URL } from "../../services/api";
+import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI, reservationsAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
 import { PlateIcon } from "../../components/common/Icons";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 
 import "../../styles/activeSession.css";
 
@@ -25,6 +26,10 @@ const ActiveSession = () => {
   const [tableInfo, setTableInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Advance Payment State
+  const [advancePayment, setAdvancePayment] = useState(0);
+  const [reservationNotes, setReservationNotes] = useState("");
 
   // Timer state - countdown mode
   const [remainingSeconds, setRemainingSeconds] = useState(null);
@@ -88,8 +93,39 @@ const ActiveSession = () => {
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [manualTime, setManualTime] = useState(30);
 
+  // Manual Frame Add Modal State
+  const [showFrameModal, setShowFrameModal] = useState(false);
+  const [framesToAdd, setFramesToAdd] = useState(1);
+
   // Cancel Booking Modal State
   const [showCancelModal, setShowCancelModal] = useState(false);
+  
+  // Confirmation Modal State
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "confirm", 
+    onConfirm: null,
+    confirmText: "Yes"
+  });
+
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const showConfirm = (title, message, onConfirm, confirmText = "Confirm", type = "confirm", isHtml = false) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm,
+      confirmText,
+      cancelText: "Cancel",
+      isHtml
+    });
+  };
   
   // Image error handling
   const [failedImages, setFailedImages] = useState(new Set());
@@ -100,6 +136,31 @@ const ActiveSession = () => {
       newSet.add(id);
       return newSet;
     });
+  };
+
+  // Handle Manual Frame Addition
+  const handleAddFramesSubmit = async () => {
+    if (!framesToAdd || framesToAdd <= 0) return;
+    
+    setShowFrameModal(false);
+    const countToAdd = Number(framesToAdd);
+    
+    try {
+        setGenerating(true);
+        const newCount = (session.frame_count || 0) + countToAdd;
+        
+        // Optimistic update
+        setSession(prev => ({ ...prev, frame_count: newCount }));
+        
+        // API Update
+        await activeTablesAPI.update(session.active_id, { frame_count: newCount });
+    } catch (err) {
+        console.error("Failed to add frames:", err);
+        alert("Failed to add frames");
+        setSession(prev => ({ ...prev, frame_count: (prev.frame_count || 1) - countToAdd }));
+    } finally {
+        setGenerating(false);
+    }
   };
 
   // Auto-release handler - generates bill when timer ends and releases table
@@ -116,6 +177,8 @@ const ActiveSession = () => {
       // Pass cart items so they are included in the bill
       const response = await activeTablesAPI.autoRelease({
         active_id: sessionToRelease.active_id,
+        // Pass advance payment to include in bill details
+        advance_payment: advancePayment, 
         cart_items: cartItems.map((item) => ({
           id: item.id,
           name: item.name,
@@ -528,9 +591,14 @@ const ActiveSession = () => {
   // Frame mode: frameCount * frameCharge
   // Timer/Stopwatch mode: billingMinutes * pricePerMin
   const frameCount = session?.frame_count || 0;
+  
+  // Normalize price fields (handle potential backend case differences)
+  const pricePerMin = Number(tableInfo?.pricePerMin ?? tableInfo?.pricepermin ?? tableInfo?.price_per_min ?? 0);
+  const frameCharge = Number(tableInfo?.frameCharge ?? tableInfo?.framecharge ?? tableInfo?.frame_charge ?? 0);
+
   const tableCost = isFrameMode
-    ? frameCount * (tableInfo?.frameCharge || 0)
-    : billingMinutes * (tableInfo?.pricePerMin || 0);
+    ? frameCount * frameCharge
+    : billingMinutes * pricePerMin;
   const grandTotal = tableCost + cartTotal;
 
   // Toggle pause
@@ -592,13 +660,42 @@ const ActiveSession = () => {
     }
   };
 
-  // Handle generate bill
-  const handleGenerateBill = async () => {
+  // Handle generate bill click (with confirmation)
+  const handleGenerateBillClick = () => {
+      const isPaid = grandTotal <= advancePayment && grandTotal > 0;
+      const actionText = isPaid ? "End Session" : "Generate Bill";
+      const confirmMessage = `
+        <div style="text-align: left">
+           <p>Are you sure you want to finish this session?</p>
+           <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+              <p><strong>Total Bill:</strong> ₹${grandTotal.toFixed(2)}</p>
+              ${advancePayment > 0 ? `<p style="color: #f59e0b"><strong>Advance Paid:</strong> -₹${advancePayment.toFixed(2)}</p>` : ''}
+              <p style="font-size: 1.1em; margin-top: 6px;"><strong>To Pay:</strong> ₹${Math.max(0, grandTotal - advancePayment).toFixed(2)}</p>
+           </div>
+        </div>
+      `;
+
+      showConfirm(
+          `${actionText}?`, 
+          confirmMessage, 
+          () => processGenerateBill(),
+          actionText,
+          "confirm",
+          true
+      );
+  };
+
+  // Actual Bill Generation Logic (moved from handleGenerateBill)
+  const processGenerateBill = async () => {
     if (!session) return;
 
     try {
       setGenerating(true);
       setError("");
+
+      // Normalize price fields again for consistency
+      const pricePerMin = Number(tableInfo?.pricePerMin ?? tableInfo?.pricepermin ?? tableInfo?.price_per_min ?? 0);
+      const frameCharge = Number(tableInfo?.frameCharge ?? tableInfo?.framecharge ?? tableInfo?.frame_charge ?? 0);
 
       // Create comprehensive bill with table charges + food items
       // For frame mode: use frame_count * frameCharge (no time-based billing)
@@ -610,15 +707,17 @@ const ActiveSession = () => {
         session_id: session.active_id,
         // For frame mode, session_duration is 0 (billing is by frames, not time)
         session_duration: isFrameMode ? 0 : billingMinutes,
-        table_price_per_min: isFrameMode ? 0 : (tableInfo?.pricePerMin || 0),
+        table_price_per_min: isFrameMode ? 0 : pricePerMin,
         // Frame charges: frameCount * frameCharge for frame mode, 0 for other modes
-        frame_charges: isFrameMode ? (frameCount * (tableInfo?.frameCharge || 0)) : 0,
+        frame_charges: isFrameMode ? (frameCount * frameCharge) : 0,
         frame_count: isFrameMode ? frameCount : null,
         booking_type: session.booking_type,
         selected_menu_items: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
         })),
+        // Pass advance payment
+        advance_payment: advancePayment,
       });
 
       // Stop the session and release the table (skip_bill=true to avoid duplicate bill)
@@ -636,6 +735,51 @@ const ActiveSession = () => {
       setGenerating(false);
     }
   };
+
+  // Fetch linked reservation to check for advance payment
+  useEffect(() => {
+    const fetchLinkedReservation = async () => {
+        if (!tableId || !session) return;
+        
+        try {
+            const data = await reservationsAPI.getAll();
+            const list = data?.data || (Array.isArray(data) ? data : []);
+            // Filter out completed or cancelled reservations to prevent matching old/irrelevant bookings
+            const tableRes = list.filter(r => 
+                String(r.tableId || r.table_id) === String(tableId) &&
+                r.status !== 'completed' && 
+                r.status !== 'cancelled'
+            );
+            
+            tableRes.sort((a, b) => {
+               const ta = new Date(a.reservationtime || a.reservation_time || a.fromTime);
+               const tb = new Date(b.reservationtime || b.reservation_time || b.fromTime);
+               return tb - ta;
+            });
+
+            const sessionStart = new Date(session.start_time);
+            const match = tableRes.find(r => {
+                const rTime = new Date(r.reservationtime || r.reservation_time || r.fromTime);
+                const diffMins = Math.abs((sessionStart - rTime) / 60000);
+                return diffMins < 60;
+            });
+
+            if (match && match.notes) {
+                setReservationNotes(match.notes);
+                // Regex to match any PAID tag: [PAID_X: amount]
+                const paymentMatch = match.notes.match(/\[PAID_(?:ADVANCE|HALF|CASH|UPI|WALLET):\s*(\d+(\.\d+)?)\]/);
+                
+                if (paymentMatch && paymentMatch[1]) {
+                    setAdvancePayment(Number(paymentMatch[1]));
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch linked reservation:", err);
+        }
+    };
+    
+    fetchLinkedReservation();
+  }, [tableId, session]);
 
   // Handle Cancel Booking Click
   const handleCancelClick = () => {
@@ -746,32 +890,50 @@ const ActiveSession = () => {
                      </button>
                      
                      {/* Add Frame Button (Frame Mode) */}
+                     {/* Frame Controls (Frame Mode) */}
                      {isFrameMode && (
-                        <button 
-                            className="control-btn-unified action" 
-                            onClick={async () => {
-                                try {
-                                    setGenerating(true);
-                                    const newCount = (session.frame_count || 0) + 1;
-                                    
-                                    // Optimistic update
-                                    setSession(prev => ({ ...prev, frame_count: newCount }));
-                                    
-                                    // API Update
-                                    await activeTablesAPI.update(session.active_id, { frame_count: newCount });
-                                } catch (err) {
-                                    console.error("Failed to add frame:", err);
-                                    alert("Failed to add frame");
-                                    // Revert on error
-                                    setSession(prev => ({ ...prev, frame_count: (prev.frame_count || 1) - 1 }));
-                                } finally {
-                                    setGenerating(false);
-                                }
-                            }}
-                            disabled={generating}
-                        >
-                            + Frame
-                        </button>
+                        <div className="frame-controls-unified" style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                            <button 
+                                className="control-btn-unified action" 
+                                style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2' }}
+                                onClick={() => {
+                                    if ((session.frame_count || 0) <= 0) return;
+                                    showConfirm(
+                                        "Remove Frame?",
+                                        "Are you sure you want to reduce the frame count by 1?",
+                                        async () => {
+                                            try {
+                                                setGenerating(true);
+                                                const newCount = Math.max(0, (session.frame_count || 0) - 1);
+                                                setSession(prev => ({ ...prev, frame_count: newCount }));
+                                                await activeTablesAPI.update(session.active_id, { frame_count: newCount });
+                                            } catch (err) {
+                                                console.error("Failed to remove frame:", err);
+                                                alert("Failed to remove frame");
+                                                setSession(prev => ({ ...prev, frame_count: (prev.frame_count || 0) + 1 }));
+                                            } finally {
+                                                setGenerating(false);
+                                            }
+                                        },
+                                        "Yes, Remove"
+                                    );
+                                }}
+                                disabled={generating || (session.frame_count || 0) <= 0}
+                            >
+                                - Frame
+                            </button>
+
+                            <button 
+                                className="control-btn-unified action" 
+                                onClick={() => {
+                                    setFramesToAdd(1);
+                                    setShowFrameModal(true);
+                                }}
+                                disabled={generating}
+                            >
+                                + Frame
+                            </button>
+                        </div>
                      )}
 
                      {/* Add Time Button (Timer Mode) */}
@@ -795,25 +957,56 @@ const ActiveSession = () => {
                   <div className="bill-details">
                     
                     {/* Table Charges */}
-                    <div className="bill-row highlight">
-                       <span>
+                    <div className="bill-row highlight" style={{ background: '#f0f7ff', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e0e7ff' }}>
+                       <span style={{ color: '#1a1a2e', fontWeight: '700', fontSize: '14px' }}>
                          {isFrameMode ? `Frame Charges (${frameCount})` : 
                           `Table Time (${billingMinutes} mins)`}
                        </span>
-                       <span>₹{tableCost.toFixed(2)}</span>
+                       <span style={{ color: '#1a1a2e', fontWeight: '700', fontSize: '15px' }}>₹{tableCost.toFixed(2)}</span>
                     </div>
                     
                     {/* Itemized Food List */}
-                    {cart.map((item) => (
-                      <div className="bill-row item-row" key={item.id} style={{ fontSize: '13px', color: '#666', marginBottom: '4px', marginTop: '0' }}>
-                        <span style={{flex: 1}}>{item.qty} x {item.name}</span>
-                        <span>₹{(Number(item.price) * item.qty).toFixed(2)}</span>
-                      </div>
-                    ))}
+                    {cart.length > 0 && (
+                        <div className="bill-food-section" style={{ marginTop: '12px' }}>
+                            <label style={{ fontSize: '12px', textTransform: 'uppercase', color: '#999', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '8px', display: 'block' }}>Food & Drinks</label>
+                            {cart.map((item) => (
+                              <div className="bill-row item-row" key={item.id} style={{ fontSize: '13px', color: '#666', marginBottom: '8px', marginTop: '0', alignItems: 'center', justifyContent: 'space-between' }}>
+                                {/* Name Left */}
+                                <span style={{ color: '#555', fontWeight: '500' }}>{item.name}</span>
+
+                                {/* Controls + Price Right */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                     <div className="mini-qty-controls" style={{ display: 'flex', alignItems: 'center', background: '#f5f5f5', borderRadius: '6px', padding: '2px' }}>
+                                        <button 
+                                            onClick={() => updateCartQty(item.id, -1)}
+                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 8px', fontSize: '14px', color: '#555', display: 'flex', alignItems: 'center' }}
+                                        >−</button>
+                                        <span style={{ fontSize: '12px', fontWeight: '600', minWidth: '18px', textAlign: 'center', color: '#333' }}>{item.qty}</span>
+                                        <button 
+                                            onClick={() => updateCartQty(item.id, 1)}
+                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 8px', fontSize: '14px', color: '#555', display: 'flex', alignItems: 'center' }}
+                                        >+</button>
+                                    </div>
+                                    <span style={{ fontWeight: '600', color: '#333', minWidth: '60px', textAlign: 'right' }}>₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                    )}
                     
                     {/* Divider */}
                     <div className="panel-divider"></div>
 
+                    {/* Advance Payment Status */}
+                    {advancePayment > 0 && (
+                      <div className="bill-row" style={{ color: grandTotal <= advancePayment ? '#10b981' : '#f59e0b', fontWeight: 'bold' }}>
+                          <span>
+                             {grandTotal <= advancePayment ? "Full Bill Paid" : "Half Paid Advance"}
+                          </span>
+                          <span>-₹{advancePayment.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
                     {/* Total */}
                     <div className="bill-total-row">
                        <span>Total</span>
@@ -850,12 +1043,20 @@ const ActiveSession = () => {
                          Cancel Booking
                        </button>
 
+                       {/* Dynamic Button Text based on Payment Status */}
                        <button 
                          className="book-btn-unified" 
-                         onClick={handleGenerateBill} 
+                         onClick={handleGenerateBillClick} 
                          disabled={generating}
+                         style={
+                            (grandTotal <= advancePayment && grandTotal > 0) ? {
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Green for Paid
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            } : {}
+                         }
                        >
-                         {generating ? "Generating..." : "Generate Bill"}
+                         {generating ? "Processing..." : 
+                          (grandTotal <= advancePayment && grandTotal > 0) ? "End Session (Paid)" : "Generate Bill"}
                        </button>
                     </div>
 
@@ -940,7 +1141,19 @@ const ActiveSession = () => {
                                  <button onClick={() => updateCartQty(item.id, 1)}>+</button>
                                </div>
                              ) : (
-                               <button className="add-btn" onClick={() => addToCart(item)}>
+                               <button 
+                                 className="add-btn" 
+                                 onClick={() => {
+                                     showConfirm(
+                                         `Add ${item.name}?`,
+                                         `Are you sure you want to add <strong>${item.name}</strong> to the order?`,
+                                         () => addToCart(item),
+                                         "Yes, Add",
+                                         "confirm",
+                                         true
+                                     );
+                                 }}
+                               >
                                  ADD
                                </button>
                              )}
@@ -988,8 +1201,18 @@ const ActiveSession = () => {
             <button className="update-btn" onClick={handleUpdate} disabled={cart.length === 0}>
               Update
             </button>
-            <button className="generate-bill-btn" onClick={handleGenerateBill} disabled={generating}>
-              {generating ? "Generating..." : "Generate Bill"}
+            <button 
+                className="generate-bill-btn" 
+                onClick={handleGenerateBillClick} 
+                disabled={generating}
+                style={
+                    (grandTotal <= advancePayment && grandTotal > 0) ? {
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    } : {}
+                 }
+            >
+               {generating ? "Processing..." : 
+                (grandTotal <= advancePayment && grandTotal > 0) ? "End Session (Paid)" : "Generate Bill"}
             </button>
           </div>
         </div>
@@ -1066,6 +1289,78 @@ const ActiveSession = () => {
     )}
 
 
+    {/* Manual Frame Add Modal */}
+    {showFrameModal && (
+      <div className="modal-overlay" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backdropFilter: 'blur(4px)'
+      }}>
+        <div className="modal-content" style={{
+          background: 'white', padding: '24px', borderRadius: '20px',
+          width: '90%', maxWidth: '340px', textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <h3 style={{ margin: '0 0 12px 0', color: '#1a1a1a', fontSize: '20px', fontWeight: '700' }}>Add Frames</h3>
+          <p style={{ color: '#666', marginBottom: '24px', fontSize: '14px' }}>How many frames to add?</p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+            <button 
+                onClick={() => setFramesToAdd(prev => Math.max(1, Number(prev) - 1))} 
+                style={{
+                  width: '44px', height: '44px', borderRadius: '12px', border: '1px solid #eee', 
+                  background: '#f8f8f8', fontSize: '20px', cursor: 'pointer', color: '#555',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#eee'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#f8f8f8'}
+            >−</button>
+            
+            <div style={{ position: 'relative' }}>
+                <input 
+                type="number" 
+                value={framesToAdd} 
+                onChange={(e) => setFramesToAdd(e.target.value)}
+                style={{
+                    width: '100px', textAlign: 'center', fontSize: '32px', fontWeight: '800',
+                    border: 'none', outline: 'none', color: '#333', background: 'transparent'
+                }}
+                />
+                <div style={{ position: 'absolute', bottom: '-4px', left: '10px', right: '10px', height: '3px', background: 'linear-gradient(90deg, #f08626 0%, #ff6b00 100%)', borderRadius: '2px' }}></div>
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px', fontWeight: '500' }}>FRAMES</div>
+            </div>
+
+            <button 
+                onClick={() => setFramesToAdd(prev => Number(prev) + 1)} 
+                style={{
+                  width: '44px', height: '44px', borderRadius: '12px', border: '1px solid #eee', 
+                  background: '#f8f8f8', fontSize: '20px', cursor: 'pointer', color: '#555',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#eee'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#f8f8f8'}
+            >+</button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={() => setShowFrameModal(false)} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: '#f5f5f5', color: '#666', fontWeight: '600', cursor: 'pointer', fontSize: '15px'
+            }}>Cancel</button>
+            
+            <button onClick={handleAddFramesSubmit} style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none', 
+              background: 'linear-gradient(135deg, #f08626 0%, #ff6b00 100%)', color: 'white', fontWeight: '600', cursor: 'pointer', 
+              boxShadow: '0 4px 12px rgba(240, 134, 38, 0.3)', fontSize: '15px'
+            }}>Add Frames</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+
     {/* Cancel Booking Confirmation Modal */}
     {showCancelModal && (
       <div className="modal-overlay" style={{
@@ -1106,8 +1401,21 @@ const ActiveSession = () => {
             }}>Yes, Cancel</button>
           </div>
         </div>
-      </div>
+       </div>
     )}
+    
+    {/* Unified Confirmation Modal */}
+    <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        isHtml={modalConfig.isHtml}
+      />
     </div>
   );
 };

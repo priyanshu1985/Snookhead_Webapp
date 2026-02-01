@@ -125,6 +125,28 @@
 /* =========================
    TABLE CARD
 ========================= */
+/* Game Image - Defines the card size */
+.table-card-img {
+  width: 100%;
+  height: 100%; /* Force fill */
+  display: block;
+  object-fit: cover; /* Cover container to remove gaps */
+  border-radius: 8px; /* Ensure image corners match card */
+  /* Remove drop-shadow on image as it might create the "background" effect if container is larger */
+}
+
+/* Auto-rotate horizontal images to fit vertical card */
+.rotated-vertical {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 177.78% !important; /* 16/9 ratio to match height */
+  height: 56.25% !important; /* 9/16 ratio to match width */
+  transform: translate(-50%, -50%) rotate(90deg);
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 .table-card {
   position: relative;
   width: 100%;
@@ -137,20 +159,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.table-card:hover {
-  transform: translateY(-4px);
-}
-
-/* Game Image - Defines the card size */
-.table-card-img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  /* Add subtle shadow to image itself since card is transparent */
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+  overflow: hidden; /* Clip everything to rounded corners */
+  aspect-ratio: 9/16; /* Force a ratio if needed, or let image dictate height */
 }
 
 /* Table Number - Centered on the card */
@@ -183,6 +193,81 @@
   background: rgba(60, 55, 55, 0.4);
   z-index: 1;
   border-radius: 8px; /* Match image radius if any */
+}
+
+/* Optional: Special border for reserved but not active */
+.table-card.has-reservation:not(.status-occupied) {
+    box-shadow: 0 0 0 2px #f08626;
+}
+
+/* Reservation Badge - Top Overlay Style */
+.reservation-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.4));
+  padding: 12px 10px 16px; /* Extra bottom padding for fade */
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align like the bottom one often looks good, or left? User image has bottom one text centered? Let's check image... The image 'table_playing.png' has text centered? Hard to tell, looks centered or left. The code for .table-booked-info doesn't specify align-items, so it defaults to stretch (left). The image shows centered text. Let's try Centered for top to look like a header. */
+  text-align: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  animation: fadeIn 0.3s ease-out;
+  max-width: none;
+  width: 100%;
+}
+
+.reservation-badge::before {
+  display: none;
+}
+
+.reservation-badge .res-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #F08626; /* Brand Orange */
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.reservation-badge .res-time {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.reservation-badge .res-name {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 90%;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+/* Active Timer Badge */
+.active-timer-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #F08626; /* Brand Orange */
+    color: #FFFFFF; /* White Text */
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: none;
+    backdrop-filter: none;
 }
 
 /* Maintenance Table - Grey overlay */
@@ -392,8 +477,89 @@
   .table-booked-info .booked-label {
     font-size: 9px;
   }
-
   .table-booked-info .booked-name {
     font-size: 11px;
   }
+}
+
+/* ALERT VIBRATION */
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.table-card.urgent-alert {
+  animation: vibrate 0.4s linear infinite;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+  border: 2px solid #ff4444;
+}
+
+.table-card.urgent-alert .active-timer-badge {
+  background: #ff4444;
+  color: #fff;
+  animation: none; /* Keep text readable, don't double vibrate if not needed, but card vibrates */
+}
+
+/* =========================
+   DRAG AND DROP TABS
+========================= */
+.category-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 4px 12px;
+  margin-bottom: 24px;
+}
+
+.category-tabs button {
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #666;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: grab;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: none;
+  user-select: none;
+}
+
+.category-tabs button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+  color: #333;
+}
+
+.category-tabs button:active {
+  cursor: grabbing;
+}
+
+.category-tabs button.active {
+  background: #F08626;
+  color: white;
+  border-color: #F08626;
+  box-shadow: 0 4px 12px rgba(240, 134, 38, 0.25);
+}
+
+/* DRAGGING STATE */
+.category-tabs button.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  background: #f0f0f0;
+  border: 2px dashed #ccc;
+  cursor: grabbing;
+}
+
+/* DRAG OVER TARGET */
+.category-tabs button.drag-over {
+  transform: scale(1.05);
+  border: 2px solid #F08626;
+  background: #fff8f0;
+  box-shadow: 0 0 0 4px rgba(240, 134, 38, 0.1);
 }

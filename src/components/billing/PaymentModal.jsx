@@ -16,6 +16,9 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
   const tableCharges = Number(bill?.table_charges || 0);
   const menuCharges = Number(bill?.menu_charges || 0);
   const totalAmount = Number(bill?.total_amount || 0);
+  const advancePayment = Number(bill?.advance_payment || 0); // Get advance payment
+  const finalPayable = Math.max(0, totalAmount - advancePayment);
+  
   const sessionDuration = bill?.session_duration || 0;
   const orderItems = bill?.order_items || [];
 
@@ -55,14 +58,20 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
           return;
         }
 
-        if (walletBalance < totalAmount) {
+        if (walletBalance < finalPayable) {
+          setError(`Insufficient wallet balance. Available: ₹${walletBalance.toFixed(2)}`);
+          setProcessing(false);
+          return;
+        }
+
+        if (walletBalance < finalPayable) {
           setError(`Insufficient wallet balance. Available: ₹${walletBalance.toFixed(2)}`);
           setProcessing(false);
           return;
         }
 
         // Deduct from wallet
-        await walletsAPI.deductMoney(memberId, totalAmount);
+        await walletsAPI.deductMoney(memberId, finalPayable);
       }
 
       // Mark bill as paid
@@ -190,7 +199,7 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
               <div className={`wallet-balance-info ${walletBalance >= totalAmount ? "sufficient" : "insufficient"}`}>
                 <span className="balance-label">Wallet Balance:</span>
                 <span className="balance-value">₹{walletBalance.toFixed(2)}</span>
-                {walletBalance < totalAmount && (
+                {walletBalance < finalPayable && (
                   <span className="balance-warning">Insufficient balance</span>
                 )}
               </div>
@@ -233,10 +242,20 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
             </div>
           )}
 
+          {/* Advance Payment Deduction */}
+          {advancePayment > 0 && (
+             <div className="charges-section" style={{ borderBottom: '1px dashed #eee', paddingBottom: '8px', marginTop: '8px' }}>
+                <div className="section-header">
+                  <span className="section-title" style={{ color: '#059669' }}>Less: Advance / Half Paid</span>
+                  <span className="section-total" style={{ color: '#059669' }}>-₹{advancePayment.toFixed(2)}</span>
+                </div>
+             </div>
+          )}
+
           {/* Grand Total */}
           <div className="grand-total">
-            <span>Grand Total</span>
-            <span className="total-amount">₹{totalAmount.toFixed(2)}</span>
+            <span>Total to Pay</span>
+            <span className="total-amount">₹{finalPayable.toFixed(2)}</span>
           </div>
         </div>
 
@@ -274,7 +293,7 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
         <button
           className="pay-btn"
           onClick={handlePay}
-          disabled={processing || (paymentMethod === "wallet" && (!memberChecked || walletBalance < totalAmount))}
+          disabled={processing || (paymentMethod === "wallet" && (!memberChecked || walletBalance < finalPayable))}
         >
           {processing ? (
             <span className="processing">
@@ -282,7 +301,7 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
               Processing...
             </span>
           ) : (
-            `Pay ₹${totalAmount.toFixed(2)}`
+            `Pay ₹${finalPayable.toFixed(2)}`
           )}
         </button>
       </div>

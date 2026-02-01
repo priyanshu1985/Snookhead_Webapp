@@ -4,7 +4,8 @@ import { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import TableBookedModal from "../../components/tables/TableBookedModel";
-import { menuAPI, activeTablesAPI, tablesAPI, IMAGE_BASE_URL } from "../../services/api";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+import { menuAPI, activeTablesAPI, tablesAPI, reservationsAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
 import { PlateIcon } from "../../components/common/Icons";
@@ -32,6 +33,7 @@ const TableBooking = () => {
 
   // Table info
   const [tableInfo, setTableInfo] = useState(null);
+  const [upcomingReservations, setUpcomingReservations] = useState([]);
 
   // Booking state
   const [showSuccess, setShowSuccess] = useState(false);
@@ -115,6 +117,39 @@ const TableBooking = () => {
     if (tableId) fetchTable();
   }, [tableId]);
 
+  // Fetch reservations for conflict check
+  useEffect(() => {
+    const fetchReservations = async () => {
+        try {
+            const data = await reservationsAPI.getAll();
+            const list = data?.data || (Array.isArray(data) ? data : []);
+            
+            // Filter: This Table + Pending + Future
+            const now = new Date();
+            const filtered = list.filter(r => {
+                if (String(r.tableId || r.table_id) !== String(tableId)) return false;
+                if (r.status !== 'pending') return false;
+                
+                const rTime = new Date(r.reservationtime || r.reservation_time || r.fromTime);
+                return rTime > now;
+            });
+            
+            // Sort by time asc
+            filtered.sort((a, b) => {
+               const ta = new Date(a.reservationtime || a.reservation_time || a.fromTime);
+               const tb = new Date(b.reservationtime || b.reservation_time || b.fromTime);
+               return ta - tb;
+            });
+            
+            setUpcomingReservations(filtered);
+            
+        } catch (err) {
+            console.error("Failed to fetch reservations for conflict check", err);
+        }
+    };
+    if (tableId) fetchReservations();
+  }, [tableId]);
+
   // Filter menu
   const filteredMenu = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -161,42 +196,107 @@ const TableBooking = () => {
   // Calculate totals
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
 
+  // Modal state
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert",
+    onConfirm: null,
+    confirmText: "OK"
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const showAlert = (title, message) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "alert",
+      onConfirm: null,
+      confirmText: "OK"
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm,
+      confirmText: "Yes, Book Anyway",
+      cancelText: "Cancel"
+    });
+  };
+
   // Handle booking
   const handleBook = async () => {
-    // Customer Name is Optional - will default to "Walk-in Customer" if empty
-
     // Validate booking based on mode
     if (!isBookingValid()) {
-      setError("Please set a valid time");
+      showAlert("Invalid Duration", "Please set a valid time or frame count.");
       return;
     }
 
     const duration = getDurationMinutes();
+    const now = new Date();
+
+    // CONFLICT CHECK
+    if (upcomingReservations.length > 0) {
+        const nextRes = upcomingReservations[0];
+        const nextResTime = new Date(nextRes.reservationtime || nextRes.reservation_time || nextRes.fromTime);
+        const timeStr = nextResTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        // Simple strict check window
+        let hasConflict = false;
+        let conflictMsg = "";
+
+        if (timeMode === 'timer') {
+             // Timer mode: Explicit end time
+             const projectedEnd = new Date(now.getTime() + duration * 60000);
+             if (projectedEnd > nextResTime) {
+                 hasConflict = true;
+                 conflictMsg = `This session (${duration} mins) overlaps with a reservation at <strong>${timeStr}</strong>.<br/><br/>You cannot book this table for this duration.`;
+             }
+        } else {
+             // Open ended modes: subjective buffer (e.g. 30 mins)
+             const minutesUntilRes = (nextResTime - now) / 60000;
+             if (minutesUntilRes < 30) {
+                 hasConflict = true;
+                 conflictMsg = `Upcoming reservation at <strong>${timeStr}</strong> (in ${Math.floor(minutesUntilRes)} mins).<br/><br/>Too close to start an open-ended session.`;
+             }
+        }
+
+        if (hasConflict) {
+             showAlert("Booking Conflict", conflictMsg);
+             return; // Block execution
+        }
+    }
+
     const finalCustomerName = customerName.trim() || "Walk-in Customer";
 
     try {
       setBooking(true);
       setError("");
 
-      // Start active table session with duration and booking type
       await activeTablesAPI.start({
         table_id: tableId,
         game_id: tableInfo?.gameid || tableInfo?.game_id,
         duration_minutes: duration,
         customer_name: finalCustomerName,
-        booking_type: timeMode, // 'timer' = countdown, 'set' = stopwatch (count up), 'frame' = frame-based
-        frame_count: timeMode === "frame" ? frameCount : null, // Send frame count for frame mode
+        booking_type: timeMode,
+        frame_count: timeMode === "frame" ? frameCount : null,
         cart: cart.map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
         })),
       });
 
-      // Show Success Modal - let the modal handle navigation on close
       setShowSuccess(true);
     } catch (err) {
       console.error("Booking failed:", err);
-      setError(err.message || "Failed to book table");
+      showAlert("Booking Failed", err.message || "Failed to book table");
       setBooking(false);
     }
   };
@@ -344,22 +444,22 @@ const TableBooking = () => {
                     <div className="bill-details">
                       {/* Price Rate Line */}
                       <div className="bill-row">
-                        <span>Rate</span>
-                        <span>
+                        <span style={{ color: '#555' }}>Rate</span>
+                        <span style={{ color: '#555' }}>
                           {timeMode === "frame" 
-                            ? `₹${tableInfo.frameCharge || 0}/frame` 
-                            : `₹${tableInfo.pricePerMin || 0}/min`}
+                            ? `₹${Number(tableInfo.frameCharge ?? tableInfo.framecharge ?? tableInfo.frame_charge ?? 0)}/frame` 
+                            : `₹${Number(tableInfo.pricePerMin ?? tableInfo.pricepermin ?? tableInfo.price_per_min ?? 0)}/min`}
                         </span>
                       </div>
 
                       {/* Estimated Cost Line */}
                       {timeMode !== "set" && (
-                         <div className="bill-row highlight">
-                           <span>{timeMode === "frame" ? "Frame Cost" : "Time Cost"}</span>
-                           <span>
+                         <div className="bill-row highlight" style={{ background: '#f0f7ff', padding: '12px', borderRadius: '8px', marginTop: '8px', border: '1px solid #e0e7ff' }}>
+                           <span style={{ color: '#1a1a2e', fontWeight: '700' }}>{timeMode === "frame" ? "Frame Cost" : "Time Cost"}</span>
+                           <span style={{ color: '#1a1a2e', fontWeight: '700', fontSize: '15px' }}>
                              {timeMode === "frame" 
-                               ? `₹${(frameCount * (tableInfo.frameCharge || 0)).toFixed(2)}`
-                               : `₹${(getDurationMinutes() * (tableInfo.pricePerMin || 0)).toFixed(2)}`
+                               ? `₹${(frameCount * Number(tableInfo.frameCharge ?? tableInfo.framecharge ?? tableInfo.frame_charge ?? 0)).toFixed(2)}`
+                               : `₹${(getDurationMinutes() * Number(tableInfo.pricePerMin ?? tableInfo.pricepermin ?? tableInfo.price_per_min ?? 0)).toFixed(2)}`
                              }
                            </span>
                          </div>
@@ -367,13 +467,28 @@ const TableBooking = () => {
 
                       {/* Food Items List */}
                       {cart.length > 0 && (
-                        <div className="bill-food-list">
-                          <label>Food Items</label>
+                        <div className="bill-food-list" style={{ marginTop: '16px' }}>
+                          <label style={{ fontSize: '12px', textTransform: 'uppercase', color: '#999', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '8px', display: 'block' }}>Food Items</label>
                           {cart.map((item) => (
-                            <div className="bill-food-row" key={item.id}>
-                              <span className="name">{item.name}</span>
-                              <span className="qty">{item.qty} x</span>
-                              <span className="price">₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                            <div className="bill-food-row" key={item.id} style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                              {/* Name Left */}
+                              <span className="name" style={{ color: '#555', fontWeight: '500' }}>{item.name}</span>
+
+                              {/* Controls + Price Right */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <div className="mini-qty-controls" style={{ display: 'flex', alignItems: 'center', background: '#f5f5f5', borderRadius: '6px', padding: '2px' }}>
+                                      <button 
+                                          onClick={() => updateCartQty(item.id, -1)}
+                                          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 8px', fontSize: '14px', color: '#555', display: 'flex', alignItems: 'center' }}
+                                      > − </button>
+                                      <span style={{ fontSize: '12px', fontWeight: '600', minWidth: '18px', textAlign: 'center', color: '#333' }}>{item.qty}</span>
+                                      <button 
+                                          onClick={() => updateCartQty(item.id, 1)}
+                                          style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 8px', fontSize: '14px', color: '#555', display: 'flex', alignItems: 'center' }}
+                                      > + </button>
+                                  </div>
+                                  <span className="price" style={{ fontWeight: '600', color: '#333', minWidth: '60px', textAlign: 'right' }}>₹{(Number(item.price) * item.qty).toFixed(2)}</span>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -390,8 +505,8 @@ const TableBooking = () => {
                           ) : (
                             <span>
                               ₹{((timeMode === "frame" 
-                                  ? (frameCount * (tableInfo.frameCharge || 0)) 
-                                  : (getDurationMinutes() * (tableInfo.pricePerMin || 0))
+                                  ? (frameCount * Number(tableInfo.frameCharge ?? tableInfo.framecharge ?? tableInfo.frame_charge ?? 0)) 
+                                  : (getDurationMinutes() * Number(tableInfo.pricePerMin ?? tableInfo.pricepermin ?? tableInfo.price_per_min ?? 0))
                                 ) + cartTotal).toFixed(2)
                               }
                             </span>
@@ -487,7 +602,14 @@ const TableBooking = () => {
                                  <button onClick={() => updateCartQty(item.id, 1)}>+</button>
                                </div>
                              ) : (
-                               <button className="add-btn" onClick={() => addToCart(item)}>
+                               <button 
+                                 className="add-btn" 
+                                 onClick={() => showConfirm(
+                                     `Add ${item.name}?`,
+                                     `Are you sure you want to add <strong>${item.name}</strong> to the booking?`,
+                                     () => addToCart(item)
+                                 )}
+                               >
                                  ADD
                                </button>
                              )}
@@ -502,6 +624,19 @@ const TableBooking = () => {
 
           </div>
         </div>
+
+        {/* Modal for Alerts */}
+        <ConfirmationModal
+           isOpen={modalConfig.isOpen}
+           onClose={closeModal}
+           title={modalConfig.title}
+           message={modalConfig.message}
+           onConfirm={modalConfig.onConfirm}
+           type={modalConfig.type}
+           confirmText={modalConfig.confirmText}
+           cancelText={modalConfig.cancelText || "Cancel"}
+           isHtml={true}
+        />
 
         {/* SUCCESS MODAL */}
         {showSuccess && <TableBookedModal onClose={handleSuccessClose} />}

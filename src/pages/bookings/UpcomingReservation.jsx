@@ -17,6 +17,7 @@ const UpcomingReservation = () => {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [processingId, setProcessingId] = useState(null);
 
   // Fetch reservations
   const fetchReservations = async () => {
@@ -76,17 +77,26 @@ const UpcomingReservation = () => {
 
   // Handle cancel reservation
   const handleCancel = async (reservationId) => {
+    if (!reservationId) {
+        console.error("No reservation ID to cancel");
+        return;
+    }
     if (!window.confirm("Are you sure you want to cancel this reservation?")) {
       return;
     }
 
     try {
+      setProcessingId(reservationId);
       await reservationsAPI.cancel(reservationId);
       // Refresh the list
-      fetchReservations();
+      await fetchReservations();
     } catch (err) {
       console.error("Failed to cancel reservation:", err);
-      alert("Failed to cancel reservation: " + (err.message || "Unknown error"));
+      // Improved error message
+      const msg = err.response?.data?.error || err.message || "Unknown error";
+      alert("Failed to cancel reservation: " + msg);
+    } finally {
+        setProcessingId(null);
     }
   };
 
@@ -181,8 +191,10 @@ const UpcomingReservation = () => {
                       className="cancel-btn"
                       onClick={() => handleCancel(item.id)}
                       title="Cancel reservation"
+                      disabled={processingId === item.id}
+                      style={{ opacity: processingId === item.id ? 0.7 : 1, cursor: processingId === item.id ? 'not-allowed' : 'pointer' }}
                     >
-                      Cancel
+                      {processingId === item.id ? "..." : "Cancel"}
                     </button>
                   </div>
                 );

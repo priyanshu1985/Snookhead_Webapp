@@ -18,6 +18,8 @@
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); /* Softer, deeper shadow */
   animation: modal-enter 0.3s ease-out;
+  border-top: 5px solid #F08626; /* Standard Top Orange Line */
+  overflow: hidden;
 }
 
 @keyframes modal-enter {

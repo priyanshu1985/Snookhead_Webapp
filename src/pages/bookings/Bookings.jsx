@@ -4,6 +4,7 @@ import Navbar from "../../components/layout/Navbar";
 import { LayoutContext } from "../../context/LayoutContext";
 import { queueAPI, gamesAPI, activeTablesAPI } from "../../services/api";
 import QueueModal from "../../components/queue/QueueModal";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 import "../../styles/queue.css";
 import { useNavigate } from "react-router-dom";
 
@@ -123,43 +124,104 @@ const Bookings = () => {
     });
   };
 
+  // Modal State
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert",
+    onConfirm: null,
+    confirmText: "Yes, Seat Now",
+    cancelText: "Cancel"
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const showAlert = (title, message) => {
+      setModalConfig({
+        isOpen: true,
+        title,
+        message,
+        type: "alert",
+        onConfirm: null,
+        confirmText: "OK",
+        isHtml: true
+      });
+  };
+
+  const showConfirm = (title, message, onConfirm, confirmText = "Confirm") => {
+      setModalConfig({
+        isOpen: true,
+        title,
+        message,
+        type: "confirm",
+        onConfirm,
+        confirmText,
+        cancelText: "Cancel",
+        isHtml: true
+      });
+  };
+
   // Handle seat next
   const handleSeatNext = async () => {
-    try {
-      const result = await queueAPI.next(selectedGame);
-      if (result.success) {
-        alert(result.message);
-        fetchQueue();
-      }
-    } catch (err) {
-      alert(err.message || "Failed to seat next customer");
-    }
+    if (!summary.nextPlayer) return;
+
+    const player = summary.nextPlayer;
+    const gameName = player.Game?.gamename || "Unknown Game";
+
+    showConfirm(
+        "Confirm Seating",
+        `Are you sure you want to seat <strong>${player.customername}</strong> for <strong>${gameName}</strong>?<br/><br/>This will start the active session immediately.`,
+        async () => {
+            try {
+              const result = await queueAPI.next(selectedGame);
+              if (result.success) {
+                // Show success message or just refresh
+                // showAlert("Success", result.message); 
+                // Opting to just refresh for speed, or could show notification
+                fetchQueue();
+              }
+            } catch (err) {
+              console.error(err);
+              showAlert("Error", err.message || "Failed to seat next customer");
+            }
+        },
+        "Yes, Seat Now"
+    );
   };
 
   // Handle cancel
   const handleCancel = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this entry from the queue?")) {
-      return;
-    }
-    try {
-      await queueAPI.cancel(id);
-      fetchQueue();
-    } catch (err) {
-      alert(err.message || "Failed to cancel queue entry");
-    }
+    showConfirm(
+        "Remove from Queue", 
+        "Are you sure you want to remove this entry from the queue?",
+        async () => {
+             try {
+              await queueAPI.cancel(id);
+              fetchQueue();
+            } catch (err) {
+              showAlert("Error", err.message || "Failed to cancel queue entry");
+            }
+        },
+        "Yes, Remove"
+    );
   };
 
   // Handle complete game
   const handleComplete = async (id) => {
-    if (!window.confirm("Mark this game as completed?")) {
-      return;
-    }
-    try {
-      await queueAPI.complete(id);
-      fetchQueue();
-    } catch (err) {
-      alert(err.message || "Failed to complete game");
-    }
+    showConfirm(
+        "End Game",
+        "Mark this game as completed and free up the table?",
+        async () => {
+            try {
+              await queueAPI.complete(id);
+              fetchQueue();
+            } catch (err) {
+              showAlert("Error", err.message || "Failed to complete game");
+            }
+        },
+        "Yes, End Game"
+    );
   };
 
   // Handle modal success
@@ -340,6 +402,19 @@ const Bookings = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSuccess={handleModalSuccess}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        isHtml={modalConfig.isHtml}
       />
     </div>
   );

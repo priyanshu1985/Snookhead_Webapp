@@ -39,39 +39,42 @@
 }
 
 /* HEADER */
+/* HEADER */
 .reservation-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
-  background: linear-gradient(135deg, #F08626 0%, #D9741F 100%);
+  background: #fff;
+  border-top: 4px solid #F08626; /* Top Orange Line */
 }
 
 .reservation-modal-header h5 {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: #333;
 }
 
 .reservation-modal-header .close-btn {
   width: 32px;
   height: 32px;
   border: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 20px;
-  color: #fff;
+  color: #888;
   transition: all 0.2s;
 }
 
 .reservation-modal-header .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #f5f5f5;
+  color: #333;
 }
 
 /* BODY */
@@ -223,5 +226,207 @@
   .reservation-modal-footer .cancel-btn,
   .reservation-modal-footer .submit-btn {
     flex: none;
+  }
+}
+
+/* BOOKING TYPE & FRAME INPUTS */
+.booking-type-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.type-option:hover {
+  background: #f0f0f0;
+}
+
+.type-option.active {
+  background: #fff5eb;
+  border-color: #F08626;
+  color: #F08626;
+  font-weight: 600;
+}
+
+.type-option input {
+  display: none;
+}
+
+.frame-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.frame-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #e8e8e8;
+  background: #fff;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.frame-btn:hover {
+  border-color: #F08626;
+  color: #F08626;
+}
+
+.frame-input {
+  width: 80px !important;
+  text-align: center;
+  font-size: 16px !important;
+  font-weight: 600;
+}
+
+@media (max-width: 576px) {
+  .booking-type-options {
+    flex-direction: column;
+  }
+}
+
+/* PAYMENT STEP STYLES */
+.payment-options-step {
+  padding: 10px 0;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.payment-intro {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #555;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.payment-choices {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.payment-choice-card {
+  flex: 1;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f9f9f9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.payment-choice-card:hover {
+  border-color: #ddd;
+  background: #f0f0f0;
+}
+
+.payment-choice-card.active {
+  border-color: #F08626;
+  background: #fff5eb;
+}
+
+.payment-choice-card input {
+  display: none;
+}
+
+.choice-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.payment-choice-card.active .choice-title {
+  color: #F08626;
+}
+
+.choice-desc {
+  display: block;
+  font-size: 12px;
+  color: #777;
+}
+
+/* Advance Input */
+.advance-input-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.advance-input-container label {
+  display: block;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 16px;
+  font-size: 16px;
+  color: #555;
+  font-weight: 600;
+}
+
+.input-with-icon input {
+  padding-left: 36px !important;
+  font-size: 18px !important;
+  font-weight: 600;
+  color: #333;
+}
+
+@media (max-width: 576px) {
+  .payment-choices {
+    flex-direction: column;
+    gap: 12px;
   }
 }
