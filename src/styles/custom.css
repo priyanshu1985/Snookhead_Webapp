@@ -1,29 +1,205 @@
-/* LOGIN PAGE */
+/* =========================
+   PREMIUM AUTH LOGIN/SIGNUP
+   Theme: Dark Snooker Cafe (Orange BG, Blue Brand)
+   ========================= */
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f08626; /* Orange base */
+}
 
 .login-page {
-  background: linear-gradient(135deg, #ff8c1a, #ffa94d);
+  /* Brand Orange Gradient */
+  background: radial-gradient(circle at 50% 30%, #f08626 0%, #cd6e1b 85%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Optional: Add a subtle overlay pattern or snooker abstract shape */
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Dark pattern overlay for contrast */
+  background: 
+    linear-gradient(45deg, rgba(0, 33, 105, 0.05) 25%, transparent 25%, transparent 75%, rgba(0, 33, 105, 0.05) 75%),
+    linear-gradient(45deg, rgba(0, 33, 105, 0.05) 25%, transparent 25%, transparent 75%, rgba(0, 33, 105, 0.05) 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 30px 30px;
+  pointer-events: none;
 }
 
 .login-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 28px 24px;
+  /* Glassmorphism Effect */
+  background: rgba(255, 255, 255, 0.9); /* Lighter card to stand out on Orange */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: 5px solid #002169; /* Blue Accent */
+  border-radius: 20px;
+  padding: 48px 40px;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.15), 
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  color: #1a1a1a; /* Dark text for light card */
+  position: relative;
+  overflow: hidden;
+  max-width: 440px;
+  width: 100%;
 }
 
 .brand-title {
-  color: #ff8c1a;
-  letter-spacing: 1px;
+  color: #002169; /* Brand Blue */
+  font-size: 32px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 900;
+  margin-bottom: 8px;
+  text-shadow: none;
+}
+
+.login-card .text-muted {
+  color: #666 !important;
+}
+
+/* Form Styles - Adapted for Light Card */
+.form-label {
+  color: #444;
+}
+
+.form-control {
+  background-color: #f5f5f5 !important;
+  border: 1px solid #ddd;
+  color: #333 !important;
+}
+
+.form-control:focus {
+  background-color: #fff !important;
+  border-color: #f08626;
+  box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.2);
+  color: #333 !important;
+}
+
+.form-control::placeholder {
+  color: #999;
+}
+
+
+
+/* Form Styles */
+.form-label {
+  color: #e0e0e0;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.form-control {
+  background-color: rgba(255, 255, 255, 0.05); /* Dark input */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #f08626;
+  box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.15);
+  color: #fff;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Buttons */
+.btn-warning {
+  background: linear-gradient(135deg, #f08626 0%, #d97706 100%);
+  border: none;
+  color: #fff;
+  padding: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.btn-warning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(240, 134, 38, 0.4);
+  color: #fff;
+}
+
+.btn-warning:active {
+  transform: translateY(0);
+}
+
+.btn-warning:disabled {
+  background: #555;
+  color: #888;
+}
+
+/* Links and Extras */
+.form-check-label {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.form-check-input {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.form-check-input:checked {
+  background-color: #f08626;
+  border-color: #f08626;
+}
+
+.text-warning {
+  color: #f08626 !important;
+}
+
+.text-warning:hover {
+  color: #ff9f43 !important;
+  text-decoration: underline;
 }
 
 .cursor-pointer {
   cursor: pointer;
 }
 
-/* Tablet & Desktop spacing improvement */
+/* Responsive */
 @media (min-width: 768px) {
   .login-card {
-    padding: 36px 32px;
+    padding: 48px;
   }
+}
+
+/* Form Select override for Role */
+.form-select {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.form-select:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #f08626;
+  box-shadow: 0 0 0 3px rgba(240, 134, 38, 0.15);
+  color: #fff;
+}
+
+.form-select option {
+  background-color: #2d3436;
+  color: #fff;
 }
 
 /* =========================

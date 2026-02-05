@@ -255,7 +255,12 @@ const Register = () => {
           <div className="login-card shadow-sm">
             {/* Brand */}
             <div className="text-center mb-4">
-              <h4 className="fw-bold brand-title">SNOKEHEAD</h4>
+               <img 
+                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : ''}/static/app-logo/logo.jpg`} 
+                alt="Logo" 
+                style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }}
+              />
+              <h4 className="fw-bold brand-title">SNOOKHEAD</h4>
               <p className="text-muted small">Create your account</p>
             </div>
 

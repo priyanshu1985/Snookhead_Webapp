@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useContext, useState, useRef, useEffect } from "react";
 import { LayoutContext } from "../../context/LayoutContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   DashboardIcon,
   QueueIcon,
@@ -91,6 +92,7 @@ const searchablePages = [
 const Navbar = ({ onMemberAdded }) => {
   const { toggleSidebarCollapse, isSidebarCollapsed, toggleSidebar } =
     useContext(LayoutContext);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -257,12 +259,21 @@ const Navbar = ({ onMemberAdded }) => {
 
       {/* RIGHT: Desktop actions only */}
       <div className="topbar-right desktop-only">
-        <button
+        <NavLink 
+          to="/reservations" 
           className="btn btn-warning btn-sm"
-          onClick={() => setIsAddMemberModalOpen(true)}
+          style={{ marginRight: '10px' }}
         >
-          New Member
-        </button>
+          Reservations
+        </NavLink>
+        {['owner', 'admin'].includes(user?.role) && (
+          <button
+            className="btn btn-warning btn-sm"
+            onClick={() => setIsAddMemberModalOpen(true)}
+          >
+            New Member
+          </button>
+        )}
       </div>
 
       {/* Add Member Modal */}

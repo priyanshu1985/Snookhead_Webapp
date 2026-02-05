@@ -15,8 +15,33 @@
 .session-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+  flex-wrap: nowrap; /* Force single line on desktop if possible */
+}
+
+@media (max-width: 992px) {
+  .session-header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .food-search-bar.header-search {
+    width: 100%;
+    max-width: 100%; /* Force full width on wrap */
+    flex: none; /* Disable flex behavior in wrapped mode */
+    order: 3;
+    margin-top: 8px;
+  }
 }
 
 .session-header .back-btn {

@@ -4,6 +4,7 @@ import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { customersAPI, walletsAPI } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 import "../../styles/members.css";
 import "../../styles/memberDetail.css";
 
@@ -22,6 +23,14 @@ const MemberDetail = () => {
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
   const [addAmount, setAddAmount] = useState("");
   const [addingMoney, setAddingMoney] = useState(false);
+
+  // Alert Modal State
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert"
+  });
 
   useEffect(() => {
     const fetchMemberDetails = async () => {
@@ -57,7 +66,12 @@ const MemberDetail = () => {
 
   const handleAddMoney = async () => {
     if (!addAmount || Number(addAmount) <= 0) {
-      alert("Please enter a valid amount");
+      setAlertModal({
+        isOpen: true,
+        title: "Invalid Amount",
+        message: "Please enter a valid amount",
+        type: "alert"
+      });
       return;
     }
 
@@ -70,9 +84,20 @@ const MemberDetail = () => {
       }));
       setShowAddMoneyModal(false);
       setAddAmount("");
-      alert("Money added successfully!");
+      
+      setAlertModal({
+        isOpen: true,
+        title: "Success",
+        message: "Money added successfully!",
+        type: "alert"
+      });
     } catch (err) {
-      alert("Failed to add money: " + err.message);
+      setAlertModal({
+        isOpen: true,
+        title: "Error",
+        message: "Failed to add money: " + err.message,
+        type: "alert"
+      });
     } finally {
       setAddingMoney(false);
     }
@@ -88,9 +113,20 @@ const MemberDetail = () => {
       const walletData = await walletsAPI.getByCustomerId(id);
       setWallet(walletData);
       setWalletError(null);
-      alert("Wallet created successfully!");
+      
+      setAlertModal({
+        isOpen: true,
+        title: "Success",
+        message: "Wallet created successfully!",
+        type: "alert"
+      });
     } catch (err) {
-      alert("Failed to create wallet: " + err.message);
+      setAlertModal({
+        isOpen: true,
+        title: "Error",
+        message: "Failed to create wallet: " + err.message,
+        type: "alert"
+      });
     }
   };
 
@@ -297,6 +333,16 @@ const MemberDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Alert Modal */}
+      <ConfirmationModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        type="alert"
+        confirmText="OK"
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@
 .add-queue-page {
   max-width: 800px;
   margin: 0 auto;
+  padding-top: 30px;
 }
 
 .add-queue-page .page-header {

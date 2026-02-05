@@ -8,7 +8,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { menuAPI, activeTablesAPI, tablesAPI, reservationsAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
-import { PlateIcon } from "../../components/common/Icons";
+import { PlateIcon, PreparedFoodIcon, PackedFoodIcon } from "../../components/common/Icons";
 
 import "../../styles/tableBooking.css";
 
@@ -29,7 +29,39 @@ const TableBooking = () => {
   const [cart, setCart] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Item Type State
+  const ITEM_TYPES = [
+    { key: "prepared", label: "Prepared Food", icon: <PreparedFoodIcon size={20} /> },
+    { key: "packed", label: "Packed Food", icon: <PackedFoodIcon size={20} /> },
+  ];
+  const [activeType, setActiveType] = useState("prepared");
+
+  // Filter items by Type first
+  const typeItems = menuItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = (item.item_type || 'prepared') === activeType;
+      return matchesSearch && matchesType;
+  });
+
+  // Compute Categories from typeItems
+  const computedCategories = typeItems.reduce((acc, item) => {
+    // Skip if no category
+    if (!item.category) return acc;
+    
+    // Check if category already added
+    const exists = acc.some(cat => cat.id === item.category);
+    if (!exists) {
+        acc.push({
+          id: item.category,
+          label: item.category,
+          icon: <PlateIcon size={20} />
+        });
+    }
+    return acc;
+  }, []).sort((a, b) => a.label.localeCompare(b.label));
+
 
   // Table info
   const [tableInfo, setTableInfo] = useState(null);
@@ -40,30 +72,6 @@ const TableBooking = () => {
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [customerName, setCustomerName] = useState("");
-
-  // Compute categories - Strict Mode: Only show categories that have items
-  const computedCategories = menuItems.reduce((acc, item) => {
-    // Skip if no category
-    if (!item.category) return acc;
-
-    const exists = acc.some(cat => cat.id === item.category);
-    
-    if (!exists) {
-        // Check if it matches a known default category to get icon/label
-        const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === item.category);
-        
-        if (defaultCat) {
-            acc.push(defaultCat);
-        } else {
-            acc.push({
-                id: item.category,
-                label: item.category,
-                icon: <PlateIcon size={24} />
-            });
-        }
-    }
-    return acc;
-  }, []);
 
   // Fetch menu items
   useEffect(() => {
@@ -95,14 +103,11 @@ const TableBooking = () => {
 
   // Ensure active category is valid
   useEffect(() => {
-    if (computedCategories.length > 0) {
-        // If current active is not in list (or empty), switch to first one
-        const currentExists = computedCategories.some(c => c.id === selectedCategory);
-        if (!currentExists) {
-            setSelectedCategory(computedCategories[0].id);
-        }
+     if (selectedCategory !== "All") {
+        const catExists = computedCategories.some(c => c.id === selectedCategory);
+        if (!catExists) setSelectedCategory("All");
     }
-  }, [computedCategories, selectedCategory]);
+  }, [activeType, computedCategories]);
 
   // Fetch table info
   useEffect(() => {
@@ -150,11 +155,10 @@ const TableBooking = () => {
     if (tableId) fetchReservations();
   }, [tableId]);
 
-  // Filter menu
-  const filteredMenu = menuItems.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory && item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  // Filter menu (Final)
+  const filteredMenu = typeItems.filter((item) => {
+    if (selectedCategory === "All" || !selectedCategory) return true;
+    return item.category === selectedCategory;
   });
 
   // Calculate duration in minutes
@@ -245,7 +249,7 @@ const TableBooking = () => {
     // CONFLICT CHECK
     if (upcomingReservations.length > 0) {
         const nextRes = upcomingReservations[0];
-        const nextResTime = new Date(nextRes.reservationtime || nextRes.reservation_time || nextRes.fromTime);
+        const nextResTime = new Date(nextRes.reservationtime || nextRes.reservation_time || nextRes.fromTime || nextRes.fromtime || nextRes.start_time);
         const timeStr = nextResTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         // Simple strict check window
@@ -257,25 +261,31 @@ const TableBooking = () => {
              const projectedEnd = new Date(now.getTime() + duration * 60000);
              if (projectedEnd > nextResTime) {
                  hasConflict = true;
-                 conflictMsg = `This session (${duration} mins) overlaps with a reservation at <strong>${timeStr}</strong>.<br/><br/>You cannot book this table for this duration.`;
+                 conflictMsg = `This session (${duration} mins) overlaps with a reservation at <strong>${timeStr}</strong>.<br/><br/>Do you want to proceed anyway?`;
              }
         } else {
              // Open ended modes: subjective buffer (e.g. 30 mins)
              const minutesUntilRes = (nextResTime - now) / 60000;
              if (minutesUntilRes < 30) {
                  hasConflict = true;
-                 conflictMsg = `Upcoming reservation at <strong>${timeStr}</strong> (in ${Math.floor(minutesUntilRes)} mins).<br/><br/>Too close to start an open-ended session.`;
+                 conflictMsg = `Upcoming reservation at <strong>${timeStr}</strong> (in ${Math.floor(minutesUntilRes)} mins).<br/><br/>Do you want to proceed anyway?`;
              }
         }
 
         if (hasConflict) {
-             showAlert("Booking Conflict", conflictMsg);
-             return; // Block execution
+             showConfirm("Booking Conflict", conflictMsg, async () => {
+                  await executeBooking(duration, finalCustomerName);
+             });
+             return; 
         }
     }
 
     const finalCustomerName = customerName.trim() || "Walk-in Customer";
 
+    await executeBooking(duration, finalCustomerName);
+  };
+
+  const executeBooking = async (duration, finalCustomerName) => {
     try {
       setBooking(true);
       setError("");
@@ -291,6 +301,7 @@ const TableBooking = () => {
           menu_item_id: item.id,
           quantity: item.qty,
         })),
+        food_orders: cart, // Pass raw cart for persistence
       });
 
       setShowSuccess(true);
@@ -326,10 +337,31 @@ const TableBooking = () => {
 
         <div className="table-booking-page">
           {/* Header */}
+          {/* Header */}
           <div className="booking-header">
-            <button className="back-btn" onClick={() => navigate(-1)}>←</button>
-            <h5>{game || "Game"}</h5>
-            <span className="table-code">{tableInfo?.name || `Table ${tableId}`}</span>
+            <div className="header-left">
+              <button className="back-btn" onClick={() => navigate(-1)}>←</button>
+              <div className="header-title-group">
+                <h5>{game || "Game"}</h5>
+                <span className="table-code">{tableInfo?.name || `Table ${tableId}`}</span>
+              </div>
+            </div>
+
+            {/* Search Bar Moved to Header */}
+            <div className="food-search-bar header-search">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search food items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="clear-search" onClick={() => setSearchQuery("")}>
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
@@ -526,30 +558,44 @@ const TableBooking = () => {
 
             {/* Right Column - Food Selection */}
             <div className="booking-right-column">
+              {/* Item Type Switcher */}
+              <div className="item-type-tabs" style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '0 10px' }}>
+                  {ITEM_TYPES.map(type => (
+                      <button
+                          key={type.key}
+                          onClick={() => setActiveType(type.key)}
+                          style={{
+                              flex: 1,
+                              padding: '12px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              background: activeType === type.key ? '#F08626' : '#fff',
+                              color: activeType === type.key ? '#fff' : '#666',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              boxShadow: activeType === type.key ? '0 4px 12px rgba(240, 134, 38, 0.3)' : '0 2px 6px rgba(0,0,0,0.05)',
+                              transition: 'all 0.2s'
+                          }}
+                      >
+                          {type.icon}
+                          {type.label}
+                      </button>
+                  ))}
+              </div>
+
               {/* Category Tabs */}
               <FoodCategoryTabs 
                 selectedCategory={selectedCategory} 
                 onSelectCategory={setSelectedCategory} 
-                categories={computedCategories}
+                categories={[{ id: 'All', label: 'All', icon: <PlateIcon size={20} /> }, ...computedCategories]}
               />
 
-              <div className="menu-header">
+                <div className="menu-header">
                 <h6>Food & Drinks</h6>
-                {/* Search Bar */}
-                <div className="food-search-bar">
-                  <span className="search-icon">🔍</span>
-                  <input
-                    type="text"
-                    placeholder="Search food items..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  {searchQuery && (
-                    <button className="clear-search" onClick={() => setSearchQuery("")}>
-                      ✕
-                    </button>
-                  )}
-                </div>
               </div>
 
               {/* Menu Items */}

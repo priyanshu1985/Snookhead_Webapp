@@ -110,6 +110,9 @@ const ENDPOINTS = {
   OWNER_DASHBOARD_GAME_UTILIZATION: "/owner/dashboard/game-utilization",
   OWNER_DASHBOARD_REVENUE: "/owner/dashboard/revenue",
   OWNER_DASHBOARD_SUMMARY: "/owner/dashboard/summary",
+
+  // Expenses
+  EXPENSES: "/expenses",
 };
 
 // Image base URL for constructing full image URLs
@@ -181,7 +184,7 @@ const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.error || errorData.message || `HTTP error! status: ${response.status}`
+        errorData.message || errorData.error || `HTTP error! status: ${response.status}`
       );
     }
 
@@ -274,7 +277,11 @@ export const gamesAPI = {
 
 // Reservations API
 export const reservationsAPI = {
-  getAll: () => apiRequest(ENDPOINTS.RESERVATIONS),
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.RESERVATIONS}?${queryString}` : ENDPOINTS.RESERVATIONS;
+    return apiRequest(url);
+  },
 
   getById: (id) => apiRequest(ENDPOINTS.RESERVATION_BY_ID(id)),
 
@@ -306,7 +313,11 @@ export const reservationsAPI = {
 
 // Active Tables API
 export const activeTablesAPI = {
-  getAll: () => apiRequest(ENDPOINTS.ACTIVE_TABLES),
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${ENDPOINTS.ACTIVE_TABLES}?${queryString}` : ENDPOINTS.ACTIVE_TABLES;
+    return apiRequest(url);
+  },
 
   getById: (id) => apiRequest(`${ENDPOINTS.ACTIVE_TABLES}/${id}`),
 
@@ -511,7 +522,7 @@ export const billingAPI = {
 export const usersAPI = {
   getAll: () => apiRequest(ENDPOINTS.USERS),
 
-  getById: (id) => apiRequest(ENDPOINTS.USER_BY_ID(id)),
+  getById: (id) => apiRequest(`${ENDPOINTS.USERS}/${id}`),
 
   create: (userData) =>
     apiRequest(ENDPOINTS.USERS, {
@@ -520,12 +531,14 @@ export const usersAPI = {
     }),
 
   update: (id, userData) =>
-    apiRequest(ENDPOINTS.USER_BY_ID(id), {
+    apiRequest(`${ENDPOINTS.USERS}/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
     }),
 
-  delete: (id) => apiRequest(ENDPOINTS.USER_BY_ID(id), { method: "DELETE" }),
+  delete: (id) => apiRequest(`${ENDPOINTS.USERS}/${id}`, { method: "DELETE" }),
+
+  changeRole: (id, role) => apiRequest(`${ENDPOINTS.USERS}/${id}/role`, { method: "POST", body: JSON.stringify({ role }) }),
 };
 
 // Customers API
@@ -690,7 +703,30 @@ export const ownerAPI = {
   
   getRevenue: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
   
+  getRevenue: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
+  
   getSummary: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_SUMMARY}?period=${period}`),
+
+  getEmployeeActivity: (id, startDate, endDate) => {
+      const params = new URLSearchParams();
+      if(startDate) params.append('startDate', startDate);
+      if(endDate) params.append('endDate', endDate);
+      // Assuming route is mounted at /owner/dashboard
+      return apiRequest(`/owner/dashboard/employees/${id}/activity?${params.toString()}`);
+  },
+};
+
+export const expensesAPI = {
+  getAll: () => apiRequest(`${ENDPOINTS.EXPENSES}`),
+  create: (data) => apiRequest(`${ENDPOINTS.EXPENSES}`, { method: "POST", body: JSON.stringify(data) }),
+  delete: (id) => apiRequest(`${ENDPOINTS.EXPENSES}/${id}`, { method: "DELETE" }),
+};
+
+export const attendanceAPI = {
+  checkIn: (user_id) => apiRequest(`/attendance/check-in`, { method: "POST", body: JSON.stringify({ user_id }) }),
+  checkOut: (user_id, attendance_id) => apiRequest(`/attendance/check-out`, { method: "POST", body: JSON.stringify({ user_id, attendance_id }) }),
+  getActive: (user_id) => apiRequest(`/attendance/active/${user_id}`),
+  getHistory: (user_id) => apiRequest(`/attendance/user/${user_id}`),
 };
 
 // Admin Stations API (for admin panel to manage stations/cafes)
@@ -752,7 +788,30 @@ const api = {
   inventory: inventoryAPI,
   bugs: bugsAPI,
   owner: ownerAPI,
+  attendance: attendanceAPI,
   adminStations: adminStationsAPI,
+  common: {
+    uploadFile: async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Use raw fetch for FormData to let browser set Content-Type
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const response = await fetch(`${API_BASE_URL}/upload`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      return await response.json();
+    },
+  },
 };
 
 export default api;

@@ -3,7 +3,7 @@ export const ALERT_SOUND_B64 = "data:audio/mp3;base64,//uQRAAAAWMSLwUIYAAsYkXgoQ
 export const playAlertSound = () => {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
+    if (!AudioContext) return () => {};
     
     const ctx = new AudioContext();
     const now = ctx.currentTime;
@@ -54,11 +54,20 @@ export const playAlertSound = () => {
     }
     
     // Auto close context after 12 seconds to cleanup
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
         if (ctx.state !== 'closed') ctx.close();
     }, 12000);
 
+    // Return a function to manually stop/cleanup
+    return () => {
+        clearTimeout(timeoutId);
+        if (ctx.state !== 'closed') {
+            ctx.close().catch(err => console.error("Error closing audio context", err));
+        }
+    };
+
   } catch (e) {
     console.warn("Audio play failed", e);
+    return () => {};
   }
 };

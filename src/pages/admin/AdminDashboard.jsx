@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ordersAPI, tablesAPI, menuAPI, adminStationsAPI } from "../../services/api";
+import { ordersAPI, tablesAPI, menuAPI, adminStationsAPI, bugsAPI } from "../../services/api";
 import "../../styles/adminDashboard.css";
 
 const AdminDashboard = () => {
@@ -24,11 +24,89 @@ const AdminDashboard = () => {
   const [stationsError, setStationsError] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState("all");
 
+  // Bugs state
+  const [bugs, setBugs] = useState([]);
+  const [bugsLoading, setBugsLoading] = useState(true);
+
+  // Selected Bug for View Modal
+  const [selectedBug, setSelectedBug] = useState(null);
+
+  // Render Bug Details Modal
+  const renderBugModal = () => {
+    if (!selectedBug) return null;
+
+    return (
+      <div className="bug-modal-overlay" onClick={() => setSelectedBug(null)}>
+        <div className="bug-modal-content" onClick={e => e.stopPropagation()}>
+          <div className="bug-modal-header">
+            <h4>Bug Details</h4>
+            <button className="close-btn" onClick={() => setSelectedBug(null)}>×</button>
+          </div>
+          <div className="bug-modal-body">
+            <div className="bug-detail-row">
+              <span className="label">Title:</span>
+              <span className="value title">{selectedBug.title}</span>
+            </div>
+            <div className="bug-detail-row">
+              <span className="label">Status:</span>
+              <span className={`status-badge ${getStatusClass(selectedBug.status)}`}>{selectedBug.status}</span>
+            </div>
+            <div className="bug-detail-row">
+               <span className="label">Description:</span>
+               <p className="description-text">{selectedBug.description || "No description provided."}</p>
+            </div>
+            
+            {(selectedBug.imageurl || selectedBug.image_url || selectedBug.audiourl || selectedBug.audio_url) && (
+               <div className="attachments-section">
+                  <span className="label">Attachments:</span>
+                  <div className="attachments-grid">
+                     {(selectedBug.imageurl || selectedBug.image_url) && (
+                        <div className="attachment-item">
+                           <p>Screen Capture</p>
+                           <a href={selectedBug.imageurl || selectedBug.image_url} target="_blank" rel="noreferrer">
+                              <img src={selectedBug.imageurl || selectedBug.image_url} alt="Bug Screenshot" className="bug-image-preview" />
+                           </a>
+                        </div>
+                     )}
+                     {(selectedBug.audiourl || selectedBug.audio_url) && (
+                        <div className="attachment-item">
+                           <p>Voice Report</p>
+                           <audio controls src={selectedBug.audiourl || selectedBug.audio_url} className="bug-audio-player" />
+                        </div>
+                     )}
+                  </div>
+               </div>
+            )}
+
+            <div className="reporter-info">
+               <small>Reported by: {selectedBug.reporter?.name || "Unknown"}</small>
+               <small>Station: {selectedBug.station?.station_name || "Unknown"}</small>
+               <small>Date: {formatDate(selectedBug.createdAt)}</small>
+            </div>
+          </div>
+          <div className="bug-modal-footer">
+             {selectedBug.status !== 'resolved' && (
+                 <button 
+                   className="resolve-btn"
+                   onClick={() => {
+                      handleUpdateBugStatus(selectedBug.id, 'resolved');
+                      setSelectedBug(null);
+                   }}
+                 >
+                   Mark as Resolved
+                 </button>
+             )}
+             <button className="secondary-btn" onClick={() => setSelectedBug(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Fetch analytics data
   const fetchStats = async () => {
     try {
       setLoading(true);
-
       // Fetch orders
       const ordersResponse = await ordersAPI.getAll();
       const orders = ordersResponse?.data || [];
@@ -93,6 +171,19 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch bugs
+  const fetchBugs = async () => {
+    try {
+      setBugsLoading(true);
+      const data = await bugsAPI.getAll();
+      setBugs(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch bugs:", err);
+    } finally {
+      setBugsLoading(false);
+    }
+  };
+
   // Handle pause subscription
   const handlePauseSubscription = async (stationId) => {
     try {
@@ -117,9 +208,21 @@ const AdminDashboard = () => {
     }
   };
 
+  // Handle bug status update
+  const handleUpdateBugStatus = async (bugId, newStatus) => {
+    try {
+      await bugsAPI.updateStatus(bugId, newStatus);
+      fetchBugs();
+    } catch (err) {
+       console.error("Failed to update bug:", err);
+       alert("Failed to update status");
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchStations();
+    fetchBugs();
   }, []);
 
   useEffect(() => {
@@ -162,12 +265,23 @@ const AdminDashboard = () => {
     }
   };
 
+  // Get bug priority color
+  const getBugPriorityColor = (priority) => {
+     switch(priority) {
+       case 'critical': return '#d32f2f';
+       case 'high': return '#f57c00';
+       case 'medium': return '#1976d2';
+       default: return '#757575';
+     }
+  };
+
   return (
     <div className="admin-page">
+      {renderBugModal()}
       {/* Admin Header */}
       <header className="admin-header">
         <div className="admin-header-left">
-          <h4 className="admin-brand">SNOKEHEAD</h4>
+          <h4 className="admin-brand">SNOKHEAD</h4>
           <span className="admin-role-badge">Admin Panel</span>
         </div>
         <div className="admin-header-right">
@@ -222,7 +336,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="stat-card">
+                <div className="stat-card completed-icon">
                   <div className="stat-icon completed-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
@@ -272,6 +386,110 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+            )}
+          </section>
+
+          {/* Reported Issues Section */}
+          <section className="admin-section">
+            <div className="section-header">
+              <h5 className="section-title">Reported Issues</h5>
+              <button className="refresh-btn" onClick={fetchBugs} disabled={bugsLoading}>
+                {bugsLoading ? "Loading..." : "Refresh"}
+              </button>
+            </div>
+            
+            {bugsLoading ? (
+               <p className="loading-text">Loading bugs...</p>
+            ) : bugs.length === 0 ? (
+               <div className="empty-state">
+                 <p>No issues reported</p>
+                 <small>Great job! The system is running smoothly.</small>
+               </div>
+            ) : (
+               <div className="table-container">
+                  <table className="admin-table">
+                    <thead>
+                       <tr>
+                          <th>Status</th>
+                          <th>Severity</th>
+                          <th>Issue</th>
+                          <th>Attachments</th>
+                          <th>Station / Owner</th>
+                          <th>Date</th>
+                          <th>Actions</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                      {bugs.map(bug => (
+                        <tr key={bug.id}>
+                           <td>
+                             <span className={`status-badge ${getStatusClass(bug.status === 'in_progress' ? 'active' : bug.status === 'resolved' ? 'active' : bug.status)}`}
+                                   style={{ 
+                                     background: bug.status === 'pending' ? '#fff3e0' : bug.status === 'resolved' ? '#e8f5e9' : '#f5f5f5', 
+                                     color: bug.status === 'pending' ? '#f57c00' : bug.status === 'resolved' ? '#2e7d32' : '#666' 
+                                   }}>
+                                {bug.status?.replace('_', ' ')}
+                             </span>
+                           </td>
+                           <td>
+                              <div className="severity-cell">
+                                <span className="severity-dot" style={{ background: getBugPriorityColor(bug.priority) }}></span>
+                                <span className="severity-text">{bug.priority}</span>
+                              </div>
+                           </td>
+                           <td>
+                              <div className="issue-title">{bug.title}</div>
+                              {bug.description && <div className="issue-desc">{bug.description}</div>}
+                           </td>
+                           <td>
+                              <div className="attachment-icons">
+                                {bug.audio_url && (
+                                  <span className="attach-icon audio" title="Voice Report">
+                                    🎤
+                                  </span>
+                                )}
+                                {bug.image_url && (
+                                  <span className="attach-icon image" title="Screen Capture">
+                                    📷
+                                  </span>
+                                )}
+                                {!bug.audio_url && !bug.image_url && <span className="no-attach">-</span>}
+                              </div>
+                           </td>
+                           <td>
+                              <div className="station-name">
+                                 {bug.station?.stationname || "Unknown Station"}
+                              </div>
+                              <div className="owner-name">
+                                 {bug.reporter?.name || bug.owner?.name || bug.station?.ownername || "Unknown Owner"}
+                              </div>
+                           </td>
+                           <td className="date-cell">
+                              {formatDate(bug.createdAt)}
+                           </td>
+                           <td>
+                              <div className="action-buttons">
+                                 <button
+                                   className="view-btn-sm"
+                                   onClick={() => setSelectedBug(bug)}
+                                 >
+                                   View
+                                 </button>
+                                 {bug.status !== 'resolved' && (
+                                    <button 
+                                      className="resolve-btn-sm"
+                                      onClick={() => handleUpdateBugStatus(bug.id, 'resolved')}
+                                    >
+                                      Resolve
+                                    </button>
+                                 )}
+                              </div>
+                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+               </div>
             )}
           </section>
 

@@ -13,49 +13,121 @@
 .booking-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0; /* Prevent title from shrinking */
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
 }
 
 .booking-header .back-btn {
   background: transparent;
   border: none;
-  font-size: 28px; /* High visibility */
+  font-size: 24px;
   cursor: pointer;
   padding: 0;
-  margin-right: 8px;
-  box-shadow: none;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #333;
   line-height: 1;
-  transform: translateY(-5px); /* MATCHING USER TWEAK: Lift arrow up */
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
 .booking-header .back-btn:hover {
-  background: transparent;
+  background: #f1f5f9;
   color: #f08626;
-  transform: translateY(-5px) translateX(-4px);
 }
 
 .booking-header h5 {
-  flex: 1;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: #333;
-  line-height: 1; /* Tight line height */
-  display: flex;
-  align-items: center;
+  line-height: 1;
+  font-size: 20px;
+  white-space: nowrap;
 }
 
 .table-code {
   background: linear-gradient(135deg, #f08626 0%, #d9741f 100%);
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: 50px;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  height: 28px;
+}
+
+/* Header Search Bar */
+.food-search-bar.header-search {
+  margin-bottom: 0;
+  padding: 0 16px;
+  /* Use flex-grow to fill available space, matching "full column" feel */
+  flex: 1; 
+  max-width: 800px; /* Cap it so it doesn't look ridiculous on ultra-wide */
+  height: 48px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+}
+
+.food-search-bar.header-search .search-icon {
+  font-size: 16px;
+  color: #94a3b8;
+  margin-right: 12px;
+}
+
+.food-search-bar.header-search input {
+  font-size: 15px;
+  height: 100%;
+}
+
+@media (max-width: 992px) {
+  .booking-header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .food-search-bar.header-search {
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    order: 3; /* Move search below on tablets/mobile */
+  }
+}
+
+@media (max-width: 576px) {
+  .booking-header {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
 }
 
 /* SECTION */
@@ -86,6 +158,43 @@
   margin-bottom: 16px;
   border: 1px solid #ffcccc;
   font-weight: 500;
+}
+
+/* Mute Toggle Button on Card */
+.mute-toggle-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.mute-toggle-btn:hover {
+  transform: scale(1.1);
+  background: #f0f0f0;
+}
+
+.mute-toggle-btn.muted {
+  background: #ff4d4d; /* Red when muted to show status or maybe grey? User wants "toggle to stop" */
+  color: #fff;
+  opacity: 0.8;
+}
+
+/* Urgent Alert Animation - ensure relative positioning */
+.table-card {
+    position: relative;
+    /* ... existing styles ... */
 }
 
 /* =========================
@@ -545,24 +654,24 @@
 ========================= */
 @media (min-width: 768px) and (max-width: 991px) {
   .table-booking-page {
-    max-width: 700px;
-    padding: 16px 24px;
+    max-width: 768px;
+    padding: 20px;
   }
 
+  .booking-content {
+    /* Stack columns on tablet if it gets too cramped, or keep side-by-side but with smaller gap */
+    display: flex;
+    flex-direction: column; 
+  }
+  
+  /* OPTIONAL: If we want side-by-side on larger tablets, we can play with this. 
+     But creating a vertical flow is safer for "responsiveness conflicts" */
+     
   .radio-row {
-    gap: 16px;
-  }
-
-  .radio-row label {
-    padding: 16px;
-  }
-
-  .food-categories {
-    justify-content: center;
+    gap: 10px;
   }
 
   .menu-items-grid {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }

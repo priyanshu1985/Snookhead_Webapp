@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ordersAPI } from "../../services/api";
+import { 
+  OrdersIcon, 
+  TableIcon, 
+  CounterIcon, 
+  RefreshIcon, 
+  SearchIcon, 
+  CheckIcon, 
+  CloseIcon 
+} from "../../components/common/Icons";
 import "../../styles/foodOrder.css";
 import "../../styles/staffOrders.css";
 
@@ -13,14 +22,16 @@ const StaffOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [exitingOrders, setExitingOrders] = useState([]);
 
-  // Source filter options
+  // Source filter options matching the screenshot
   const sourceFilters = [
-    { key: "all", label: "All" },
-    { key: "table_booking", label: "Table Booking" },
-    { key: "counter", label: "Counter/Screen" },
-    { key: "zomato", label: "Zomato" },
-    { key: "swiggy", label: "Swiggy" },
+    { key: "all", label: "All Orders", Icon: OrdersIcon },
+    { key: "table_booking", label: "Table", Icon: TableIcon },
+    { key: "counter", label: "Counter", Icon: CounterIcon },
+    { key: "zomato", label: "Zomato", Icon: null },
+    { key: "swiggy", label: "Swiggy", Icon: null },
   ];
 
   // Fetch orders
@@ -28,9 +39,7 @@ const StaffOrders = () => {
     try {
       setLoading(true);
       const response = await ordersAPI.getAll();
-      // Backend returns { total, currentPage, data: orders }
-      const ordersList =
-        response?.data || (Array.isArray(response) ? response : []);
+      const ordersList = response?.data || (Array.isArray(response) ? response : []);
       setOrders(ordersList);
       setError("");
     } catch (err) {
@@ -43,29 +52,47 @@ const StaffOrders = () => {
 
   // Update order status
   const handleUpdateStatus = async (orderId, newStatus) => {
+    if (!window.confirm(`Are you sure you want to mark this order as ${newStatus}?`)) return;
+
+    // Trigger animation if completing
+    if (newStatus === "completed") {
+        setExitingOrders(prev => [...prev, orderId]);
+        
+        // Wait for animation to finish (e.g. 500ms)
+        setTimeout(async () => {
+            try {
+                await ordersAPI.updateStatus(orderId, newStatus);
+                // Refresh list
+                fetchOrders();
+                // Remove from exiting list
+                setExitingOrders(prev => prev.filter(id => id !== orderId));
+            } catch (err) {
+                console.error("Failed to update order status:", err);
+                alert("Failed to update order status: " + (err.message || "Unknown error"));
+                setExitingOrders(prev => prev.filter(id => id !== orderId));
+            }
+        }, 500);
+        return;
+    }
+
     try {
       await ordersAPI.updateStatus(orderId, newStatus);
-      // Refresh orders list after status update
       fetchOrders();
     } catch (err) {
       console.error("Failed to update order status:", err);
-      alert(
-        "Failed to update order status: " + (err.message || "Unknown error")
-      );
+      alert("Failed to update order status: " + (err.message || "Unknown error"));
     }
   };
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh orders every 30 seconds
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Filter orders by status (pending) and source
+  // Filter orders
   const pendingOrders = orders.filter((o) => o.status === "pending");
-  const filteredOrders =
-    sourceFilter === "all"
+  const filteredOrders = sourceFilter === "all"
       ? pendingOrders
       : pendingOrders.filter((o) => o.order_source === sourceFilter);
 
@@ -81,31 +108,15 @@ const StaffOrders = () => {
       table_booking: "Table",
       counter: "Counter",
       zomato: "Zomato",
+      table_booking: "Table",
+      counter: "Counter",
+      zomato: "Zomato",
       swiggy: "Swiggy",
+      queue: "Queue",
+      reservation: "Reservation",
+      active_session: "Active Table"
     };
     return sourceMap[source] || source;
-  };
-
-  // Get source badge class
-  const getSourceClass = (source) => {
-    const classMap = {
-      table_booking: "source-table",
-      counter: "source-counter",
-      zomato: "source-zomato",
-      swiggy: "source-swiggy",
-    };
-    return classMap[source] || "";
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return (
-      date.toLocaleDateString("en-GB") +
-      " " +
-      date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
-    );
   };
 
   const handleLogout = () => {
@@ -118,14 +129,12 @@ const StaffOrders = () => {
       {/* Staff Header */}
       <header className="staff-header">
         <div className="staff-header-left">
-          <h4 className="staff-brand">SNOKEHEAD</h4>
+          <h4 className="staff-brand">SNOKHEAD</h4>
           <span className="staff-role-badge">Staff Portal</span>
         </div>
         <div className="staff-header-right">
           <div className="staff-user-info">
-            <span className="staff-user-name">
-              {user?.name || "Staff Member"}
-            </span>
+            <span className="staff-user-name">{user?.name || "Staff Member"}</span>
             <span className="staff-user-role">{user?.role || "Staff"}</span>
           </div>
           <button className="staff-logout-btn" onClick={handleLogout}>
@@ -136,189 +145,140 @@ const StaffOrders = () => {
 
       {/* Main Content */}
       <main className="staff-main">
-        <div className="staff-content">
-          <div className="staff-title-row">
-            <h5>
-              <span>Active Orders</span>
-              {filteredOrders.length > 0 && (
-                <span
-                  style={{
-                    marginLeft: "12px",
-                    fontSize: "16px",
-                    color: "#F08626",
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #FEF3E7 0%, #FDF0E1 100%)",
-                    padding: "4px 12px",
-                    borderRadius: "20px",
-                    border: "1px solid #F08626",
-                  }}
+        <div className="staff-content" style={{ padding: '0', background: 'transparent', boxShadow: 'none', border: 'none' }}>
+          
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {/* Source Filter Tabs - Copied style from FoodOrder */}
+          <div className="source-filter-tabs">
+            {sourceFilters.map((filter) => {
+              const FilterIcon = filter.Icon;
+              return (
+                <button
+                  key={filter.key}
+                  className={`source-chip ${sourceFilter === filter.key ? "active" : ""}`}
+                  onClick={() => setSourceFilter(filter.key)}
                 >
-                  {filteredOrders.length}
-                </span>
-              )}
-            </h5>
+                  <span className="source-icon">
+                    {FilterIcon ? <FilterIcon size={16} color={sourceFilter === filter.key ? "#fff" : "#F08626"} /> : null}
+                  </span>
+                  <span>{filter.label}</span>
+                  <span className="source-count">{getSourceCount(filter.key)}</span>
+                </button>
+              );
+            })}
             <button
               className="refresh-btn"
               onClick={fetchOrders}
               disabled={loading}
             >
-              {loading ? (
-                <span>
-                  <span style={{ marginRight: "8px" }}>⟳</span>
-                  Refreshing...
-                </span>
-              ) : (
-                <span>
-                  <span style={{ marginRight: "8px" }}>↻</span>
-                  Refresh
-                </span>
-              )}
+              <RefreshIcon size={16} color="#F08626" /> Refresh
             </button>
           </div>
 
-          {error && (
-            <div
-              className="alert alert-danger"
-              style={{
-                background: "linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%)",
-                color: "#cc0000",
-                padding: "16px 20px",
-                borderRadius: "12px",
-                border: "1px solid #ff9999",
-                marginBottom: "20px",
-                fontWeight: "600",
-              }}
-            >
-              ⚠️ {error}
-            </div>
-          )}
-
-          {/* Source Filter Tabs */}
-          <div className="source-filter-tabs">
-            {sourceFilters.map((filter) => (
-              <button
-                key={filter.key}
-                className={`source-tab ${
-                  sourceFilter === filter.key ? "active" : ""
-                }`}
-                onClick={() => setSourceFilter(filter.key)}
-              >
-                <span>{filter.label}</span>
-                <span className="source-count">
-                  {getSourceCount(filter.key)}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Orders List */}
-          <div className="orders-list">
-            {loading && orders.length === 0 ? (
-              <div className="loading-text">
-                <div style={{ fontSize: "48px", marginBottom: "16px" }}>⏳</div>
-                <div>Loading orders...</div>
-                <div
-                  style={{ fontSize: "14px", marginTop: "8px", opacity: 0.7 }}
-                >
-                  Please wait while we fetch the latest orders
-                </div>
-              </div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="empty-text">
-                <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
-                <div>
-                  {sourceFilter === "all"
-                    ? "No active orders at the moment"
-                    : `No active orders from ${
-                        sourceFilters.find((f) => f.key === sourceFilter)?.label
-                      }`}
-                </div>
-                <div
-                  style={{ fontSize: "14px", marginTop: "8px", opacity: 0.7 }}
-                >
-                  New orders will appear here automatically
-                </div>
-              </div>
-            ) : (
-              filteredOrders.map((order, index) => (
-                <div className="order-card" key={order.id}>
-                  <div className="order-card-header">
-                    <div
-                      style={{ display: "flex", alignItems: "center", flex: 1 }}
-                    >
-                      <span className="order-index">{index + 1}</span>
-                      <div className="order-info">
-                        <span className="order-date">
-                          📅 {formatDate(order.createdAt)}
-                        </span>
-                        <span className="order-customer">
-                          👤 {order.personName || "Customer"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="order-badges">
-                      {order.order_source && (
-                        <span
-                          className={`source-badge ${getSourceClass(
-                            order.order_source
-                          )}`}
-                        >
-                          {getSourceLabel(order.order_source)}
-                        </span>
-                      )}
-                      <span
-                        className={`order-status ${order.status || "pending"}`}
+          {/* Orders Table - Replicating Active Orders Screen */}
+          <div className="orders-table-container">
+            <table className="orders-table">
+              <thead>
+                <tr>
+                  <th>Order No</th>
+                  <th>Order Type</th>
+                  <th>Customer Name</th>
+                  <th>Payment</th>
+                  <th>Grand Total (₹)</th>
+                  <th>Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && orders.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
+                      <div className="loading-spinner" style={{ margin: "0 auto" }}></div>
+                      <p>Loading orders...</p>
+                    </td>
+                  </tr>
+                ) : filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
+                      <OrdersIcon size={48} color="#ccc" />
+                      <p style={{ marginTop: "10px", color: "#666" }}>No active orders found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order, index) => {
+                     const total = Number(order.total || 0);
+                                          return (
+                      <tr 
+                        key={order.id} 
+                        className={exitingOrders.includes(order.id) ? "slide-out-right" : ""}
+                        style={exitingOrders.includes(order.id) ? { pointerEvents: "none" } : {}}
                       >
-                        {order.status === "pending"
-                          ? "🕐 Pending"
-                          : "✅ " + (order.status || "Pending")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="order-card-items">
-                    {order.OrderItems &&
-                      order.OrderItems.map((orderItem, idx) => (
-                        <div className="order-card-item" key={idx}>
-                          <span>🍽️ {orderItem.MenuItem?.name || "Item"}</span>
-                          <span>×{orderItem.qty}</span>
-                          <span>
-                            ₹
-                            {(
-                              Number(orderItem.priceEach || 0) * orderItem.qty
-                            ).toFixed(2)}
+                        <td>
+                          <span className="table-order-no">#{index + 1}</span>
+                        </td>
+                        <td>
+                          <div className="table-order-source">
+                            <span className="source-main">{getSourceLabel(order.order_source || "Counter")}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="table-customer-name">
+                            {order.personName || "Walk-in Customer"}
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 600, color: "#3d4152", textTransform: "capitalize" }}>
+                            {order.paymentMethod === "offline" ? "Cash" : order.paymentMethod === "online" ? "UPI" : order.paymentMethod || "Cash"}
                           </span>
-                        </div>
-                      ))}
-                  </div>
-
-                  <div className="order-card-footer">
-                    <div className="order-payment">
-                      <span className="payment-method">
-                        💳{" "}
-                        {order.paymentMethod === "cash"
-                          ? "Cash"
-                          : order.paymentMethod || "Cash"}
-                      </span>
-                    </div>
-                    <span className="order-total">
-                      ₹{Number(order.total || 0).toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="order-card-actions">
-                    <button
-                      className="complete-btn"
-                      onClick={() => handleUpdateStatus(order.id, "completed")}
-                    >
-                      ✅ Mark as Completed
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                        </td>
+                        <td>
+                            <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
+                              {total.toFixed(2)}
+                            </span>
+                        </td>
+                        <td>
+                          <div className="table-date-time">
+                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#3d4152" }}>
+                              {new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                           <div className="table-actions">
+                               <button 
+                                  className="action-btn" 
+                                  title="View Details"
+                                  onClick={() => setSelectedOrder(order)} // Logic to view details can be added
+                               >
+                                  <SearchIcon size={18} />
+                               </button>
+                               <button 
+                                  className="action-btn complete-icon" 
+                                  onClick={() => handleUpdateStatus(order.id, "completed")}
+                                  title="Mark Completed"
+                                  disabled={exitingOrders.includes(order.id)}
+                               >
+                                  {/* Use currentColor (remove explicit color prop) to let CSS control it */}
+                                  <CheckIcon size={18} /> 
+                               </button>
+                               <button 
+                                  className="action-btn cancel-icon"
+                                  onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                                  title="Cancel Order"
+                               >
+                                  <CloseIcon size={18} color="#FF5252" />
+                               </button>
+                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
+
         </div>
       </main>
     </div>

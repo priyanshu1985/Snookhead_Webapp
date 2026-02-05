@@ -1,40 +1,31 @@
 import { useState, useEffect } from "react";
 import { stockImagesAPI, IMAGE_BASE_URL } from "../../services/api";
+import { PreparedFoodIcon, PackedFoodIcon } from "../common/Icons";
 import "../../styles/creategame.css";
 
-const CATEGORIES = [
-  { value: "prepared", label: "Prepared Food" },
-  { value: "packed", label: "Packed Food" },
-  { value: "Others", label: "Others" },
-];
 
-const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
+
+const CreateMenuPopUp = ({ onClose, onSubmit, initialData, categories }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
+    item_type: "prepared", // Default
     price: "",
     purchasePrice: "",
     image_url: "",
   });
-  const [isCustomCategory, setIsCustomCategory] = useState(false);
-  const [customCategory, setCustomCategory] = useState("");
-
 
   // Populate form if editing
   useState(() => {
     if (initialData) {
-      const isStandardCat = CATEGORIES.some(c => c.value === initialData.category);
       setFormData({
         name: initialData.name || "",
-        category: isStandardCat ? initialData.category : "Others",
+        category: initialData.category || "",
+        item_type: initialData.item_type || "prepared",
         price: initialData.price || "",
         purchasePrice: initialData.purchasePrice || "",
         image_url: initialData.imageUrl || initialData.image_url || initialData.imageurl || "",
       });
-      if (!isStandardCat && initialData.category) {
-        setIsCustomCategory(true);
-        setCustomCategory(initialData.category);
-      }
     }
   }, [initialData]);
 
@@ -56,23 +47,12 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "category") {
-      if (value === "Others") {
-        setIsCustomCategory(true);
-        setFormData((prev) => ({ ...prev, category: "Others" }));
-      } else {
-        setIsCustomCategory(false);
-        setFormData((prev) => ({ ...prev, category: value }));
-      }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const selectImage = (imageUrl) => {
     const fullUrl = `${IMAGE_BASE_URL}${imageUrl}`;
     setFormData(prev => ({ ...prev, image_url: fullUrl }));
-    setShowImageSelector(false);
   };
 
   const handleSubmit = (e) => {
@@ -83,10 +63,8 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
       return;
     }
 
-    const finalCategory = isCustomCategory ? customCategory.trim() : formData.category;
-
-    if (!finalCategory) {
-      alert("Please select or enter a category");
+    if (!formData.category) {
+      alert("Please enter a sub-category");
       return;
     }
 
@@ -97,7 +75,8 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
 
     const payload = {
       name: formData.name,
-      category: finalCategory,
+      category: formData.category.trim(),
+      item_type: formData.item_type,
       price: parseFloat(formData.price),
       purchasePrice: parseFloat(formData.purchasePrice) || 0,
       imageUrl: formData.image_url,
@@ -131,38 +110,32 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData }) => {
             />
           </div>
 
-          {/* Category */}
-          <div className="form-group">
-            <label>Category *</label>
+            {/* Hidden Item Type */}
+            <input type="hidden" name="item_type" value={formData.item_type} />
+
+           {/* Custom Category Input */}
+           <div className="form-group">
+            <label>Sub Category *</label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
               required
+              style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px',
+                  background: '#fff'
+              }}
             >
-              <option value="">-- Select Category --</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-              <option value="Others">Others (Custom)</option>
+                <option value="" disabled>Select a Category</option>
+                {categories && categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                ))}
             </select>
           </div>
-
-          {/* Custom Category Input */}
-          {isCustomCategory && (
-            <div className="form-group">
-              <label>Custom Category Name *</label>
-              <input
-                type="text"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Enter new category name"
-                required
-              />
-            </div>
-          )}
 
           {/* Price */}
           <div className="form-group">

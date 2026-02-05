@@ -17,8 +17,8 @@ const SetupMenu = () => {
   const navigate = useNavigate();
 
   const tabs = [
-    { key: "table", label: "Table Games", shortLabel: "Tables", Icon: TableGamesIcon },
-    { key: "digital", label: "Digital Games", shortLabel: "Digital", Icon: DigitalGamesIcon },
+    { key: "table", label: "Games", shortLabel: "Games", Icon: TableGamesIcon },
+    { key: "digital", label: "Table", shortLabel: "Table", Icon: DigitalGamesIcon },
     { key: "menu", label: "Menu Items", shortLabel: "Menu", Icon: FoodIcon },
   ];
 

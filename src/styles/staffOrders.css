@@ -790,3 +790,37 @@
   outline: 2px solid #f08626;
   outline-offset: 2px;
 }
+
+/* =================================
+   CUSTOM OVERRIDES FOR ACTIVE ORDERS
+   ================================= */
+/* ORANGE COMPLETE BUTTON OVERRIDE */
+.action-btn.complete-icon {
+  background: #F08626 !important; /* Solid Orange */
+  border: 1px solid #e07d24 !important;
+  color: #000000 !important; /* Black Icon */
+}
+
+.action-btn.complete-icon:hover {
+  background: #d9741f !important; /* Darker Orange on hover */
+  border-color: #d9741f !important;
+  color: #000000 !important; /* Keep Black Icon */
+  box-shadow: 0 4px 12px rgba(240, 134, 38, 0.4) !important;
+}
+
+/* ANIMATIONS */
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.5s forwards ease-in;
+  background-color: #ffebee !important; /* Slight red tint as it leaves */
+}

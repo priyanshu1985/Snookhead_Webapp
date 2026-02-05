@@ -150,6 +150,37 @@
   gap: 16px;
 }
 
+/* CUSTOM DATE/TIME INPUT STYLES */
+input[type="date"],
+input[type="time"] {
+  position: relative;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: text;
+}
+
+/* Customize the native picker indicator */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(56%) sepia(68%) saturate(1915%) hue-rotate(346deg) brightness(98%) contrast(93%); /* Orange-ish filter to match #F08626 */
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Ensure placeholder/text styling is consistent */
+input[type="date"],
+input[type="time"] {
+    padding-right: 12px; /* Ensure space for scrolling/indicator */
+}
+
 /* FOOTER */
 .reservation-modal-footer {
   display: flex;

@@ -136,6 +136,7 @@ const ReportBugs = () => {
                   </div>
 
                   <span className={`status ${getStatusClass(bug.status)}`}>
+                    {bug.status === 'resolved' && <span style={{ marginRight: '6px' }}>✓</span>}
                     {getStatusText(bug.status)}
                   </span>
                 </div>

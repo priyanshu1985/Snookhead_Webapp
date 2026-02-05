@@ -18,6 +18,7 @@ const UpcomingReservation = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [processingId, setProcessingId] = useState(null);
+  const [reservationToEdit, setReservationToEdit] = useState(null);
 
   // Fetch reservations
   const fetchReservations = async () => {
@@ -29,14 +30,22 @@ const UpcomingReservation = () => {
 
       // Filter only future/upcoming reservations and sort by date
       const now = new Date();
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
       const upcoming = reservationsList
         .filter((r) => {
-          const reservationTime = new Date(r.reservationtime || r.reservation_time || r.fromTime);
-          return reservationTime >= now && (r.status === "pending" || r.status === "active");
+          // Robust field reading - matching backend fix
+          const reservationTime = new Date(r.reservationtime || r.reservation_time || r.fromTime || r.fromtime || r.start_time);
+          
+          if (isNaN(reservationTime.getTime())) return false;
+
+          // Show all pending/active reservations from today onwards (even if slightly past time)
+          return reservationTime >= startOfToday && (r.status === "pending" || r.status === "active");
         })
         .sort((a, b) => {
-          const timeA = new Date(a.reservationtime || a.reservation_time || a.fromTime);
-          const timeB = new Date(b.reservationtime || b.reservation_time || b.fromTime);
+          const timeA = new Date(a.reservationtime || a.reservation_time || a.fromTime || a.fromtime || a.start_time);
+          const timeB = new Date(b.reservationtime || b.reservation_time || b.fromTime || b.fromtime || b.start_time);
           return timeA - timeB;
         });
 
@@ -169,7 +178,7 @@ const UpcomingReservation = () => {
             /* Reservation List */
             <div className="reservation-list">
               {filteredReservations.map((item, index) => {
-                const reservationTime = item.reservationtime || item.reservation_time || item.fromTime;
+                const reservationTime = item.reservationtime || item.reservation_time || item.fromTime || item.fromtime || item.start_time;
                 const customerName = item.customerName || item.customer_name || item.User?.name || "Guest";
                 const tableName = item.TableAsset?.name || item.table?.name || `Table ${item.tableId || item.table_id}`;
                 const gameName = item.TableAsset?.Game?.gamename || item.TableAsset?.Game?.game_name || "";
@@ -188,6 +197,26 @@ const UpcomingReservation = () => {
                     <span className="time">{formatTime(reservationTime)}</span>
 
                     <button
+                      className="edit-btn"
+                      onClick={() => {
+                          setShowModal(true);
+                          setReservationToEdit(item);
+                      }}
+                      title="Edit reservation"
+                      style={{ 
+                          marginRight: '10px',
+                          padding: '6px 12px',
+                          background: '#fff',
+                          border: '1px solid #F08626',
+                          borderRadius: '6px',
+                          color: '#F08626',
+                          cursor: 'pointer',
+                          fontWeight: '600'
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
                       className="cancel-btn"
                       onClick={() => handleCancel(item.id)}
                       title="Cancel reservation"
@@ -204,7 +233,10 @@ const UpcomingReservation = () => {
 
           {/* Footer */}
           <div className="reservation-footer">
-            <button className="add-queue-btn" onClick={() => setShowModal(true)}>
+            <button className="add-queue-btn" onClick={() => {
+                setReservationToEdit(null); // Clear edit state
+                setShowModal(true);
+            }}>
               + New Reservation
             </button>
           </div>
@@ -214,8 +246,12 @@ const UpcomingReservation = () => {
       {/* Reservation Modal */}
       <ReservationModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+            setShowModal(false);
+            setReservationToEdit(null);
+        }}
         onSuccess={handleModalSuccess}
+        reservationToEdit={reservationToEdit}
       />
     </div>
   );

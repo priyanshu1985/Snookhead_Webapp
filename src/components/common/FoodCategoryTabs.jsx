@@ -33,7 +33,7 @@ const FoodCategoryTabs = ({ selectedCategory, onSelectCategory, categories }) =>
               onClick={() => onSelectCategory(cat.id)}
             >
               <span className="tab-icon">
-                {React.cloneElement(cat.icon, { 
+                {cat.icon && React.cloneElement(cat.icon, { 
                   color: isActive ? "#FFFFFF" : "#F08626" 
                 })}
               </span>

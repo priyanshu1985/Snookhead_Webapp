@@ -6,7 +6,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 15px;
-  padding-top: 30px;
+  padding-top: 10px; /* Reduced from 30px */
 }
 
 /* Fix for spacing issue - Remove excessive top margin from dashboard-main */
@@ -19,10 +19,11 @@
    HEADER
 ========================= */
 
+
+
 .setup-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: flex !important;
+  align-items: center !important;
   margin-bottom: 20px;
 }
 
@@ -59,7 +60,7 @@
 ========================= */
 
 .setup-tabs-wrapper {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -127,7 +128,7 @@
 .setup-content {
   background: #fff;
   border-radius: 16px;
-  padding: 20px;
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   min-height: 400px;
 }
@@ -360,7 +361,7 @@
 ========================= */
 
 .menu-tab {
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 /* Loading State */

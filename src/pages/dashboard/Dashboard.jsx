@@ -10,6 +10,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 
 // New component to handle individual table card state (image rotation)
 // New component to handle individual table card state (image rotation)
+// New component to handle individual table card state (image rotation)
 const TableCardItem = ({ 
   table, 
   selectedGame, 
@@ -25,18 +26,42 @@ const TableCardItem = ({
     const [isUrgent, setIsUrgent] = useState(false);
     const lastPlayedSessionId = useRef(null);
 
+    const [isMuted, setIsMuted] = useState(false);
+    const stopSoundRef = useRef(null);
+
     const session = getActiveSession(table.id);
     const hasActiveSession = !!session;
     const bookedBy = session ? (session.customer_name || session.customername) : null;
     const displayStatus = hasActiveSession ? "occupied" : table.status;
     const bookingLabel = "Playing"; 
     
-    const upcomingRes = !hasActiveSession ? getReservationForTable(table.id) : null;
-    const isReserved = !!upcomingRes;
+    // Check for upcoming reservations
+    const upcomingRes = getReservationForTable(table.id);
+    
+    // Logic: Only show "RESERVED" badge if within 30 mins
+    let isReserved = false;
+    if (upcomingRes) {
+        const rTime = new Date(upcomingRes.reservationtime || upcomingRes.reservation_time || upcomingRes.fromTime || upcomingRes.fromtime || upcomingRes.start_time);
+        const diff = (rTime - currentTime) / 60000;
+        isReserved = diff <= 30; // Only true if starting soon
+    }
+
+    // Reset mute state when session changes or ends
+    useEffect(() => {
+        setIsMuted(false);
+        if (stopSoundRef.current) {
+            stopSoundRef.current();
+            stopSoundRef.current = null;
+        }
+    }, [session?.activeid, session?.active_id]);
 
     useEffect(() => {
         if (!session || session.booking_type !== 'timer' || !session.end_time) {
             setIsUrgent(false);
+            if (stopSoundRef.current) {
+                stopSoundRef.current();
+                stopSoundRef.current = null;
+            }
             return;
         }
 
@@ -47,8 +72,11 @@ const TableCardItem = ({
         if (minutesLeft <= 3 && minutesLeft > 0) {
              setIsUrgent(true);
              const sId = session.activeid || session.active_id;
-             if (lastPlayedSessionId.current !== sId) {
-                 playAlertSound();
+             
+             // Only play if not already muted and it's a new trigger or ongoing urgent state
+             if (lastPlayedSessionId.current !== sId && !isMuted) {
+                 if (stopSoundRef.current) stopSoundRef.current(); // Stop previous if any
+                 stopSoundRef.current = playAlertSound();
                  lastPlayedSessionId.current = sId;
              }
         } else {
@@ -56,8 +84,28 @@ const TableCardItem = ({
              if (minutesLeft > 3) {
                  lastPlayedSessionId.current = null;
              }
+             // Stop sound if we exit urgent state
+             if (stopSoundRef.current) {
+                stopSoundRef.current();
+                stopSoundRef.current = null;
+             }
         }
-    }, [session, currentTime]);
+    }, [session, currentTime, isMuted]); // Added isMuted
+
+    const toggleMute = (e) => {
+        e.stopPropagation(); // Prevent card click
+        if (isMuted) {
+            setIsMuted(false);
+            // Sound will restart via useEffect if still urgent
+            lastPlayedSessionId.current = null; // Reset identifier to force replay
+        } else {
+            setIsMuted(true);
+            if (stopSoundRef.current) {
+                stopSoundRef.current();
+                stopSoundRef.current = null;
+            }
+        }
+    };
 
     return (
         <div
@@ -104,17 +152,44 @@ const TableCardItem = ({
                 </div>
             )}
 
-            {/* Show Reservation Badge if available but reserved */}
-            {isReserved && !hasActiveSession && (
+            {/* Show Reservation Badge if available but reserved OR if upcoming reservation is near (even if active) */}
+            {isReserved && (
                 <div className="reservation-badge">
                     <span className="res-label">RESERVED</span>
                     <span className="res-time">{formatResTime(upcomingRes)}</span>
                     <span className="res-name">{upcomingRes.customerName || upcomingRes.customer_name}</span>
                 </div>
             )}
+
+            {/* Mute Toggle for Urgent Sessions */}
+            {isUrgent && (
+                <button 
+                    className={`mute-toggle-btn ${isMuted ? 'muted' : ''}`}
+                    onClick={toggleMute}
+                    title={isMuted ? "Unmute Sound" : "Mute Sound"}
+                >
+                    {isMuted ? "🔇" : "🔊"}
+                </button>
+            )}
         </div>
     );
 };
+
+// ... (Dashboard component starts here, but TableCardItem is static for now)
+
+  // Check for Queue Waiters (Auto-Prompt) effect inside Dashboard
+  // Since we are replacing lines 13-168 (TableCardItem) AND lines 435-489 (Queue Effect),
+  // I must be careful. I can't replace non-contiguous blocks with ONE tool call unless I replace EVERYTHING in between.
+  // The user asked for sequential edits? No, standard.
+  // I will replace `TableCardItem` first (above) and then the effect in separate call?
+  // Or I can replace the whole file content if needed, but it's large.
+  // The instruction said "1. Update TableCardItem... 2. Update Auto-Prompt".
+  // If I can't do both in one block (they are far apart), I should do 2 calls.
+  // WAIT. `TableCardItem` is lines 13-168.
+  // `useEffect` is lines 435-489.
+  // They are far apart.
+  // I will ONLY replace `TableCardItem` in this call. I will do `useEffect` in next call.
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -185,7 +260,7 @@ const Dashboard = () => {
       const [gamesData, tablesData, sessionsData, reservationsData, queueData] = await Promise.all([
         gamesAPI.getAll(),
         tablesAPI.getAll(),
-        activeTablesAPI.getAll().catch(() => []), 
+        activeTablesAPI.getAll(), // Allow error to propagate
         reservationsAPI.getAll().catch(() => []),
         queueAPI.getSummary().catch(() => null),
       ]);
@@ -229,12 +304,18 @@ const Dashboard = () => {
       
       const upcoming = reservationsList.filter(r => {
         if (r.status !== 'pending') return false;
-        const rTime = new Date(r.reservationtime || r.reservation_time || r.fromTime);
+        // Robust field reading - matching backend fix
+        const rTime = new Date(r.reservationtime || r.reservation_time || r.fromTime || r.fromtime || r.start_time);
+        
+        if (isNaN(rTime.getTime())) return false; // Invalid date check
+
         if (rTime.getFullYear() !== todayYear) return false;
         if (rTime.getMonth() !== todayMonth) return false;
         if (rTime.getDate() !== todayDate) return false;
+        
+        // Return ALL future pending reservations for today
         const diffMinutes = (rTime - now) / 60000;
-        return diffMinutes <= 10 && diffMinutes > -30;
+        return diffMinutes > -120; // Keep recent past too
       });
 
       setTodaysReservations(upcoming);
@@ -359,14 +440,21 @@ const Dashboard = () => {
         todaysReservations.forEach(res => {
              if (res.status !== 'pending') return;
              const rId = String(res.id);
+             
+             // Prevent multiple prompts for same reservation
              if (triggeredReservationsRef.current.has(rId)) return;
 
              const rTime = new Date(res.reservationtime || res.reservation_time || res.fromTime);
+             // Diff in minutes: Positive = Now is AFTER reservation time
              const diffMinutes = (now - rTime) / 60000;
              
-             if (diffMinutes >= 0 && diffMinutes < 30) {
+             // Trigger if time has arrived (within last 30 mins) or is about to (1 min before)
+             // This gives a prompt "as schedule time arrive"
+             if (diffMinutes >= -1 && diffMinutes < 30) {
                  const tableId = res.tableId || res.table_id;
                  const table = tables.find(t => String(t.id) === String(tableId));
+                 
+                 // Only prompt if table is actually available
                  if (table && table.status === 'available') {
                      triggeredReservationsRef.current.add(rId);
                      handleStartSession(res, table);
@@ -376,6 +464,8 @@ const Dashboard = () => {
       }, 5000);
       return () => clearInterval(interval);
   }, [todaysReservations, tables]);
+
+
 
   // Check for Queue Waiters (Auto-Prompt)
   useEffect(() => {
@@ -404,9 +494,24 @@ const Dashboard = () => {
              // Check if already triggered
              if (triggeredReservationsRef.current.has(promptKey)) continue;
 
-             // Don't prompt if there is a blocking reservation very soon
+             // Don't prompt if there is a blocking reservation within the NEW session duration
              const tableRes = todaysReservations.find(r => String(r.tableId || r.table_id) === String(table.id));
-             if (tableRes) continue;
+             if (tableRes) {
+                 const now = new Date();
+                 const rTime = new Date(tableRes.reservationtime || tableRes.reservation_time || tableRes.fromTime);
+                 
+                 // If reservation is already passed (shouldn't happen for pending) or very soon
+                 // Check overlap: StartNow + Duration vs ResTime
+                 // Use member duration or default 60m
+                 const duration = nextPerson.duration_minutes || 60;
+                 const sessionEnd = new Date(now.getTime() + duration * 60000);
+
+                 // If ResTime is BEFORE our session ends, it's a conflict
+                 if (rTime < sessionEnd && rTime > new Date(now.getTime() - 15*60000)) {
+                    // Conflict found - don't prompt
+                    continue;
+                 }
+             }
 
              // Trigger Prompt
              triggeredReservationsRef.current.add(promptKey);
@@ -418,8 +523,8 @@ const Dashboard = () => {
                      try {
                           const result = await queueAPI.next(gameId);
                           if (result.success) {
-                              showAlert("Success", `Seated ${nextPerson.customername} at ${table.name}`);
-                              fetchData(true);
+                               showAlert("Success", `Seated ${nextPerson.customername} at ${table.name}`);
+                               fetchData(true);
                           }
                      } catch (err) {
                           showAlert("Error", "Failed to seat queue member: " + err.message);
@@ -432,32 +537,9 @@ const Dashboard = () => {
              break; 
          }
      }
-  }, []); // Mount only
+  }, [queueSummary, tables, todaysReservations]); // Added todaysReservations dependency
   
-  // Reservation Auto-Trigger Interval (Separated for clarity)
-  useEffect(() => {
-      const interval = setInterval(() => {
-        const now = new Date();
-        todaysReservations.forEach(res => {
-             if (res.status !== 'pending') return;
-             const rId = String(res.id);
-             if (triggeredReservationsRef.current.has(rId)) return;
 
-             const rTime = new Date(res.reservationtime || res.reservation_time || res.fromTime);
-             const diffMinutes = (now - rTime) / 60000;
-             
-             if (diffMinutes >= 0 && diffMinutes < 30) {
-                 const tableId = res.tableId || res.table_id;
-                 const table = tables.find(t => String(t.id) === String(tableId));
-                 if (table && table.status === 'available') {
-                     triggeredReservationsRef.current.add(rId);
-                     handleStartSession(res, table);
-                 }
-             }
-        });
-      }, 5000);
-      return () => clearInterval(interval);
-  }, [todaysReservations, tables]);
 
   // Filter tables by selected game
 
@@ -522,7 +604,7 @@ const Dashboard = () => {
 
   // Helper to format reservation time
   const formatResTime = (r) => {
-     const date = new Date(r.reservationtime || r.reservation_time || r.fromTime);
+     const date = new Date(r.reservationtime || r.reservation_time || r.fromTime || r.fromtime || r.start_time);
      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -569,20 +651,21 @@ const Dashboard = () => {
       return `+${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Reusable Session Start Logic
+  // Reusable Session Start Logic (Restored)
   const handleStartSession = (reservation, table) => {
       const customerName = reservation.customerName || reservation.customer_name || "Customer";
       const timeStr = formatResTime(reservation);
       
       const confirmMessage = `
         <div style="text-align: left; margin-top: 8px;">
-          <p><strong>Customer:</strong> ${customerName}</p>
-          <p><strong>Time:</strong> ${timeStr}</p>
-          <p style="margin-top: 8px;">Are you sure you want to start this session?</p>
+          <p><strong>Reservation Time Arrived!</strong></p>
+          <p>Customer: <strong>${customerName}</strong></p>
+          <p>Time: ${timeStr}</p>
+          <p style="margin-top: 8px;">Start session and assign table to <strong>${customerName}</strong>?</p>
         </div>
       `;
       
-      showConfirm("Start Session?", confirmMessage, async () => {
+      showConfirm("Start Reservation Session", confirmMessage, async () => {
           try {
               await activeTablesAPI.start({
                   table_id: table.id,
@@ -596,14 +679,14 @@ const Dashboard = () => {
                   customer_name: customerName,
               });
 
-              // Mark active locally if not auto-updated
+              // Mark active locally
               if (reservation.id) {
                    try {
                       await reservationsAPI.update(reservation.id, { status: 'active' }); 
                    } catch (e) { console.warn("Could not update reservation status", e); }
               }
 
-              showAlert("Success", "Session started successfully!");
+              showAlert("Success", `Session started for ${customerName}`);
               fetchData(true); 
               
           } catch (err) {
@@ -612,6 +695,8 @@ const Dashboard = () => {
           }
       }, "Start Session");
   };
+
+
 
   // Handle table click - navigate based on status
   const handleTableClick = async (table) => {
@@ -628,27 +713,24 @@ const Dashboard = () => {
       navigate(`/session/${gameName}/${table.id}${sessionId ? `/${sessionId}` : ""}`);
     } else if (table.status === "available") {
       
-      // CHECK FOR RESERVATION FIRST
-      const reservation = getReservationForTable(table.id);
+      // Check if there is an upcoming reservation that is "due" (Time has arrived or past)
+      // "scheduled time arrive... and we clicked on that table"
+      const upcomingRes = getReservationForTable(table.id);
       
-      if (reservation) {
-        const customerName = reservation.customerName || reservation.customer_name || "Customer";
-        const timeStr = formatResTime(reservation);
-        
-        const resTime = new Date(reservation.reservationtime || reservation.reservation_time || reservation.fromTime);
-        const now = new Date();
-
-        if (now < resTime) {
-            showAlert("Too Early", `You can start only when the time comes exactly what the owner selected in reservation form (${timeStr}).`);
-            return;
-        }
-
-        // Trigger the shared start logic
-        handleStartSession(reservation, table);
-        return; 
+      if (upcomingRes) {
+          const now = new Date();
+          const rTime = new Date(upcomingRes.reservationtime || upcomingRes.reservation_time || upcomingRes.fromTime);
+          const diffMinutes = (now - rTime) / 60000;
+          
+          // If time has passed (diff > 0) OR is within 1 min (diff > -1)
+          if (diffMinutes > -1) {
+               // Trigger the custom start session prompt instead of booking screen
+               handleStartSession(upcomingRes, table);
+               return; 
+          }
       }
 
-      // Table is available and NO reservation (or user cancelled start) - go to booking screen
+      // Default: Go to booking screen
       navigate(`/tables/${gameName}/${table.id}`);
     } else {
       // Maintenance or other status - show alert

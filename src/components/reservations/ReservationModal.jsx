@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { gamesAPI, tablesAPI, reservationsAPI, walletsAPI } from "../../services/api";
+import { gamesAPI, tablesAPI, reservationsAPI, walletsAPI, menuAPI } from "../../services/api";
 import "../../styles/reservationModal.css";
 
-const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
+const ReservationModal = ({ isOpen, onClose, onSuccess, reservationToEdit = null }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,24 +36,48 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
   const [memberChecked, setMemberChecked] = useState(false);
   const [walletLoading, setWalletLoading] = useState(false);
 
-  // Data state
-  const [games, setGames] = useState([]);
-  const [tables, setTables] = useState([]);
-  const [filteredTables, setFilteredTables] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
+  // Food State
+  const [menuItems, setMenuItems] = useState([]);
+  const [foodCart, setFoodCart] = useState([]);
+  const [foodType, setFoodType] = useState("prepared"); // prepared, packed
+  const [foodCategory, setFoodCategory] = useState("All");
+
+  // Filtered Food
+  const typeFood = menuItems.filter(item => (item.item_type || 'prepared') === foodType);
+  const availableCategories = [...new Set(typeFood.map(item => item.category).filter(Boolean))].sort();
+  
+  const filteredFood = typeFood.filter(item => {
+      if (foodCategory !== "All" && item.category !== foodCategory) return false;
+      return true;
+  });
+
+  const updateFoodCart = (item, delta) => {
+      setFoodCart(prev => {
+          const existing = prev.find(i => i.id === item.id);
+          if (existing) {
+              const newQty = existing.qty + delta;
+              if (newQty <= 0) return prev.filter(i => i.id !== item.id);
+              return prev.map(i => i.id === item.id ? { ...i, qty: newQty } : i);
+          }
+          if (delta > 0) return [...prev, { ...item, qty: 1 }];
+          return prev;
+      });
+  };
 
   // Fetch games and tables on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoadingData(true);
-        const [gamesData, tablesData] = await Promise.all([
+        const [gamesData, tablesData, menuData] = await Promise.all([
           gamesAPI.getAll(),
           tablesAPI.getAll(),
+          menuAPI.getAll()
         ]);
 
         const gamesArr = gamesData?.data || (Array.isArray(gamesData) ? gamesData : []);
         const tablesArr = tablesData?.data || (Array.isArray(tablesData) ? tablesData : []);
+        const menuArr = menuData?.data || (Array.isArray(menuData) ? menuData : []);
 
         // Debug: Log table pricing to ensure we have the right data
         console.log("ReservationModal Debug: Tables Loaded", tablesArr.map(t => ({
@@ -65,6 +89,7 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
 
         setGames(gamesArr);
         setTables(tablesArr);
+        setMenuItems(menuArr);
       } catch (err) {
         console.error("Failed to fetch data:", err);
         setError("Failed to load games and tables");
@@ -75,11 +100,55 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
 
     if (isOpen) {
       fetchData();
-      // Set default date to today
-      const today = new Date().toISOString().split("T")[0];
-      setReservationDate(today);
+      
+      if (reservationToEdit) {
+          // EDIT MODE: Populate fields
+          setCustomerName(reservationToEdit.customerName || reservationToEdit.customer_name || "");
+          setCustomerPhone(reservationToEdit.customerPhone || reservationToEdit.customer_phone || "");
+          
+          // Table & Game
+          const tId = reservationToEdit.tableId || reservationToEdit.tableid || reservationToEdit.table_id;
+          const gId = reservationToEdit.gameId || reservationToEdit.gameid || reservationToEdit.game_id || 
+                      (reservationToEdit.TableAsset?.gameid) || (reservationToEdit.TableAsset?.game_id);
+          
+          if (gId) setSelectedGame(String(gId));
+          if (tId) setSelectedTable(String(tId));
+
+          // Date & Time
+          const fromTime = reservationToEdit.reservationtime || reservationToEdit.reservation_time || reservationToEdit.fromTime;
+          if (fromTime) {
+              const dt = new Date(fromTime);
+              setReservationDate(dt.toISOString().split('T')[0]);
+              setStartTime(dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+          }
+
+          // Booking Details
+          const bType = reservationToEdit.booking_type || 'timer';
+          setBookingType(bType);
+          setDurationMinutes(reservationToEdit.durationminutes || reservationToEdit.duration_minutes || 60);
+          setFrameCount(reservationToEdit.frame_count || 1);
+          setSetTimeValue(reservationToEdit.set_time || "");
+          setNotes(reservationToEdit.notes || "");
+          
+          // Load Food (if needed, but structure is tricky. Assume empty or parse if exists)
+          // For now, assume empty on edit
+          setFoodCart([]); 
+
+      } else {
+          // CREATE MODE: Defaults
+          // Set default date to today (Local Time)
+          const now = new Date();
+          const localDate = [
+              now.getFullYear(),
+              String(now.getMonth() + 1).padStart(2, '0'),
+              String(now.getDate()).padStart(2, '0')
+          ].join('-');
+          
+          setReservationDate(localDate);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, reservationToEdit]);
+
 
   // Filter tables when game is selected
   useEffect(() => {
@@ -227,7 +296,45 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
             return;
         }
 
-        // Transition to payment step directly without creating reservation yet
+        // IF EDITING: Update immediately (Skip payment step mostly, or assume payment is handled separately)
+        if (reservationToEdit) {
+             try {
+                setLoading(true);
+                setError("");
+                
+                const updatePayload = {
+                    customer_name: customerName.trim(),
+                    customer_phone: customerPhone.trim(),
+                    game_id: parseInt(selectedGame),
+                    table_id: parseInt(selectedTable),
+                    reservation_date: reservationDate,
+                    start_time: startTime,
+                    duration_minutes: bookingType === "timer" ? durationMinutes : null,
+                    booking_type: bookingType,
+                    frame_count: bookingType === "frame" ? frameCount : null,
+                    set_time: bookingType === "set" ? setTimeValue : null,
+                    notes: notes.trim(),
+                };
+
+                await reservationsAPI.update(reservationToEdit.id, updatePayload);
+                
+                resetForm();
+                onSuccess?.();
+                onClose();
+             } catch (err) {
+                console.error("Failed to update reservation:", err);
+                if (err.response && err.response.status === 409) {
+                     setError(err.response.data.message || "Time slot conflict");
+                } else {
+                     setError(err.message || "Failed to update reservation");
+                }
+             } finally {
+                setLoading(false);
+             }
+             return;
+        }
+
+        // CREATE MODE: Transition to payment step
         setStep('payment');
     } else if (step === 'payment') {
         if (!paymentOption) {
@@ -248,6 +355,7 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
             frame_count: bookingType === "frame" ? frameCount : null,
             set_time: bookingType === "set" ? setTimeValue : null,
             notes: notes.trim(),
+            food_orders: foodCart.map(item => ({ menu_item_id: item.id, quantity: item.qty }))
         };
 
         // Handle Payment Note & Wallet Deduction
@@ -264,8 +372,14 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
                     return;
                  }
                  if (walletBalance < parseFloat(advanceAmount)) {
-                    setError(`Insufficient wallet balance. Available: ₹${walletBalance.toFixed(2)}`);
-                    return;
+                    // Allow negative balance with confirmation
+                    const deficit = parseFloat(advanceAmount) - walletBalance;
+                    const confirmMsg = `Insufficient wallet balance. Wallet will go negative by ₹${deficit.toFixed(2)}. \n\nAvailable: ₹${walletBalance.toFixed(2)}\nRequired: ₹${parseFloat(advanceAmount).toFixed(2)}\n\nDo you want to proceed?`;
+                    
+                    if (!window.confirm(confirmMsg)) {
+                        return; // Stop if cancelled
+                    }
+                    // If confirmed, proceed to deduction
                  }
 
                  try {
@@ -409,7 +523,11 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
                         type="date"
                         value={reservationDate}
                         onChange={(e) => setReservationDate(e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
+                        min={[
+                            new Date().getFullYear(),
+                            String(new Date().getMonth() + 1).padStart(2, '0'),
+                            String(new Date().getDate()).padStart(2, '0')
+                        ].join('-')}
                         className="form-control"
                       />
                     </div>
@@ -539,6 +657,118 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
                       rows={3}
                     />
                   </div>
+
+                   {/* FOOD SELECTION SECTION */}
+                   <div className="form-divider" style={{ borderTop: '1px solid #eee', margin: '20px 0', padding: '10px 0' }}></div>
+                   
+                   <h6 style={{ marginBottom: '15px', color: '#444' }}>Add Food (Optional)</h6>
+                   
+                   {/* Type Tabs */}
+                   <div className="item-type-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <button 
+                        type="button" 
+                        onClick={() => setFoodType("prepared")}
+                        style={{ 
+                            flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #ddd',
+                            background: foodType === "prepared" ? '#F08626' : '#f9f9f9',
+                            color: foodType === "prepared" ? '#fff' : '#444',
+                            fontWeight: '600', cursor: 'pointer'
+                        }}
+                      >
+                        Prepared Food
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setFoodType("packed")}
+                        style={{ 
+                            flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #ddd',
+                            background: foodType === "packed" ? '#F08626' : '#f9f9f9',
+                            color: foodType === "packed" ? '#fff' : '#444',
+                            fontWeight: '600', cursor: 'pointer'
+                        }}
+                      >
+                        Packed Food
+                      </button>
+                   </div>
+
+                    {/* Sub-Category Filter */}
+                    {availableCategories.length > 0 && (
+                       <div className="sub-cat-filter" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '10px' }}>
+                           <button
+                              type="button"
+                              onClick={() => setFoodCategory("All")}
+                              style={{
+                                  whiteSpace: 'nowrap', padding: '6px 12px', borderRadius: '20px', fontSize: '12px',
+                                  background: foodCategory === "All" ? '#333' : '#eee',
+                                  color: foodCategory === "All" ? '#fff' : '#333',
+                                  border: 'none', cursor: 'pointer'
+                              }}
+                           >
+                              All
+                           </button>
+                           {availableCategories.map(cat => (
+                               <button
+                                  key={cat}
+                                  type="button"
+                                  onClick={() => setFoodCategory(cat)}
+                                  style={{
+                                      whiteSpace: 'nowrap', padding: '6px 12px', borderRadius: '20px', fontSize: '12px',
+                                      background: foodCategory === cat ? '#333' : '#eee',
+                                      color: foodCategory === cat ? '#fff' : '#333',
+                                      border: 'none', cursor: 'pointer'
+                                  }}
+                               >
+                                  {cat}
+                               </button>
+                           ))}
+                       </div>
+                    )}
+
+
+                   {/* Food List */}
+                   <div className="modal-food-list" style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '8px', padding: '8px' }}>
+                       {filteredFood.length === 0 ? (
+                           <p style={{ textAlign: 'center', color: '#999', fontSize: '13px', padding: '20px' }}>No items found in this category</p>
+                       ) : (
+                           filteredFood.map(item => {
+                               const inCart = foodCart.find(c => c.id === item.id);
+                               const qty = inCart ? inCart.qty : 0;
+                               return (
+                                   <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #f5f5f5' }}>
+                                       <div>
+                                           <div style={{ fontWeight: '600', fontSize: '14px', color: '#333' }}>{item.name}</div>
+                                           <div style={{ fontSize: '12px', color: '#666' }}>₹{item.price}</div>
+                                       </div>
+                                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                           {qty > 0 ? (
+                                               <>
+                                                 <button type="button" onClick={() => updateFoodCart(item, -1)} style={{ width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff' }}>-</button>
+                                                 <span style={{ fontSize: '13px', fontWeight: '600' }}>{qty}</span>
+                                                 <button type="button" onClick={() => updateFoodCart(item, 1)} style={{ width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff' }}>+</button>
+                                               </>
+                                           ) : (
+                                               <button 
+                                                  type="button" 
+                                                  onClick={() => updateFoodCart(item, 1)}
+                                                  style={{ padding: '4px 12px', borderRadius: '6px', background: '#f8f8f8', border: '1px solid #ddd', fontSize: '12px', fontWeight: '600', color: '#333', cursor: 'pointer' }}
+                                               >
+                                                  Add
+                                               </button>
+                                           )}
+                                       </div>
+                                   </div>
+                               );
+                           })
+                       )}
+                   </div>
+                   
+
+                   {/* Cart Summary (Tiny) */}
+                   {foodCart.length > 0 && (
+                       <div className="mini-cart-summary" style={{ marginTop: '10px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '13px' }}>
+                           <strong>Selected Items:</strong> {foodCart.map(i => `${i.name} x${i.qty}`).join(', ')}
+                       </div>
+                   )}
                 </>
               )
           ) : (
@@ -706,7 +936,7 @@ const ReservationModal = ({ isOpen, onClose, onSuccess }) => {
                     Cancel
                     </button>
                     <button type="submit" className="submit-btn" disabled={loading || loadingData}>
-                    {loading ? "Creating..." : "Create Reservation"}
+                    {loading ? (reservationToEdit ? "Updating..." : "Creating...") : (reservationToEdit ? "Update Reservation" : "Create Reservation")}
                     </button>
                 </>
             ) : (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { billingAPI, walletsAPI } from "../../services/api";
 import "../../styles/paymentModel.css";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -12,11 +13,19 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
   const [memberChecked, setMemberChecked] = useState(false);
   const [promoCode, setPromoCode] = useState("");
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null
+  });
+
   // Calculate totals from bill data
   const tableCharges = Number(bill?.table_charges || 0);
   const menuCharges = Number(bill?.menu_charges || 0);
   const totalAmount = Number(bill?.total_amount || 0);
-  const advancePayment = Number(bill?.advance_payment || 0); // Get advance payment
+  const advancePayment = Number(bill?.advance_payment || 0);
   const finalPayable = Math.max(0, totalAmount - advancePayment);
   
   const sessionDuration = bill?.session_duration || 0;
@@ -44,34 +53,15 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
     }
   };
 
-  // Handle pay button click
-  const handlePay = async () => {
+  // Actual Payment Execution
+  const executePayment = async () => {
     try {
       setProcessing(true);
       setError("");
 
-      // If wallet payment, check balance and deduct
       if (paymentMethod === "wallet") {
-        if (!memberChecked || walletBalance === null) {
-          setError("Please check member ID first");
-          setProcessing(false);
-          return;
-        }
-
-        if (walletBalance < finalPayable) {
-          setError(`Insufficient wallet balance. Available: ₹${walletBalance.toFixed(2)}`);
-          setProcessing(false);
-          return;
-        }
-
-        if (walletBalance < finalPayable) {
-          setError(`Insufficient wallet balance. Available: ₹${walletBalance.toFixed(2)}`);
-          setProcessing(false);
-          return;
-        }
-
-        // Deduct from wallet
-        await walletsAPI.deductMoney(memberId, finalPayable);
+          // Deduct from wallet
+          await walletsAPI.deductMoney(memberId, finalPayable);
       }
 
       // Mark bill as paid
@@ -81,9 +71,45 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
     } catch (err) {
       console.error("Payment failed:", err);
       setError(err.message || "Payment failed");
-    } finally {
       setProcessing(false);
     }
+  };
+
+  // Handle pay button click
+  const handlePay = async () => {
+    setError("");
+
+    // If wallet payment, check balance
+    if (paymentMethod === "wallet") {
+        if (!memberChecked || walletBalance === null) {
+          setError("Please check member ID first");
+          return;
+        }
+
+        if (walletBalance < finalPayable) {
+          const deficit = finalPayable - walletBalance;
+          const confirmMsg = `
+            Insufficient balance.<br/>
+            Wallet will go negative by <span class="highlight">₹${deficit.toFixed(2)}</span>.
+            <br/><br/>
+            Current Balance: <b>₹${walletBalance.toFixed(2)}</b><br/>
+            Payable: <b>₹${finalPayable.toFixed(2)}</b>
+            <br/><br/>
+            Do you want to proceed?
+          `;
+          
+          setConfirmModal({
+             isOpen: true,
+             title: "Confirm Insufficient Funds",
+             message: confirmMsg,
+             onConfirm: executePayment
+          });
+          return;
+        }
+    }
+    
+    // Proceed normally if no confirmation needed
+    await executePayment();
   };
 
   // Reset wallet info when switching payment methods
@@ -293,7 +319,7 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
         <button
           className="pay-btn"
           onClick={handlePay}
-          disabled={processing || (paymentMethod === "wallet" && (!memberChecked || walletBalance < finalPayable))}
+          disabled={processing || (paymentMethod === "wallet" && !memberChecked)}
         >
           {processing ? (
             <span className="processing">
@@ -305,6 +331,17 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
           )}
         </button>
       </div>
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        confirmText="Proceed"
+        isHtml={true}
+        type="alert"
+      />
     </div>
   );
 };

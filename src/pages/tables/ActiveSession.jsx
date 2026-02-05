@@ -6,7 +6,7 @@ import Navbar from "../../components/layout/Navbar";
 import { menuAPI, activeTablesAPI, tablesAPI, billingAPI, ordersAPI, reservationsAPI, IMAGE_BASE_URL } from "../../services/api";
 import { LayoutContext } from "../../context/LayoutContext";
 import FoodCategoryTabs, { DEFAULT_CATEGORIES } from "../../components/common/FoodCategoryTabs";
-import { PlateIcon } from "../../components/common/Icons";
+import { PlateIcon, PreparedFoodIcon, PackedFoodIcon } from "../../components/common/Icons";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 
 import "../../styles/activeSession.css";
@@ -40,6 +40,7 @@ const ActiveSession = () => {
   const [isFrameMode, setIsFrameMode] = useState(false); // true = frame-based billing (manual release)
   const timerRef = useRef(null);
   const hasAutoReleased = useRef(false);
+  const [shouldAutoBill, setShouldAutoBill] = useState(false);
 
   // Food selection
   const [menuItems, setMenuItems] = useState([]);
@@ -49,42 +50,53 @@ const ActiveSession = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const cartRef = useRef(initialCart); // Ref to access cart in timer callbacks
 
-  // Compute categories - Strict Mode: Only show categories that have items
-  const computedCategories = menuItems.reduce((acc, item) => {
+  // Keep cartRef in sync with cart state
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
+  // Main types (Tabs)
+  const ITEM_TYPES = [
+    { key: "prepared", label: "Prepared Food", icon: <PreparedFoodIcon size={20} /> },
+    { key: "packed", label: "Packed Food", icon: <PackedFoodIcon size={20} /> },
+  ];
+
+  const [activeType, setActiveType] = useState("prepared"); // 'prepared' or 'packed'
+
+  // Filter items by search query and active Type first
+  const typeItems = menuItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = (item.item_type || 'prepared') === activeType;
+      return matchesSearch && matchesType;
+  });
+
+  // Compute Sub-categories from the filtered items (or all items if we want consistent internal tabs)
+  // Here we compute based on available items for this type
+  const computedCategories = typeItems.reduce((acc, item) => {
     // Skip if no category
     if (!item.category) return acc;
     
     // Check if category already added
     const exists = acc.some(cat => cat.id === item.category);
     if (!exists) {
-      // Check if it matches a known default category to get icon/label
-      const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === item.category);
-      
-      if (defaultCat) {
-        acc.push(defaultCat);
-      } else {
-        // Add as proper custom category
         acc.push({
           id: item.category,
           label: item.category,
-          icon: <PlateIcon size={24} />
+          // icon: <PlateIcon size={20} />
         });
-      }
     }
     return acc;
-  }, []);
+  }, []).sort((a, b) => a.label.localeCompare(b.label));
 
-  // Ensure active category is valid
+  // Ensure active selected category is valid for this type
+  // "All" is always valid
   useEffect(() => {
-    if (computedCategories.length > 0) {
-        // If current active is not in list (or empty), switch to first one
-        const currentExists = computedCategories.some(c => c.id === selectedCategory);
-        if (!currentExists) {
-            setSelectedCategory(computedCategories[0].id);
-        }
+    if (selectedCategory !== "All") {
+        const catExists = computedCategories.some(c => c.id === selectedCategory);
+        if (!catExists) setSelectedCategory("All");
     }
-  }, [computedCategories, selectedCategory]);
+  }, [activeType, computedCategories]);
+
 
   // Action states
   const [generating, setGenerating] = useState(false);
@@ -97,580 +109,471 @@ const ActiveSession = () => {
   const [showFrameModal, setShowFrameModal] = useState(false);
   const [framesToAdd, setFramesToAdd] = useState(1);
 
-  // Cancel Booking Modal State
+
+  // Early Exit Modal State
+  const [showEarlyExitModal, setShowEarlyExitModal] = useState(false);
+  const [earlyExitData, setEarlyExitData] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+
+  // 1. Fetch Session Data
+  useEffect(() => {
+    const fetchSession = async () => {
+       try {
+         setLoading(true);
+         setError("");
+
+         // Check if passed via navigation state
+         if (passedSession) {
+             setSession(passedSession);
+             if (passedSession.tableid) {
+                 try {
+                    const tData = await tablesAPI.getById(passedSession.tableid);
+                    setTableInfo(tData);
+                 } catch (e) { console.warn("Failed to fetch table info", e); }
+             }
+             setLoading(false);
+             return;
+         }
+
+         // Fetch from API
+         let foundSession = null;
+         
+         // Priority 1: Fetch by Session ID
+         if (sessionId) {
+              try {
+                  foundSession = await activeTablesAPI.getById(sessionId);
+              } catch (e) {
+                  console.warn("Session ID lookup failed:", e);
+              }
+         }
+         
+         // Priority 2: Fetch by Table ID
+         if (!foundSession && tableId) {
+              const sessions = await activeTablesAPI.getAll({ tableid: tableId });
+              foundSession = sessions.find(s => 
+                  String(s.tableid) === String(tableId) && s.status === 'active'
+              );
+         }
+
+         if (foundSession) {
+             setSession(foundSession);
+             // Load persisted cart if available and initialCart is empty
+             if (foundSession.food_orders && (!initialCart || initialCart.length === 0)) {
+                 try {
+                    const savedCart = typeof foundSession.food_orders === 'string' 
+                        ? JSON.parse(foundSession.food_orders) 
+                        : foundSession.food_orders;
+                    setCart(Array.isArray(savedCart) ? savedCart : []);
+                 } catch (e) {
+                    console.warn("Failed to parse saved food_orders", e);
+                 }
+             }
+             if (foundSession.tableid) {
+                 const tData = await tablesAPI.getById(foundSession.tableid);
+                 setTableInfo(tData);
+             }
+         } else {
+             setError("No active session found for this table.");
+         }
+
+       } catch (err) {
+           console.error("Fetch session error:", err);
+           setError(err.message || "Failed to load session");
+       } finally {
+           setLoading(false);
+       }
+    };
+
+    fetchSession();
+  }, [tableId, sessionId, passedSession]);
+
+  // 2. Initialize Timer & Mode based on Session
+  useEffect(() => {
+      if (!session) return;
+
+      const type = session.bookingtype || session.booking_type || 'timer'; // timer, set, frame
+      setIsTimerMode(type === 'timer');
+      setIsStopwatchMode(type === 'set');
+      setIsFrameMode(type === 'frame');
+      
+      if (type === 'frame') {
+          // Frame mode logic
+          return; 
+      }
+
+      // Time calculation
+      const calculateTime = () => {
+          const now = new Date();
+          const start = new Date(session.starttime); // start_time vs starttime? API uses starttime usually
+          const allocatedMins = session.durationminutes || session.duration_minutes || 0;
+          
+          if (type === 'timer') {
+              // Countdown
+              const endTime = new Date(start.getTime() + allocatedMins * 60000);
+              const diff = Math.floor((endTime - now) / 1000); // seconds
+              setRemainingSeconds(Math.max(0, diff));
+              
+              const elapsed = Math.floor((now - start) / 1000);
+              setElapsedSeconds(Math.max(0, elapsed));
+
+              // Auto-release check
+              if (diff <= 0 && !hasAutoReleased.current && !session.endtime) {
+                  hasAutoReleased.current = true;
+                  setShouldAutoBill(true);
+              }
+          } else {
+              // Stopwatch (Set)
+              const elapsed = Math.floor((now - start) / 1000);
+              setElapsedSeconds(Math.max(0, elapsed));
+          }
+      };
+
+      calculateTime(); // Initial call
+      
+      // Interval
+      timerRef.current = setInterval(calculateTime, 1000);
+
+      return () => {
+          if (timerRef.current) clearInterval(timerRef.current);
+      };
+  }, [session]);
+
+  // Derived state for billing
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  const billingMinutes = isFrameMode ? 
+      0 : 
+      (isTimerMode ? (session?.durationminutes || session?.duration_minutes || 0) : Math.ceil(elapsedSeconds / 60));
   
-  // Confirmation Modal State
+  const pricePerMin = Number(tableInfo?.pricePerMin ?? 0);
+  const frameCharge = Number(tableInfo?.frameCharge ?? 0);
+  const frameCount = session?.framecount || session?.frame_count || 0;
+
+  const tableCost = isFrameMode ? (frameCount * frameCharge) : (billingMinutes * pricePerMin);
+  
+  // Calculate Cart Total
+  const cartTotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
+  const grandTotal = tableCost + cartTotal;
+
+
+  // Missing State for Images & Modals
+  const [failedImages, setFailedImages] = useState(new Set());
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: "",
     message: "",
-    type: "confirm", 
     onConfirm: null,
-    confirmText: "Yes"
+    confirmText: "Yes",
+    cancelText: "Cancel",
+    type: "confirm",
+    isHtml: false
   });
+
+  // Derived filtered menu
+  // Derived filtered menu (from typeItems)
+  const filteredMenu = typeItems.filter(item => {
+    if (selectedCategory === "All" || !selectedCategory) return true;
+    return item.category === selectedCategory;
+  });
+
+  // --- Helper Functions ---
+
+  const handleImageError = (id) => {
+    setFailedImages(prev => new Set(prev).add(id));
+  };
 
   const closeModal = () => {
     setModalConfig(prev => ({ ...prev, isOpen: false }));
   };
 
-  const showConfirm = (title, message, onConfirm, confirmText = "Confirm", type = "confirm", isHtml = false) => {
+  const showConfirm = (title, message, onConfirm, confirmText = "Yes", type = "confirm", isHtml = false) => {
     setModalConfig({
       isOpen: true,
       title,
       message,
-      type,
       onConfirm,
       confirmText,
       cancelText: "Cancel",
+      type,
       isHtml
     });
   };
-  
-  // Image error handling
-  const [failedImages, setFailedImages] = useState(new Set());
 
-  const handleImageError = (id) => {
-    setFailedImages((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(id);
-      return newSet;
-    });
-  };
-
-  // Handle Manual Frame Addition
-  const handleAddFramesSubmit = async () => {
-    if (!framesToAdd || framesToAdd <= 0) return;
-    
-    setShowFrameModal(false);
-    const countToAdd = Number(framesToAdd);
-    
-    try {
-        setGenerating(true);
-        const newCount = (session.frame_count || 0) + countToAdd;
-        
-        // Optimistic update
-        setSession(prev => ({ ...prev, frame_count: newCount }));
-        
-        // API Update
-        await activeTablesAPI.update(session.active_id, { frame_count: newCount });
-    } catch (err) {
-        console.error("Failed to add frames:", err);
-        alert("Failed to add frames");
-        setSession(prev => ({ ...prev, frame_count: (prev.frame_count || 1) - countToAdd }));
-    } finally {
-        setGenerating(false);
-    }
-  };
-
-  // Auto-release handler - generates bill when timer ends and releases table
-  const handleAutoRelease = async (sessionToRelease, cartItems = []) => {
-    console.log("handleAutoRelease triggered", { sessionToRelease, hasReleased: hasAutoReleased.current });
-    
-    if (!sessionToRelease || hasAutoReleased.current) return;
-
-    hasAutoReleased.current = true;
-
-    try {
-      console.log("Calling autoRelease API...");
-      // Use auto-release endpoint which stops session, generates bill, and sets table to available
-      // Pass cart items so they are included in the bill
-      const response = await activeTablesAPI.autoRelease({
-        active_id: sessionToRelease.active_id,
-        // Pass advance payment to include in bill details
-        advance_payment: advancePayment, 
-        cart_items: cartItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.qty,
-        })),
-      });
-      console.log("Auto-release successful", response);
-      
-      const newBillId = response?.bill_id || response?.id || response?.bill?.id || response?.data?.id;
-
-      // Navigate to billing page
-      navigate("/billing", { state: { billGenerated: true, newBillId } });
-    } catch (err) {
-      console.error("Auto-release failed:", err);
-      alert("Auto-release failed check console. Redirecting to billing anyway."); 
-      // Still navigate to billing even if there's an error so user isn't stuck
-      navigate("/billing", { state: { billGenerated: true } });
-    }
-  };
-
-  // Handle Manual Time Addition
-  const handleAddTimeSubmit = async () => {
-    if (!manualTime || manualTime <= 0) return;
-    
-    setShowTimeModal(false);
-    const minutesToAdd = Number(manualTime);
-    
-    try {
-        setGenerating(true);
-        
-        // Calculate new end time
-        // Ensure we work with valid dates
-        const currentEndTime = new Date(session.booking_end_time);
-        if (isNaN(currentEndTime.getTime())) {
-            throw new Error("Invalid current end time");
-        }
-        
-        const newEndTime = new Date(currentEndTime.getTime() + minutesToAdd * 60000);
-        const newDuration = (parseInt(session.duration_minutes) || 0) + minutesToAdd;
-
-        console.log("Adding time:", { minutesToAdd, newEndTime, newDuration });
-
-        // Optimistic Update
-        setSession(prev => ({ 
-            ...prev, 
-            booking_end_time: newEndTime.toISOString(),
-            duration_minutes: newDuration
-        }));
-        
-        // Also update the running timer immediately
-        setRemainingSeconds(prev => (prev || 0) + minutesToAdd * 60);
-        
-        // API Update
-        await activeTablesAPI.update(session.active_id, { 
-            booking_end_time: newEndTime.toISOString(),
-            duration_minutes: newDuration
-        });
-    } catch (err) {
-        console.error("Failed to add time:", err);
-        alert("Failed to add time: " + err.message);
-        // Ideally revert optimistic update here if needed (refetch session)
-        // For now, simpler error handling
-    } finally {
-        setGenerating(false);
-    }
-  };
-
-  // Initialize session from passed state or fetch from API
-  useEffect(() => {
-    const initializeSession = (sessionData) => {
-      // Normalize session data keys to handle both snake_case (frontend state) and lowercase (DB response)
-      // The backend returns lowercase column names (starttime, bookingendtime, durationminutes)
-      const data = {
-        ...sessionData,
-        active_id: sessionData.activeid || sessionData.active_id,
-        table_id: sessionData.tableid || sessionData.table_id,
-        game_id: sessionData.gameid || sessionData.game_id,
-        start_time: sessionData.starttime || sessionData.start_time,
-        booking_end_time: sessionData.bookingendtime || sessionData.booking_end_time,
-        duration_minutes: sessionData.durationminutes || sessionData.duration_minutes,
-        booking_type: sessionData.bookingtype || sessionData.booking_type || 'timer', // Default to timer for backward compatibility
-        frame_count: sessionData.framecount || sessionData.frame_count || null, // Frame count for frame-based bookings
-      };
-
-      setSession(data);
-
-      const startTime = new Date(data.start_time);
-      const now = new Date();
-      const elapsed = Math.floor((now - startTime) / 1000);
-      setElapsedSeconds(Math.max(0, elapsed));
-
-      // Check booking type to determine timer behavior
-      // 'timer' = countdown mode (count DOWN, auto-release at 0)
-      // 'set' = stopwatch mode (count UP, no auto-release, manual bill)
-      // 'frame' = frame mode (count UP, no auto-release, manual bill, billing by frames)
-      const bookingType = data.booking_type;
-
-      if (bookingType === 'set') {
-        // Stopwatch mode - just count up, no countdown, no auto-release
-        setIsStopwatchMode(true);
-        setIsTimerMode(false);
-        setIsFrameMode(false);
-        // No remaining seconds for stopwatch - it only counts up
-      } else if (bookingType === 'frame') {
-        // Frame mode - count up elapsed time, no countdown, no auto-release
-        // Billing is based on frame count, not time
-        setIsFrameMode(true);
-        setIsStopwatchMode(false);
-        setIsTimerMode(false);
-        // No remaining seconds for frame mode - owner manually generates bill
-      } else {
-        // Timer mode - countdown with auto-release
-        setIsStopwatchMode(false);
-        setIsFrameMode(false);
-
-        // Check if session has booking_end_time or duration_minutes (countdown mode)
-        const hasDuration = data.booking_end_time || data.duration_minutes;
-
-        if (hasDuration) {
-          setIsTimerMode(true);
-
-          let remaining;
-
-          if (data.booking_end_time) {
-            // Calculate from booking_end_time
-            const endTime = new Date(data.booking_end_time);
-            remaining = Math.floor((endTime - now) / 1000);
-          } else if (data.duration_minutes) {
-            // Calculate from duration_minutes
-            const totalDurationSeconds = data.duration_minutes * 60;
-            remaining = totalDurationSeconds - elapsed;
-          } else {
-            remaining = 0;
-          }
-
-          if (remaining <= 0) {
-            setRemainingSeconds(0);
-            handleAutoRelease(data);
-          } else {
-            setRemainingSeconds(remaining);
-          }
-        }
-      }
-    };
-
-    const fetchSession = async () => {
-      try {
-        setLoading(true);
-
-        // If session was passed via navigation state, use it directly
-        if (passedSession) {
-          initializeSession(passedSession);
-          setLoading(false);
-          return;
-        }
-
-        // Otherwise fetch from API
-        const sessions = await activeTablesAPI.getAll();
-
-        // Find session by tableId (string comparison) or sessionId
-        const currentSession = sessions.find((s) => {
-          const sTableId = s.tableid || s.table_id;
-          const sActiveId = s.activeid || s.active_id;
-          
-          // CRITICAL FIX: If sessionId is provided in URL, ONLY match that specific session.
-          // Otherwise, fall back to matching by tableId.
-          if (sessionId) {
-            return String(sActiveId) === String(sessionId);
-          }
-          return String(sTableId) === String(tableId);
-        });
-
-        if (currentSession) {
-          initializeSession(currentSession);
-        } else {
-          setError("Session not found");
-        }
-      } catch (err) {
-        console.error("Failed to fetch session:", err);
-        setError(err.message || "Failed to load session");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableId, sessionId, passedSession]);
-
-  // Fetch linked order to restore cart if needed
-  useEffect(() => {
-    const fetchLinkedOrder = async () => {
-      if (!session || !session.active_id) return;
-      
-      try {
-        // Fetch order linked to this session
-        // Using ORDERS API
-        const response = await ordersAPI.getBySession(session.active_id);
-        
-        // If we have items in the order, and our local cart is effectively empty (or initial), merge them?
-        // Actually, we should prioritise server items if it's a restore (page refresh).
-        // But if user just booked, local cart might be same as server items.
-        // Let's assume server is truth.
-        if (response && response.consolidated_items && response.consolidated_items.length > 0) {
-          const serverItems = response.consolidated_items.map(item => ({
-             id: item.id,
-             name: item.name,
-             price: item.price,
-             qty: item.quantity
-          }));
-          
-          // Only update if we are seemingly starting fresh/empty or if items differ substantially
-          // Optimization: If cart is empty, set it.
-          // If cart has items, we might be double adding?
-          // If this runs on mount/session-load, cart is likely just initialCart from nav state.
-          // If nav state is present, use that?
-          // If passedSession is missing (refresh), then nav state is undefined.
-          
-          // Strategy: Always prioritize server items as the source of truth.
-          // This ensures that items booked in the previous step (saved to DB) appear correctly,
-          // and also handles page refreshes.
-          setCart(serverItems);
-          
-          // Populate savedItems map for delta calculation
-          const savedMap = {};
-          serverItems.forEach(item => {
-              savedMap[item.id] = item.qty;
-          });
-          setSavedItems(savedMap);
-        }
-        
-        // Store the order ID if available (usually the first one from consolidated response or we might need to fetch raw orders)
-        // ordersAPI.getBySession returns { orders: [...] }
-        if (response && response.orders && response.orders.length > 0) {
-            // Use the first pending order as the active one to append to
-            const pendingOrder = response.orders.find(o => o.status === 'pending');
-            if (pendingOrder) {
-                setActiveOrderId(pendingOrder.id);
-            } else if (response.orders.length > 0) {
-                // Should we append to a completed order? Probably not.
-                // If all are completed, maybe we need a new order?
-                // For now, assume a session has one main order.
-                setActiveOrderId(response.orders[0].id);
-            }
-        }
-      } catch (err) {
-        console.error("Failed to fetch linked order:", err);
-      }
-    };
-    
-    if (session) {
-        fetchLinkedOrder();
-    }
-  }, [session, passedSession]);
-
-  // Fetch table info
-  useEffect(() => {
-    const fetchTable = async () => {
-      try {
-        const data = await tablesAPI.getById(tableId);
-        setTableInfo(data);
-      } catch (err) {
-        console.error("Failed to fetch table:", err);
-      }
-    };
-    if (tableId) fetchTable();
-  }, [tableId]);
-
-  // Fetch menu items
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        setLoadingMenu(true);
-        const data = await menuAPI.getAll();
-        const items = data?.data || (Array.isArray(data) ? data : []);
-
-        // Sanitize image URLs
-        const processedItems = items.map(item => {
-          if (item.imageUrl && item.imageUrl.includes('localhost:4000')) {
-             const cleanUrl = item.imageUrl.replace(/https?:\/\/localhost:4000/g, IMAGE_BASE_URL);
-             return { ...item, imageUrl: cleanUrl };
-          }
-          return item;
-        });
-
-        setMenuItems(processedItems);
-      } catch (err) {
-        console.error("Failed to fetch menu:", err);
-      } finally {
-        setLoadingMenu(false);
-      }
-    };
-    fetchMenu();
-  }, []);
-
-  // Keep cartRef in sync with cart state for use in timer callbacks
-  useEffect(() => {
-    cartRef.current = cart;
-  }, [cart]);
-
-  // Timer effect - handles both countdown and elapsed time (stopwatch)
-  useEffect(() => {
-    if (!isPaused && session && !hasAutoReleased.current) {
-      timerRef.current = setInterval(() => {
-        // Update elapsed time (always counts up for both modes)
-        setElapsedSeconds((prev) => prev + 1);
-
-        // Update countdown if in timer mode (NOT stopwatch mode)
-        // In stopwatch mode, we only count up - no countdown, no auto-release
-        if (isTimerMode && !isStopwatchMode) {
-          setRemainingSeconds((prev) => {
-            // Safety check
-            if (prev === null) return 0;
-            
-            // If already at 0, don't keep decrementing, just return 0
-            if (prev <= 0) return 0;
-
-            const newValue = prev - 1;
-
-            // Auto-release when timer hits zero (only for countdown timer mode)
-            if (newValue <= 0) {
-              console.log("Timer hit zero, triggering auto-release");
-              clearInterval(timerRef.current);
-              handleAutoRelease(session, cartRef.current);
-              return 0; // Set state to 0
-            }
-            return newValue;
-          });
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPaused, session, isTimerMode, isStopwatchMode]);
-
-  // Format time display (HH:MM:SS)
   const formatTime = (totalSeconds) => {
-    if (totalSeconds === null || totalSeconds < 0) return "00:00:00";
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Format countdown display (MM:SS)
-  const formatCountdown = (totalSeconds) => {
-    if (totalSeconds === null || totalSeconds < 0) return "00:00";
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  const formatCountdown = (seconds) => {
+    if (seconds === null) return "--:--";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    
+    if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Get timer color based on remaining time
   const getTimerColor = () => {
-    if (!isTimerMode || remainingSeconds === null) return "";
+    if (!remainingSeconds) return ""; // default
     if (remainingSeconds <= 60) return "timer-critical";
     if (remainingSeconds <= 300) return "timer-warning";
-    return "";
+    return "timer-safe";
   };
 
-  // Filter menu by search query AND category
-  const filteredMenu = menuItems.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory && item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // --- Actions ---
 
-  // Add item to cart
-  const addToCart = (item) => {
-    const exists = cart.find((c) => c.id === item.id);
-    if (exists) {
-      setCart(cart.map((c) => (c.id === item.id ? { ...c, qty: c.qty + 1 } : c)));
-    } else {
-      setCart([...cart, { ...item, qty: 1 }]);
-    }
+  const togglePause = async () => {
+      // Toggle pause state (local only for now, unless backend support added)
+      setIsPaused(!isPaused);
   };
 
-  // Update cart quantity
-  const updateCartQty = (id, delta) => {
-    setCart(
-      cart
-        .map((item) => (item.id === id ? { ...item, qty: item.qty + delta } : item))
-        .filter((item) => item.qty > 0)
-    );
-  };
-
-  // Calculate totals
-  const cartTotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-  const elapsedMinutes = Math.ceil(elapsedSeconds / 60);
-
-  // For timer mode, use the booked duration
-  // For stopwatch mode, use elapsed time
-  // For frame mode, billing is by frames (not time)
-  const billingMinutes = (isTimerMode && session?.duration_minutes)
-    ? session.duration_minutes
-    : elapsedMinutes;
-
-  // Calculate table cost based on mode
-  // Frame mode: frameCount * frameCharge
-  // Timer/Stopwatch mode: billingMinutes * pricePerMin
-  const frameCount = session?.frame_count || 0;
-  
-  // Normalize price fields (handle potential backend case differences)
-  const pricePerMin = Number(tableInfo?.pricePerMin ?? tableInfo?.pricepermin ?? tableInfo?.price_per_min ?? 0);
-  const frameCharge = Number(tableInfo?.frameCharge ?? tableInfo?.framecharge ?? tableInfo?.frame_charge ?? 0);
-
-  const tableCost = isFrameMode
-    ? frameCount * frameCharge
-    : billingMinutes * pricePerMin;
-  const grandTotal = tableCost + cartTotal;
-
-  // Toggle pause
-  const togglePause = () => {
-    setIsPaused(!isPaused);
-  };
-
-  // Track saved item quantities to calculate deltas
-  const [savedItems, setSavedItems] = useState({});
-  const [activeOrderId, setActiveOrderId] = useState(null);
-
-  // Handle update (confirm items added - sync to backend order)
   const handleUpdate = async () => {
-    if (!activeOrderId) {
-        alert("No active order found for this session. Please try refreshing.");
-        return;
-    }
+      if (!session) return;
+      try {
+          setGenerating(true);
+          const sessionId = session.active_id || session.activeid;
+          
+          await activeTablesAPI.update(sessionId, { 
+              food_orders: cart 
+          });
+          
+          alert("Order saved successfully!");
+      } catch (err) {
+          console.error("Failed to save order:", err);
+          alert("Failed to save order");
+      } finally {
+          setGenerating(false);
+      }
+  };
 
-    // Calculate items to add (delta between current cart and savedItems)
-    const itemsToAdd = [];
-    
-    cart.forEach(item => {
-        const savedQty = savedItems[item.id] || 0;
-        const currentQty = item.qty;
-        
-        if (currentQty > savedQty) {
-            const delta = currentQty - savedQty;
-            itemsToAdd.push({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                qty: delta
-            });
+
+  // Fetch Menu
+  useEffect(() => {
+      const fetchMenu = async () => {
+          try {
+              setLoadingMenu(true);
+              const data = await menuAPI.getAll();
+              setMenuItems(data?.data || (Array.isArray(data) ? data : []));
+          } catch (err) {
+              console.error("Failed to load menu:", err);
+          } finally {
+              setLoadingMenu(false);
+          }
+      };
+      fetchMenu();
+  }, []); // Run once on mount
+
+  // Cart Actions
+  const addToCart = async (item) => {
+      setCart(prev => {
+          let newCart = [];
+          const existing = prev.find(i => i.id === item.id);
+          if (existing) {
+              newCart = prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+          } else {
+              newCart = [...prev, { ...item, qty: 1 }];
+          }
+
+          // Persist immediately (fire and forget)
+          if (session) {
+             const sessionId = session.active_id || session.activeid;
+             activeTablesAPI.update(sessionId, { food_orders: newCart }).catch(e => {
+                 console.error("Failed to persist cart:", e);
+             });
+          }
+          
+          return newCart;
+      });
+
+      // TRIGGER KITCHEN ORDER
+      if (session) {
+        try {
+             // We use a small timeout or just fire it
+             const orderPayload = {
+                 session_id: session.active_id || session.activeid,
+                 table_id: session.tableid || session.table_id,
+                 personName: session.customer_name || session.customername || "Table Customer",
+                 order_source: 'active_session',
+                 status: 'pending',
+                 payment_status: 'pending',
+                 total: Number(item.price),
+                 items: [{
+                     menu_item_id: item.id,
+                     quantity: 1,
+                     price: Number(item.price)
+                 }]
+             };
+             ordersAPI.create(orderPayload).catch(e => console.error("Kitchen order trigger failed", e));
+        } catch (err) {
+            console.error("Order trigger error", err);
         }
-    });
-
-    if (itemsToAdd.length === 0) {
-        alert("No new items to update.");
-        return;
-    }
-
-    try {
-        setGenerating(true); // Reuse generating state for loading
-        await ordersAPI.addItems(activeOrderId, itemsToAdd);
-        
-        // Update saved items reference
-        const newSavedItems = { ...savedItems };
-        itemsToAdd.forEach(item => {
-            newSavedItems[item.id] = (newSavedItems[item.id] || 0) + item.qty;
-        });
-        setSavedItems(newSavedItems);
-        
-        alert("Order updated successfully!");
-    } catch (err) {
-        console.error("Failed to update order:", err);
-        alert("Failed to update order. Please try again.");
-    } finally {
-        setGenerating(false);
     }
   };
 
-  // Handle generate bill click (with confirmation)
+  const updateCartQty = async (itemId, change) => {
+      setCart(prev => {
+          const newCart = prev.map(item => {
+              if (item.id === itemId) {
+                  const newQty = Math.max(0, item.qty + change);
+                  return { ...item, qty: newQty };
+              }
+              return item;
+          }).filter(item => item.qty > 0);
+
+          // Persist immediately
+          if (session) {
+             const sessionId = session.active_id || session.activeid;
+             activeTablesAPI.update(sessionId, { food_orders: newCart }).catch(e => {
+                 console.error("Failed to persist cart quantity:", e);
+             });
+          }
+          
+          return newCart;
+      });
+
+      // TRIGGER KITCHEN ORDER (Only on Add)
+      if (change > 0 && session) {
+        try {
+            const menuItem = menuItems.find(m => m.id === itemId);
+            if (menuItem) {
+                 const orderPayload = {
+                     session_id: session.active_id || session.activeid,
+                     table_id: session.tableid || session.table_id,
+                     personName: session.customer_name || session.customername || "Table Customer",
+                     order_source: 'active_session',
+                     status: 'pending', 
+                     payment_status: 'pending', 
+                     total: Number(menuItem.price),
+                     items: [{
+                         menu_item_id: menuItem.id,
+                         quantity: change,
+                         price: Number(menuItem.price)
+                     }]
+                 };
+                 ordersAPI.create(orderPayload).catch(e => console.error("Kitchen order trigger failed", e));
+            }
+        } catch (err) {
+            console.error("Order trigger error", err);
+        }
+    }
+  };
+
+  const handleAddTimeSubmit = async () => {
+      if (!session) return;
+      try {
+          setGenerating(true);
+          const addedMinutes = Number(manualTime);
+          
+          // Current accumulated duration or specific duration update
+          // Usually we update 'duration_minutes' in DB
+          const newDuration = (session.duration_minutes || session.durationminutes || 0) + addedMinutes;
+          
+          const sessionId = session.active_id || session.activeid;
+          await activeTablesAPI.update(sessionId, { 
+              duration_minutes: newDuration 
+          });
+          
+          // Update local state immediately for responsiveness
+          setSession(prev => ({ 
+              ...prev, 
+              duration_minutes: newDuration,
+              durationminutes: newDuration
+          }));
+          
+          setShowTimeModal(false);
+          alert(`Added ${addedMinutes} minutes to session.`);
+      } catch (err) {
+          console.error("Failed to add time:", err);
+          alert("Failed to update session time.");
+      } finally {
+          setGenerating(false);
+      }
+  };
+
+  const handleAddFramesSubmit = async () => {
+      if (!session) return;
+      try {
+          setGenerating(true);
+          const added = Number(framesToAdd);
+          const newCount = (session.frame_count || session.framecount || 0) + added;
+          
+          const sessionId = session.active_id || session.activeid;
+          await activeTablesAPI.update(sessionId, { 
+              frame_count: newCount 
+          });
+          
+          setSession(prev => ({ 
+              ...prev, 
+              frame_count: newCount,
+              framecount: newCount
+          }));
+          
+          setShowFrameModal(false);
+      } catch (err) {
+          console.error("Failed to add frames:", err);
+          alert("Failed to update frames.");
+      } finally {
+          setGenerating(false);
+      }
+  };
+
+
+  // Handle generate bill click (with confirmation and Early Exit logic)
   const handleGenerateBillClick = () => {
-      const isPaid = grandTotal <= advancePayment && grandTotal > 0;
+      // Check for Early Exit in Timer Mode (booked time > elapsed time + buffer)
+      // Buffer of 1 minute to avoid minor timing differences
+      const durationMins = session?.duration_minutes || session?.durationminutes || 0;
+      const isEarlyExit = isTimerMode && session && (durationMins > elapsedMinutes + 1);
+
+      if (isEarlyExit) {
+          const bookedDuration = durationMins;
+          const actualDuration = elapsedMinutes;
+          
+          // Calculate costs
+          const bookedCost = bookedDuration * pricePerMin;
+          const actualCost = actualDuration * pricePerMin;
+
+          setEarlyExitData({
+              bookedDuration,
+              actualDuration,
+              bookedCost,
+              actualCost,
+              pricePerMin
+          });
+          setShowEarlyExitModal(true);
+          return;
+      }
+
+      // Normal flow
+      showBillConfirmation();
+  };
+
+  const showBillConfirmation = (overrideDuration = null) => {
+      // Recalculate based on override if present
+      let finalTableCost = tableCost;
+      let finalGrandTotal = grandTotal;
+      let durationText = "";
+
+      if (overrideDuration !== null) {
+          const cost = overrideDuration * pricePerMin; // Assuming not frame mode if override is used (only for timer mode)
+          finalTableCost = cost;
+          finalGrandTotal = finalTableCost + cartTotal;
+          durationText = ` (${overrideDuration} mins)`;
+      }
+
+      const isPaid = finalGrandTotal <= advancePayment && finalGrandTotal > 0;
       const actionText = isPaid ? "End Session" : "Generate Bill";
+      
       const confirmMessage = `
         <div style="text-align: left">
-           <p>Are you sure you want to finish this session?</p>
+           <p>Are you sure you want to finish this session?${durationText}</p>
            <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
-              <p><strong>Total Bill:</strong> ₹${grandTotal.toFixed(2)}</p>
+              <p><strong>Total Bill:</strong> ₹${finalGrandTotal.toFixed(2)}</p>
               ${advancePayment > 0 ? `<p style="color: #f59e0b"><strong>Advance Paid:</strong> -₹${advancePayment.toFixed(2)}</p>` : ''}
-              <p style="font-size: 1.1em; margin-top: 6px;"><strong>To Pay:</strong> ₹${Math.max(0, grandTotal - advancePayment).toFixed(2)}</p>
+              <p style="font-size: 1.1em; margin-top: 6px;"><strong>To Pay:</strong> ₹${Math.max(0, finalGrandTotal - advancePayment).toFixed(2)}</p>
            </div>
         </div>
       `;
@@ -678,41 +581,70 @@ const ActiveSession = () => {
       showConfirm(
           `${actionText}?`, 
           confirmMessage, 
-          () => processGenerateBill(),
+          () => processGenerateBill(overrideDuration),
           actionText,
           "confirm",
           true
       );
   };
 
+  // Effect to handle auto-bill trigger
+  useEffect(() => {
+    if (shouldAutoBill) {
+        showBillConfirmation();
+        setShouldAutoBill(false);
+    }
+  }, [shouldAutoBill]);
+
+  // Handle Early Exit Selection
+  const handleEarlyExitSelection = (choice) => {
+      setShowEarlyExitModal(false);
+      if (choice === 'full') {
+          // Charge for full booked time (no override needed, uses logic default)
+          showBillConfirmation(null);
+      } else {
+          // Charge for actual elapsed time
+          showBillConfirmation(earlyExitData.actualDuration);
+      }
+  };
+
   // Actual Bill Generation Logic (moved from handleGenerateBill)
-  const processGenerateBill = async () => {
+  const processGenerateBill = async (overrideDuration = null) => {
     if (!session) return;
 
     try {
       setGenerating(true);
       setError("");
 
+      const sessionId = session.active_id || session.activeid;
+      if (!sessionId) {
+          throw new Error("Invalid session ID");
+      }
+
       // Normalize price fields again for consistency
       const pricePerMin = Number(tableInfo?.pricePerMin ?? tableInfo?.pricepermin ?? tableInfo?.price_per_min ?? 0);
       const frameCharge = Number(tableInfo?.frameCharge ?? tableInfo?.framecharge ?? tableInfo?.frame_charge ?? 0);
 
+      // Determine final duration
+      // If override provided, use it.
+      // Else if frame mode, 0.
+      // Else use billingMinutes (which is set to session.duration in timer mode, or elapsed in stopwatch)
+      const finalDuration = overrideDuration !== null 
+          ? overrideDuration 
+          : (isFrameMode ? 0 : billingMinutes);
+
       // Create comprehensive bill with table charges + food items
-      // For frame mode: use frame_count * frameCharge (no time-based billing)
-      // For timer mode: use booked duration * pricePerMin
-      // For stopwatch mode: use elapsed time * pricePerMin
       const billResponse = await billingAPI.create({
         customer_name: session.customer_name || "Walk-in Customer",
         table_id: tableId,
-        session_id: session.active_id,
-        // For frame mode, session_duration is 0 (billing is by frames, not time)
-        session_duration: isFrameMode ? 0 : billingMinutes,
+        session_id: sessionId,
+        session_duration: finalDuration,
         table_price_per_min: isFrameMode ? 0 : pricePerMin,
         // Frame charges: frameCount * frameCharge for frame mode, 0 for other modes
         frame_charges: isFrameMode ? (frameCount * frameCharge) : 0,
         frame_count: isFrameMode ? frameCount : null,
-        booking_type: session.booking_type,
-        selected_menu_items: cart.map((item) => ({
+        booking_type: session.booking_type || session.bookingtype,
+        selected_menu_items: (cartRef.current || cart).map((item) => ({
           menu_item_id: item.id,
           quantity: item.qty,
         })),
@@ -721,10 +653,9 @@ const ActiveSession = () => {
       });
 
       // Stop the session and release the table (skip_bill=true to avoid duplicate bill)
-      await activeTablesAPI.stop({ active_id: session.active_id, skip_bill: true });
+      await activeTablesAPI.stop({ active_id: sessionId, skip_bill: true });
 
       // Pass the new bill ID to the billing page for highlighting
-      // The API likely returns the created bill object, check if it has id or _id or bill_id
       const newBillId = billResponse?.data?.id || billResponse?.id || billResponse?.bill?.id;
       
       navigate("/billing", { state: { billGenerated: true, newBillId } });
@@ -794,7 +725,9 @@ const ActiveSession = () => {
         setGenerating(true);
         setShowCancelModal(false);
         // Stop session with skip_bill flag to prevent bill generation
-        await activeTablesAPI.stop({ active_id: session.active_id, skip_bill: true });
+        const sessionId = session.active_id || session.activeid;
+        if (!sessionId) throw new Error("Invalid Session ID");
+        await activeTablesAPI.stop({ active_id: sessionId, skip_bill: true });
         
         navigate("/dashboard");
     } catch (err) {
@@ -836,9 +769,29 @@ const ActiveSession = () => {
         <div className="active-session-page">
           {/* Header */}
           <div className="session-header">
-            <button className="back-btn" onClick={() => navigate("/dashboard")}>←</button>
-            <h5>{game || "Snooker"}</h5>
-            <span className="table-code">{tableInfo?.name || `Table ${tableId}`}</span>
+            <div className="header-left">
+              <button className="back-btn" onClick={() => navigate("/dashboard")}>←</button>
+              <div className="header-title-group">
+                <h5>{game || "Snooker"}</h5>
+                <span className="table-code">{tableInfo?.name || `Table ${tableId}`}</span>
+              </div>
+            </div>
+
+            {/* Search Bar Moved to Header */}
+            <div className="food-search-bar header-search">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search food items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="clear-search" onClick={() => setSearchQuery("")}>
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
@@ -1068,28 +1021,43 @@ const ActiveSession = () => {
 
             {/* Right Column - Food Selection */}
             <div className="session-right-column">
+              {/* Item Type Switcher */}
+              <div className="item-type-tabs" style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '0 10px' }}>
+                  {ITEM_TYPES.map(type => (
+                      <button
+                          key={type.key}
+                          onClick={() => setActiveType(type.key)}
+                          style={{
+                              flex: 1,
+                              padding: '12px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              background: activeType === type.key ? '#F08626' : '#fff',
+                              color: activeType === type.key ? '#fff' : '#666',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              boxShadow: activeType === type.key ? '0 4px 12px rgba(240, 134, 38, 0.3)' : '0 2px 6px rgba(0,0,0,0.05)',
+                              transition: 'all 0.2s'
+                          }}
+                      >
+                          {type.icon}
+                          {type.label}
+                      </button>
+                  ))}
+              </div>
+
               {/* Category Tabs */}
               <FoodCategoryTabs 
                 selectedCategory={selectedCategory} 
                 onSelectCategory={setSelectedCategory} 
-                categories={computedCategories}
+                categories={[{ id: 'All', label: 'All', icon: <PlateIcon size={20} /> }, ...computedCategories]}
               />
               
-              {/* Search Bar */}
-              <div className="food-search-bar">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search food items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button className="clear-search" onClick={() => setSearchQuery("")}>
-                    ✕
-                  </button>
-                )}
-              </div>
+
 
               {/* Menu Items */}
               <div className="menu-items-list">
@@ -1360,6 +1328,88 @@ const ActiveSession = () => {
       </div>
     )}
 
+
+    {/* Early Exit Confirmation Modal */}
+    {showEarlyExitModal && earlyExitData && (
+       <div className="modal-overlay" style={{
+         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+         background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+         display: 'flex', alignItems: 'center', justifyContent: 'center',
+         backdropFilter: 'blur(4px)'
+       }}>
+         <div className="modal-content" style={{
+           background: 'white', padding: '24px', borderRadius: '20px',
+           width: '90%', maxWidth: '400px', textAlign: 'center',
+           boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+           animation: 'fadeIn 0.2s ease-out'
+         }}>
+            <div style={{
+               width: '50px', height: '50px', background: '#ffe0b2', borderRadius: '50%',
+               display: 'flex', alignItems: 'center', justifyContent: 'center',
+               margin: '0 auto 16px', color: '#f57c00', fontSize: '24px'
+            }}>
+               ⏱️
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', color: '#1a1a1a', fontSize: '20px', fontWeight: '700' }}>Early Exit Detected</h3>
+            <p style={{ color: '#666', marginBottom: '8px', fontSize: '14px', lineHeight: '1.5' }}>
+               This session was booked for <strong>{earlyExitData.bookedDuration} mins</strong>,<br/>
+               but currently only <strong>{earlyExitData.actualDuration} mins</strong> have elapsed.
+            </p>
+            <p style={{ color: '#333', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
+               How would you like to bill?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+               {/* Option 1: Actual Time */}
+               <button onClick={() => handleEarlyExitSelection('actual')} style={{
+                 padding: '16px', borderRadius: '12px', border: '1px solid #e0e0e0', 
+                 background: '#fff', textAlign: 'left', cursor: 'pointer',
+                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                 transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+               }}
+               onMouseOver={(e) => e.currentTarget.style.borderColor = '#4caf50'}
+               onMouseOut={(e) => e.currentTarget.style.borderColor = '#e0e0e0'}
+               >
+                  <div>
+                     <div style={{ fontWeight: '700', color: '#333', marginBottom: '4px' }}>Actual Time ({earlyExitData.actualDuration}m)</div>
+                     <div style={{ fontSize: '12px', color: '#666' }}>Pay only for time played</div>
+                  </div>
+                  <div style={{ fontWeight: '700', color: '#4caf50', fontSize: '16px' }}>
+                     ₹{earlyExitData.actualCost.toFixed(2)}
+                  </div>
+               </button>
+
+               {/* Option 2: Full Time */}
+               <button onClick={() => handleEarlyExitSelection('full')} style={{
+                 padding: '16px', borderRadius: '12px', border: '1px solid #e0e0e0', 
+                 background: '#fcfcfc', textAlign: 'left', cursor: 'pointer',
+                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                 transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+               }}
+               onMouseOver={(e) => e.currentTarget.style.borderColor = '#f57c00'}
+               onMouseOut={(e) => e.currentTarget.style.borderColor = '#e0e0e0'}
+               >
+                  <div>
+                     <div style={{ fontWeight: '700', color: '#333', marginBottom: '4px' }}>Full Booking ({earlyExitData.bookedDuration}m)</div>
+                     <div style={{ fontSize: '12px', color: '#666' }}>Pay for full booked session</div>
+                  </div>
+                  <div style={{ fontWeight: '700', color: '#333', fontSize: '16px' }}>
+                     ₹{earlyExitData.bookedCost.toFixed(2)}
+                  </div>
+               </button>
+            </div>
+            
+            <button onClick={() => setShowEarlyExitModal(false)} style={{
+               marginTop: '20px',
+               padding: '12px', width: '100%',
+               border: 'none', background: 'transparent',
+               color: '#999', cursor: 'pointer', fontSize: '14px'
+            }}>
+               Cancel
+            </button>
+         </div>
+       </div>
+    )}
 
     {/* Cancel Booking Confirmation Modal */}
     {showCancelModal && (

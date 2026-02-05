@@ -23,6 +23,7 @@ import MemberDetail from "../pages/members/MemberDetail";
 import TableBooking from "../pages/tables/TableBooking";
 import ActiveSession from "../pages/tables/ActiveSession";
 import StaffOrders from "../pages/staff/StaffOrders";
+import EmployeeAttendance from "../pages/attendance/EmployeeAttendance"; // Import new page
 import AdminDashboard from "../pages/admin/AdminDashboard";
 
 const AppRoutes = () => {
@@ -107,7 +108,6 @@ const AppRoutes = () => {
         <Route path="/inventory" element={<InventoryTracking />} />
         <Route path="/members" element={<Members />} />
         <Route path="/members/:id" element={<MemberDetail />} />
-
         <Route path="/tables/:game/:tableId" element={<TableBooking />} />
         <Route path="/session/:game/:tableId" element={<ActiveSession />} />
         <Route
