@@ -6,6 +6,12 @@ const ReservationModal = ({ isOpen, onClose, onSuccess, reservationToEdit = null
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Missing State Declarations
+  const [loadingData, setLoadingData] = useState(false);
+  const [games, setGames] = useState([]);
+  const [tables, setTables] = useState([]);
+  const [filteredTables, setFilteredTables] = useState([]);
+
   // Form state
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");

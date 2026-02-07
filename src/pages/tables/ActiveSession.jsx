@@ -588,13 +588,7 @@ const ActiveSession = () => {
       );
   };
 
-  // Effect to handle auto-bill trigger
-  useEffect(() => {
-    if (shouldAutoBill) {
-        showBillConfirmation();
-        setShouldAutoBill(false);
-    }
-  }, [shouldAutoBill]);
+
 
   // Handle Early Exit Selection
   const handleEarlyExitSelection = (choice) => {
@@ -666,6 +660,15 @@ const ActiveSession = () => {
       setGenerating(false);
     }
   };
+
+  // Effect to handle auto-bill trigger (Moved here to access processGenerateBill)
+  useEffect(() => {
+    if (shouldAutoBill) {
+        // Auto-generate bill without confirmation for timer expiry
+        processGenerateBill();
+        setShouldAutoBill(false);
+    }
+  }, [shouldAutoBill]);
 
   // Fetch linked reservation to check for advance payment
   useEffect(() => {

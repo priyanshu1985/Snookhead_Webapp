@@ -15,6 +15,7 @@ import {
   EditIcon,
   DeleteIcon,
 } from "../common/Icons";
+import ConfirmationModal from "../common/ConfirmationModal";
 import "../../styles/setupMenuCardList.css";
 
 const MenuItems = () => {
@@ -25,6 +26,10 @@ const MenuItems = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const categoriesRef = useRef(null);
+
+  // Confirmation Modal State
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Main types (Tabs)
   const ITEM_TYPES = [
@@ -164,6 +169,50 @@ const MenuItems = () => {
       setShowModal(true);
   };
   
+  const handleDeleteCategory = (e, categoryName) => {
+      e.stopPropagation(); // Prevent activating the tab
+      setCategoryToDelete(categoryName);
+      setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+      if (!categoryToDelete) return;
+      
+      const categoryName = categoryToDelete;
+      
+      try {
+          // Identify items to delete
+          const itemsToDelete = items.filter(item => item.category === categoryName);
+          
+          if (itemsToDelete.length > 0) {
+              setLoading(true);
+              // Delete all items sequentially to avoid overwhelming server or hitting rate limits
+              await Promise.all(itemsToDelete.map(item => menuAPI.delete(item.id)));
+          }
+          
+          // Update items state
+          setItems(prev => prev.filter(item => item.category !== categoryName));
+          
+          // Also remove from tempCategories if it was just created and empty
+          setTempCategories(prev => prev.filter(tc => tc.name !== categoryName));
+          
+          // If active, switch to another or clear
+          if (activeCategory === categoryName) {
+              const remaining = sortedCategories.filter(c => c !== categoryName);
+              setActiveCategory(remaining.length > 0 ? remaining[0] : "");
+          }
+          
+      } catch (err) {
+          console.error("Failed to delete category:", err);
+          alert("Failed to delete category. Some items might not have been deleted.");
+          fetchItems(); // Refresh to be sure
+      } finally {
+          setLoading(false);
+          setShowDeleteConfirm(false);
+          setCategoryToDelete(null);
+      }
+  };
+  
   // Categories to display
   const displayCategories = activeCategory ? [activeCategory] : [];
 
@@ -245,29 +294,51 @@ const MenuItems = () => {
               scrollbarWidth: 'none' 
           }}>
               {sortedCategories.map(cat => (
-                  <button
+                  <div    
                       key={cat}
                       className={`subcat-pill ${activeCategory === cat ? "active" : ""}`}
                       onClick={() => setActiveCategory(cat)}
                       style={{
-                          padding: '4px 12px', /* Reduced padding */
+                          padding: '4px 8px 4px 12px', /* Adjusted padding for delete btn */
                           borderRadius: '16px',
                           border: 'none',
                           background: activeCategory === cat ? '#F08626' : '#f3f4f6',
                           color: activeCategory === cat ? 'white' : '#4b5563',
-                          fontSize: '11px', /* Smaller font */
+                          fontSize: '11px', 
                           fontWeight: '600',
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           boxShadow: activeCategory === cat ? '0 1px 3px rgba(240, 134, 38, 0.3)' : 'none',
                           transition: 'all 0.2s',
-                          height: '28px', /* Ensure fixed small height */
+                          height: '28px', 
                           display: 'flex',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          gap: '6px'
                       }}
                   >
-                      {cat}
-                  </button>
+                      <span>{cat}</span>
+                      {/* Delete Category Button */ }
+                      <span 
+                          onClick={(e) => handleDeleteCategory(e, cat)}
+                          title="Delete Category"
+                          style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '50%',
+                              background: activeCategory === cat ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                              color: activeCategory === cat ? '#fff' : '#666',
+                              fontSize: '14px',
+                              lineHeight: '1',
+                              cursor: 'pointer'
+                          }}
+                          className="hover-bright"
+                      >
+                          &times;
+                      </span>
+                  </div>
               ))}
           </div>
       )}
@@ -410,6 +481,18 @@ const MenuItems = () => {
           categories={sortedCategories}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Category?"
+        message={`Are you sure you want to delete the "${categoryToDelete}" category? This will PERMANENTLY DELETE ALL ${groupedItems[categoryToDelete]?.length || 0} items in it.`}
+        onConfirm={confirmDeleteCategory}
+        confirmText="Delete Everything"
+        cancelText="Cancel"
+        type="alert"
+      />
     </div>
   );
 };

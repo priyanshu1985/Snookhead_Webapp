@@ -340,16 +340,18 @@ const Bookings = () => {
 
               {/* Waiting Queue Section */}
               <h6 style={{ marginTop: "20px", marginBottom: "10px", color: "#F08626" }}>
-                Waiting Queue ({queueList.length})
+                Waiting Queue ({queueList.filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id).length})
               </h6>
-              {queueList.length === 0 ? (
+              {queueList.filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id).length === 0 ? (
                 <div className="empty-state">
-                  <p>No one in queue</p>
+                  <p>No one else in queue</p>
                   <span>Click the button below to add someone to the queue</span>
                 </div>
               ) : (
                 <div className="queue-list">
-                  {queueList.map((item, index) => (
+                  {queueList
+                    .filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id)
+                    .map((item, index) => (
                     <div className="queue-item" key={item.id}>
                       <div className="queue-left">
                         <span className="queue-number">{index + 1}.</span>

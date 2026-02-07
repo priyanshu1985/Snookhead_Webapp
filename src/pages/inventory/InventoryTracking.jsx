@@ -19,7 +19,6 @@ import "../../styles/inventoryTracking.css";
 import "../../styles/setupMenuCardList.css";
 
 const categories = [
-  { key: "prepared", label: "Prepared Food", Icon: PreparedFoodIcon },
   { key: "packed", label: "Packed Food", Icon: PackedFoodIcon },
 ];
 
@@ -28,7 +27,7 @@ const InventoryTracking = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeCategory, setActiveCategory] = useState("prepared");
+  const [activeCategory, setActiveCategory] = useState("packed");
   const [search, setSearch] = useState("");
   const categoriesRef = useRef(null);
 
@@ -142,20 +141,62 @@ const InventoryTracking = () => {
   };
 
 
-  const getFilteredItems = () => {
-    let filtered = items.filter((item) => item.category === activeCategory);
-    
-    if (search) {
-      const lowerSearch = search.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.name.toLowerCase().includes(lowerSearch)
-      );
-    }
-    
-    return filtered;
-  };
 
-  const filteredItems = getFilteredItems();
+  const [activeSubCategory, setActiveSubCategory] = useState("All");
+
+
+  const { subCategories, groupedItems } = (() => {
+      // 1. Filter by Active Main Category (Prepared / Packed)
+      const mainFiltered = items.filter(item => {
+          const type = item.item_type || 'prepared';
+          return type === activeCategory;
+      });
+
+      // 2. Get available sub-categories for this main category
+      const availableSubCats = new Set(mainFiltered.map(i => i.category || 'Uncategorized'));
+      const subCats = Array.from(availableSubCats).sort();
+
+      // 3. Determine meaningful active sub-category
+      // If "All" or invalid, default to first available
+      let currentActive = activeSubCategory;
+      if (currentActive === "All" || !subCats.includes(currentActive)) {
+           if (subCats.length > 0) {
+               currentActive = subCats[0];
+               // Side-effect: Sync state (in render this is risky, but for derived view it's ok)
+               // Better: just use currentActive for filtering, and useEffect will sync activeSubCategory
+           }
+      }
+
+      // 4. Filter by Sub-Category
+      let subCatFiltered = mainFiltered;
+      if (currentActive) {
+          subCatFiltered = mainFiltered.filter(item => (item.category || 'Uncategorized') === currentActive);
+      }
+
+      // 5. Filter by Search
+      const searchFiltered = search 
+          ? subCatFiltered.filter(item => item.name.toLowerCase().includes(search.toLowerCase()))
+          : subCatFiltered;
+
+      // 6. Group by Sub-Category
+      const groups = {};
+      searchFiltered.forEach(item => {
+          const cat = item.category || 'Uncategorized';
+          if (!groups[cat]) groups[cat] = [];
+          groups[cat].push(item);
+      });
+
+      return { subCategories: subCats, groupedItems: groups };
+  })();
+
+  // Sync activeSubCategory when main category changes or if it becomes invalid
+  useEffect(() => {
+      if (subCategories.length > 0 && (!activeSubCategory || !subCategories.includes(activeSubCategory) || activeSubCategory === "All")) {
+          setActiveSubCategory(subCategories[0]);
+      }
+  }, [activeCategory, subCategories, activeSubCategory]);
+
+  const hasItems = Object.keys(groupedItems).length > 0;
 
   return (
     <div className="dashboard-wrapper">
@@ -187,9 +228,10 @@ const InventoryTracking = () => {
            <div className="menu-tab">
               {error && <div className="alert alert-danger">{error}</div>}
 
+              {/* Top Level Tabs: Prepared vs Packed */}
               <div className="menu-categories-wrapper">
-                <div className="menu-categories" ref={categoriesRef}>
-                  {computedCategories.map((cat) => {
+                <div className="menu-categories">
+                  {categories.map((cat) => {
                     const IconComponent = cat.Icon;
                     return (
                       <span
@@ -207,6 +249,37 @@ const InventoryTracking = () => {
                 </div>
               </div>
 
+              {/* Sub-Category Horizontal Scrollable List */}
+              {subCategories.length > 0 && (
+                <div className="sub-categories-wrapper" style={{ 
+                    overflowX: 'auto', 
+                    whiteSpace: 'nowrap', 
+                    marginBottom: '20px',
+                    paddingBottom: '5px' 
+                }}>
+                    {subCategories.map(subCat => (
+                        <button 
+                            key={subCat}
+                            onClick={() => setActiveSubCategory(subCat)}
+                            style={{
+                                padding: '8px 16px',
+                                marginRight: '10px',
+                                borderRadius: '20px',
+                                border: '1px solid #eee',
+                                background: activeSubCategory === subCat ? '#f08626' : '#fff',
+                                color: activeSubCategory === subCat ? '#fff' : '#666',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {subCat}
+                        </button>
+                    ))}
+                </div>
+              )}
+
               {loading ? (
                 <div className="loading-state" style={{ padding: '40px', textAlign: 'center' }}>
                   <LoadingIcon size={40} />
@@ -214,76 +287,80 @@ const InventoryTracking = () => {
                 </div>
               ) : (
                 <div className="setup-card-list">
-                  {filteredItems.length > 0 && (
-                    <div className="setup-list-header">
-                      <span style={{ width: '40px' }}>#</span>
-                      <span style={{ flex: 2 }}>Item Details</span>
-                      <span style={{ width: '120px', textAlign: 'center' }}>Current Stock</span>
-                      <span style={{ width: '150px', justifyContent: 'flex-end', textAlign: 'right' }}>Actions</span>
-                    </div>
-                  )}
-
-                  {filteredItems.length === 0 ? (
+                  {!hasItems ? (
                      <div className="no-data" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                         <p>No items found in this category.</p>
                      </div>
                   ) : (
-                    filteredItems.map((item, index) => {
-                      const isLowStock = (item.stock || 0) <= (item.threshold || 5);
-                      
-                      return (
-                        <div className="setup-card-item" key={item.id}>
-                          <div className="setup-card-index">{index + 1}</div>
-                          
-                          <div className="setup-card-details">
-                            <div className="card-title-row">
-                              <span className="card-icon-small">
-                                 <PlateIcon size={14} />
-                              </span>
-                              <h6>{item.name}</h6>
+                    Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
+                        <div key={categoryName} style={{ marginBottom: '30px' }}>
+                            {/* Removed Header as per request */}
+                            
+                            <div className="setup-list-header">
+                              <span style={{ width: '40px' }}>#</span>
+                              <span style={{ flex: 2 }}>Item Details</span>
+                              <span style={{ width: '120px', textAlign: 'center' }}>Current Stock</span>
+                              <span style={{ width: '150px', justifyContent: 'flex-end', textAlign: 'right' }}>Actions</span>
                             </div>
-                            <div className="card-subtitle-row">
-                              <span>₹{item.price}</span>
-                              {item.purchasePrice && (
-                                <>
-                                  <span className="separator">•</span>
-                                  <span style={{ color: '#666', fontSize: '11px' }}>Buy: ₹{item.purchasePrice}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
 
-                          {/* Stock Display */}
-                          <div className="setup-card-status" style={{ justifyContent: 'center', flexDirection: 'column', gap: '4px' }}>
-                             <span style={{ 
-                               fontSize: '18px', 
-                               fontWeight: '600', 
-                               color: isLowStock ? '#ff4444' : '#22c55e'
-                             }}>
-                               {item.stock || 0}
-                             </span>
-                             {isLowStock && <span style={{ fontSize: '10px', color: '#ff4444' }}>Low Stock</span>}
-                          </div>
+                            {categoryItems.map((item, index) => {
+                              const isLowStock = (item.stock || 0) <= (item.threshold || 5);
+                              
+                              return (
+                                <div className="setup-card-item" key={item.id}>
+                                  <div className="setup-card-index">{index + 1}</div>
+                                  
+                                  <div className="setup-card-details">
+                                    <div className="card-title-row">
+                                      <span className="card-icon-small">
+                                         <PlateIcon size={14} />
+                                      </span>
+                                      <h6>{item.name}</h6>
+                                    </div>
+                                    <div className="card-subtitle-row">
+                                      <span>₹{item.price}</span>
+                                      {item.purchasePrice && (
+                                        <>
+                                          <span className="separator">•</span>
+                                          <span style={{ color: '#666', fontSize: '11px' }}>Buy: ₹{item.purchasePrice}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
 
-                          {/* Add Stock Action */}
-                          <div className="setup-card-actions">
-                            <button 
-                              onClick={() => openStockModal(item)}
-                              className="primary-btn"
-                              style={{ 
-                                padding: '6px 12px', 
-                                fontSize: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                            >
-                              + Add Stock
-                            </button>
-                          </div>
+                                  {/* Stock Display */}
+                                  <div className="setup-card-status" style={{ justifyContent: 'center', flexDirection: 'column', gap: '4px' }}>
+                                     <span style={{ 
+                                       fontSize: '18px', 
+                                       fontWeight: '600', 
+                                       color: isLowStock ? '#ff4444' : '#22c55e'
+                                     }}>
+                                       {item.stock || 0}
+                                     </span>
+                                     {isLowStock && <span style={{ fontSize: '10px', color: '#ff4444' }}>Low Stock</span>}
+                                  </div>
+
+                                  {/* Add Stock Action */}
+                                  <div className="setup-card-actions">
+                                    <button 
+                                      onClick={() => openStockModal(item)}
+                                      className="primary-btn"
+                                      style={{ 
+                                        padding: '6px 12px', 
+                                        fontSize: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                    >
+                                      + Add Stock
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                         </div>
-                      );
-                    })
+                    ))
                   )}
                 </div>
               )}

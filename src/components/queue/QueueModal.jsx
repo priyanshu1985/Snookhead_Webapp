@@ -192,10 +192,6 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
       setError("Customer name is required");
       return;
     }
-    if (!phone.trim()) {
-      setError("Phone number is required");
-      return;
-    }
     if (!selectedGame) {
       setError("Please select a game");
       return;
@@ -322,7 +318,7 @@ const QueueModal = ({ isOpen, onClose, onSuccess }) => {
 
               {/* Phone */}
               <div className="form-group">
-                <label>Phone Number *</label>
+                <label>Phone Number </label>
                 <input
                   type="tel"
                   value={phone}

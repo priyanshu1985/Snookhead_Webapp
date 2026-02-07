@@ -44,7 +44,12 @@ const GlobalAutoRelease = () => {
                                     detail: { activeId, reason: 'auto-release' } 
                                 }));
                             } catch (e) {
-                                console.error("[Global Auto-Release] Failed:", e);
+                                // Ignore "Session is not active" error as it means it was already released (race condition with ActiveSession.jsx)
+                                if (e.message && e.message.includes("Session is not active")) {
+                                    console.log("[Global Auto-Release] Session already active/released by another process.");
+                                } else {
+                                    console.error("[Global Auto-Release] Failed:", e);
+                                }
                             }
                         }
                     }
