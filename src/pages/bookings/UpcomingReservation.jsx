@@ -196,35 +196,45 @@ const UpcomingReservation = () => {
                     <span className="date">{formatDate(reservationTime)}</span>
                     <span className="time">{formatTime(reservationTime)}</span>
 
-                    <button
-                      className="edit-btn"
-                      onClick={() => {
-                          setShowModal(true);
-                          setReservationToEdit(item);
-                      }}
-                      title="Edit reservation"
-                      style={{ 
-                          marginRight: '10px',
-                          padding: '6px 12px',
-                          background: '#fff',
-                          border: '1px solid #F08626',
-                          borderRadius: '6px',
-                          color: '#F08626',
-                          cursor: 'pointer',
-                          fontWeight: '600'
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="cancel-btn"
-                      onClick={() => handleCancel(item.id)}
-                      title="Cancel reservation"
-                      disabled={processingId === item.id}
-                      style={{ opacity: processingId === item.id ? 0.7 : 1, cursor: processingId === item.id ? 'not-allowed' : 'pointer' }}
-                    >
-                      {processingId === item.id ? "..." : "Cancel"}
-                    </button>
+                    <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        className="edit-btn"
+                        onClick={() => {
+                            setShowModal(true);
+                            setReservationToEdit(item);
+                        }}
+                        title="Edit reservation"
+                        style={{ 
+                            padding: '6px 12px',
+                            background: '#fff',
+                            border: '1px solid #F08626',
+                            borderRadius: '6px',
+                            color: '#F08626',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="cancel-btn"
+                        onClick={() => handleCancel(item.id)}
+                        title="Cancel reservation"
+                        disabled={processingId === item.id}
+                        style={{ 
+                            padding: '6px 12px', 
+                            background: '#fff', 
+                            border: '1px solid #dc3545', 
+                            borderRadius: '6px', 
+                            color: '#dc3545', 
+                            cursor: processingId === item.id ? 'not-allowed' : 'pointer',
+                            fontWeight: '600',
+                            opacity: processingId === item.id ? 0.7 : 1
+                        }}
+                      >
+                        {processingId === item.id ? "..." : "Cancel"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}

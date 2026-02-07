@@ -6,28 +6,14 @@ import "../../styles/creategame.css";
 
 
 const CreateMenuPopUp = ({ onClose, onSubmit, initialData, categories }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    item_type: "prepared", // Default
-    price: "",
-    purchasePrice: "",
-    image_url: "",
-  });
-
-  // Populate form if editing
-  useState(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name || "",
-        category: initialData.category || "",
-        item_type: initialData.item_type || "prepared",
-        price: initialData.price || "",
-        purchasePrice: initialData.purchasePrice || "",
-        image_url: initialData.imageUrl || initialData.image_url || initialData.imageurl || "",
-      });
-    }
-  }, [initialData]);
+  const [formData, setFormData] = useState(() => ({
+    name: initialData?.name || "",
+    category: initialData?.category || "",
+    item_type: initialData?.item_type || "prepared", // Default to prepared if not specified
+    price: initialData?.price || "",
+    purchasePrice: initialData?.purchasePrice || "",
+    image_url: initialData?.imageUrl || initialData?.image_url || initialData?.imageurl || "",
+  }));
 
   const [stockImages, setStockImages] = useState([]);
 
@@ -110,8 +96,58 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData, categories }) => {
             />
           </div>
 
-            {/* Hidden Item Type */}
-            <input type="hidden" name="item_type" value={formData.item_type} />
+            {/* Food Type Selection */}
+            <div className="form-group">
+              <label>Food Type *</label>
+              <div className="booking-type-options" style={{ display: 'flex', gap: '10px' }}>
+                <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, item_type: "prepared" }))}
+                    className={`type-select-btn ${formData.item_type === "prepared" ? "active" : ""}`}
+                    style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: formData.item_type === "prepared" ? '2px solid #F08626' : '1px solid #e5e7eb',
+                        background: formData.item_type === "prepared" ? '#FFF3E0' : '#fff',
+                        color: formData.item_type === "prepared" ? '#F08626' : '#374151',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontWeight: '600',
+                        fontSize: '13px'
+                    }}
+                >
+                    <PreparedFoodIcon size={18} />
+                    Prepared
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, item_type: "packed" }))}
+                    className={`type-select-btn ${formData.item_type === "packed" ? "active" : ""}`}
+                    style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: formData.item_type === "packed" ? '2px solid #F08626' : '1px solid #e5e7eb',
+                        background: formData.item_type === "packed" ? '#FFF3E0' : '#fff',
+                        color: formData.item_type === "packed" ? '#F08626' : '#374151',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontWeight: '600',
+                        fontSize: '13px'
+                    }}
+                >
+                    <PackedFoodIcon size={18} />
+                    Packed
+                </button>
+              </div>
+            </div>
 
            {/* Custom Category Input */}
            <div className="form-group">
