@@ -57,7 +57,7 @@ const FoodOrder = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cart, setCart] = useState([]);
-  
+
   // NEW: Type state
   const [activeType, setActiveType] = useState("prepared"); // 'prepared' | 'packed'
   const [activeCategory, setActiveCategory] = useState("");
@@ -79,17 +79,17 @@ const FoodOrder = () => {
 
       const exists = acc.some(cat => cat.key === item.category);
       if (!exists) {
-          // Use local categories config if available (for icons)
-          const defaultCat = categories.find(c => c.key === item.category);
-          if (defaultCat) {
-               acc.push(defaultCat);
-          } else {
-               acc.push({
-                  key: item.category,
-                  label: item.category,
-                  Icon: PlateIcon
-               });
-          }
+        // Use local categories config if available (for icons)
+        const defaultCat = categories.find(c => c.key === item.category);
+        if (defaultCat) {
+          acc.push(defaultCat);
+        } else {
+          acc.push({
+            key: item.category,
+            label: item.category,
+            Icon: PlateIcon
+          });
+        }
       }
       return acc;
     }, [])
@@ -98,10 +98,10 @@ const FoodOrder = () => {
   // Ensure active category is valid when type changes
   useEffect(() => {
     if (computedCategories.length > 0) {
-        // Default to first category
-        setActiveCategory(computedCategories[0].key);
+      // Default to first category
+      setActiveCategory(computedCategories[0].key);
     } else {
-        setActiveCategory("");
+      setActiveCategory("");
     }
   }, [activeType, menuItems]); // Re-run when type changes or items load
 
@@ -186,12 +186,12 @@ const FoodOrder = () => {
         setLoading(true);
         const data = await menuAPI.getAll();
         const items = data?.data || (Array.isArray(data) ? data : []);
-        
+
         // Sanitize image URLs
         const processedItems = items.map(item => {
           if (item.imageUrl && item.imageUrl.includes('localhost:4000')) {
-             const cleanUrl = item.imageUrl.replace(/https?:\/\/localhost:4000/g, IMAGE_BASE_URL);
-             return { ...item, imageUrl: cleanUrl };
+            const cleanUrl = item.imageUrl.replace(/https?:\/\/localhost:4000/g, IMAGE_BASE_URL);
+            return { ...item, imageUrl: cleanUrl };
           }
           return item;
         });
@@ -292,8 +292,20 @@ const FoodOrder = () => {
   };
 
   const addItem = (item) => {
+    // Check stock
+    if (item.stock !== undefined) {
+      if (item.stock <= 0) {
+        alert("This item is out of stock");
+        return;
+      }
+    }
+
     const exists = cart.find((c) => c.id === item.id);
     if (exists) {
+      if (item.stock !== undefined && exists.qty + 1 > item.stock) {
+        alert(`Only ${item.stock} items available`);
+        return;
+      }
       setCart(
         cart.map((c) => (c.id === item.id ? { ...c, qty: c.qty + 1 } : c))
       );
@@ -303,6 +315,17 @@ const FoodOrder = () => {
   };
 
   const updateQty = (id, type) => {
+    if (type === "inc") {
+      const itemInCart = cart.find(c => c.id === id);
+      const originalItem = menuItems.find(i => i.id === id);
+      if (itemInCart && originalItem && originalItem.stock !== undefined) {
+        if (itemInCart.qty + 1 > originalItem.stock) {
+          alert(`Only ${originalItem.stock} items available`);
+          return;
+        }
+      }
+    }
+
     setCart(
       cart
         .map((item) =>
@@ -351,14 +374,14 @@ const FoodOrder = () => {
 
       if (paymentMethod === "wallet") {
         if (!memberChecked || walletBalance === null) {
-           alert("Please verify member ID first");
-           setSubmitting(false);
-           return;
+          alert("Please verify member ID first");
+          setSubmitting(false);
+          return;
         }
         if (walletBalance < total) {
-           alert(`Insufficient wallet balance. Available: ₹${Number(walletBalance).toFixed(2)}`);
-           setSubmitting(false);
-           return;
+          alert(`Insufficient wallet balance. Available: ₹${Number(walletBalance).toFixed(2)}`);
+          setSubmitting(false);
+          return;
         }
         // Deduct from wallet before creating order
         await walletsAPI.deductMoney(memberId, total);
@@ -443,213 +466,234 @@ const FoodOrder = () => {
             <>
               {/* Type Switcher */}
               <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', padding: '0 20px' }}>
-                  <button 
-                     onClick={() => setActiveType('prepared')}
-                     style={{
-                         flex: 1,
-                         padding: '12px',
-                         borderRadius: '12px',
-                         background: activeType === 'prepared' ? '#F08626' : '#fff',
-                         color: activeType === 'prepared' ? '#fff' : '#333',
-                         border: activeType === 'prepared' ? 'none' : '1px solid #ddd',
-                         fontWeight: 'bold',
-                         cursor: 'pointer',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         gap: '10px',
-                         boxShadow: activeType === 'prepared' ? '0 4px 10px rgba(240, 134, 38, 0.3)' : 'none',
-                         transition: 'all 0.2s'
-                     }}
-                  >
-                      <PreparedFoodIcon size={20} /> Prepared Food
-                  </button>
-                  <button 
-                     onClick={() => setActiveType('packed')}
-                     style={{
-                         flex: 1,
-                         padding: '12px',
-                         borderRadius: '12px',
-                         background: activeType === 'packed' ? '#F08626' : '#fff',
-                         color: activeType === 'packed' ? '#fff' : '#333',
-                         border: activeType === 'packed' ? 'none' : '1px solid #ddd',
-                         fontWeight: 'bold',
-                         cursor: 'pointer',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         gap: '10px',
-                         boxShadow: activeType === 'packed' ? '0 4px 10px rgba(240, 134, 38, 0.3)' : 'none',
-                         transition: 'all 0.2s'
-                     }}
-                  >
-                      <PackedFoodIcon size={20} /> Packed Food
-                  </button>
+                <button
+                  onClick={() => setActiveType('prepared')}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: activeType === 'prepared' ? '#F08626' : '#fff',
+                    color: activeType === 'prepared' ? '#fff' : '#333',
+                    border: activeType === 'prepared' ? 'none' : '1px solid #ddd',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: activeType === 'prepared' ? '0 4px 10px rgba(240, 134, 38, 0.3)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <PreparedFoodIcon size={20} /> Prepared Food
+                </button>
+                <button
+                  onClick={() => setActiveType('packed')}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: activeType === 'packed' ? '#F08626' : '#fff',
+                    color: activeType === 'packed' ? '#fff' : '#333',
+                    border: activeType === 'packed' ? 'none' : '1px solid #ddd',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: activeType === 'packed' ? '0 4px 10px rgba(240, 134, 38, 0.3)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <PackedFoodIcon size={20} /> Packed Food
+                </button>
               </div>
 
-              <div className="food-layout-split" style={{ display: 'flex', gap: '20px', padding: '0 20px', height: 'calc(100vh - 230px)' }}> 
-                
+              <div className="food-layout-split" style={{ display: 'flex', gap: '20px', padding: '0 20px', height: 'calc(100vh - 230px)' }}>
+
                 {/* LEFT SIDE: Search + Category Sidebar + Grid */}
                 <div className="food-left-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    
-                    {/* Search Bar */}
-                    <div className="food-search-container" style={{ marginBottom: '15px' }}>
-                        <div className="food-search-box" style={{ maxWidth: '400px', width: '100%' }}>
-                        <span className="search-icon"><SearchIcon size={20} color="#93959f" /></span>
-                        <input
-                            type="text"
-                            placeholder="Search for food items..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        {searchQuery && (
-                            <button className="clear-search" onClick={() => setSearchQuery("")}>
-                            <CloseIcon size={12} color="#666" />
-                            </button>
-                        )}
+
+                  {/* Search Bar */}
+                  <div className="food-search-container" style={{ marginBottom: '15px' }}>
+                    <div className="food-search-box" style={{ maxWidth: '400px', width: '100%' }}>
+                      <span className="search-icon"><SearchIcon size={20} color="#93959f" /></span>
+                      <input
+                        type="text"
+                        placeholder="Search for food items..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <button className="clear-search" onClick={() => setSearchQuery("")}>
+                          <CloseIcon size={12} color="#666" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content Area (Sidebar + Grid) */}
+                  <div className="food-layout" style={{ display: 'flex', gap: '20px', flex: 1, overflow: 'hidden' }}>
+                    {/* Vertical Category Sidebar */}
+                    <div className="food-sidebar-categories" style={{
+                      width: '110px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      overflowY: 'auto',
+                      paddingRight: '5px',
+                      flexShrink: 0
+                    }}>
+                      {computedCategories.map((cat) => {
+                        const IconComponent = cat.Icon;
+                        const isActive = activeCategory === cat.key;
+                        return (
+                          <button
+                            key={cat.key}
+                            onClick={() => setActiveCategory(cat.key)}
+                            style={{
+                              padding: '10px 5px',
+                              borderRadius: '12px',
+                              background: isActive ? '#F08626' : '#fff',
+                              border: isActive ? 'none' : '1px solid #f0f0f0',
+                              color: isActive ? '#fff' : '#4b5563',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              width: '100%',
+                              boxShadow: isActive ? '0 3px 8px rgba(240, 134, 38, 0.3)' : '0 2px 5px rgba(0,0,0,0.03)',
+                              minHeight: '90px'
+                            }}
+                          >
+                            <span style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '50%',
+                              background: isActive ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
+                              color: isActive ? '#fff' : '#F08626',
+                              marginBottom: '2px'
+                            }}>
+                              <IconComponent size={20} />
+                            </span>
+                            <span style={{
+                              fontSize: '12px',
+                              fontWeight: isActive ? '700' : '600',
+                              textAlign: 'center',
+                              lineHeight: '1.2',
+                              wordBreak: 'break-word'
+                            }}>{cat.label}</span>
+                          </button>
+                        );
+                      })}
+                      {computedCategories.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '10px', color: '#888', fontSize: '11px' }}>
+                          Empty
                         </div>
+                      )}
                     </div>
 
-                    {/* Content Area (Sidebar + Grid) */}
-                    <div className="food-layout" style={{ display: 'flex', gap: '20px', flex: 1, overflow: 'hidden' }}>
-                        {/* Vertical Category Sidebar */}
-                        <div className="food-sidebar-categories" style={{ 
-                            width: '110px', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            gap: '12px',
-                            overflowY: 'auto',
-                            paddingRight: '5px',
-                            flexShrink: 0
-                        }}>
-                            {computedCategories.map((cat) => {
-                                const IconComponent = cat.Icon;
-                                const isActive = activeCategory === cat.key;
-                                return (
-                                <button
-                                    key={cat.key}
-                                    onClick={() => setActiveCategory(cat.key)}
-                                    style={{
-                                        padding: '10px 5px',
-                                        borderRadius: '12px',
-                                        background: isActive ? '#F08626' : '#fff',
-                                        border: isActive ? 'none' : '1px solid #f0f0f0',
-                                        color: isActive ? '#fff' : '#4b5563',
-                                        display: 'flex',
-                                        flexDirection: 'column', 
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '6px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        width: '100%',
-                                        boxShadow: isActive ? '0 3px 8px rgba(240, 134, 38, 0.3)' : '0 2px 5px rgba(0,0,0,0.03)',
-                                        minHeight: '90px'
-                                    }}
-                                >
-                                    <span style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center',
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '50%',
-                                        background: isActive ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
-                                        color: isActive ? '#fff' : '#F08626',
-                                        marginBottom: '2px'
-                                    }}>
-                                    <IconComponent size={20} />
-                                    </span>
-                                    <span style={{ 
-                                        fontSize: '12px',
-                                        fontWeight: isActive ? '700' : '600',
-                                        textAlign: 'center',
-                                        lineHeight: '1.2',
-                                        wordBreak: 'break-word'
-                                    }}>{cat.label}</span>
-                                </button>
-                                );
-                            })}
-                            {computedCategories.length === 0 && (
-                                <div style={{ textAlign: 'center', padding: '10px', color: '#888', fontSize: '11px' }}>
-                                    Empty
+                    {/* FOOD GRID */}
+                    <div className="food-grid" style={{ overflowY: 'auto', padding: '5px', flex: 1 }}>
+                      {loading ? (
+                        <div className="loading-state">
+                          <div className="loading-spinner"></div>
+                          <p>Loading menu items...</p>
+                        </div>
+                      ) : filteredItems.length === 0 ? (
+                        <div className="empty-state">
+                          <span className="empty-icon"><PlateIcon size={64} color="#ccc" /></span>
+                          <p>{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category"}</p>
+                        </div>
+                      ) : (
+                        filteredItems.map((item) => {
+                          const qty = getItemQty(item.id);
+                          return (
+                            <div className="food-item-card" key={item.id}>
+                              {/* Food Image Placeholder */}
+                              <div className="food-item-image">
+                                {item.imageUrl ? (
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.name}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                  />
+                                ) : null}
+                                <div className="food-placeholder-img" style={{ display: item.imageUrl ? 'none' : 'flex' }}>
+                                  <PlateIcon size={40} color="#ccc" />
                                 </div>
-                            )}
-                        </div>
+                                {/* Veg/Non-Veg Indicator */}
+                                <span className={`food-type-badge ${item.isVeg !== false ? 'veg' : 'non-veg'}`}>
+                                  <span className="food-type-dot"></span>
+                                </span>
+                              </div>
 
-                        {/* FOOD GRID */}
-                        <div className="food-grid" style={{ overflowY: 'auto', padding: '5px', flex: 1 }}>
-                            {loading ? (
-                            <div className="loading-state">
-                                <div className="loading-spinner"></div>
-                                <p>Loading menu items...</p>
+                              {/* Food Details */}
+                              <div className="food-item-details">
+                                <h6 className="food-item-name">{item.name}</h6>
+                                <p className="food-item-category">{item.category}</p>
+                                <div className="food-item-footer">
+                                  <span className="food-item-price">₹{item.price}</span>
+
+                                  {/* Low Stock Warning */}
+                                  {item.stock !== undefined && item.stock <= 5 && item.stock > 0 && (
+                                    <span style={{ fontSize: '10px', color: '#dc3545', fontWeight: 'bold', marginLeft: 'auto', marginRight: '10px' }}>
+                                      Only {item.stock} left!
+                                    </span>
+                                  )}
+
+                                  {item.stock !== undefined && item.stock <= 0 ? (
+                                    <button
+                                      className="add-to-cart-btn disabled"
+                                      disabled
+                                      style={{ background: '#ccc', cursor: 'not-allowed', width: 'auto', padding: '5px 10px' }}
+                                    >
+                                      Out of Stock
+                                    </button>
+                                  ) : qty === 0 ? (
+                                    <button
+                                      className="add-to-cart-btn"
+                                      onClick={() => showConfirm(
+                                        `Add ${item.name}?`,
+                                        `Are you sure you want to add <strong>${item.name}</strong> to the cart?`,
+                                        () => addItem(item),
+                                        "Yes, Add",
+                                        "confirm",
+                                        true
+                                      )}
+                                    >
+                                      ADD
+                                      <span className="plus-icon"><PlusIcon size={12} color="#fff" /></span>
+                                    </button>
+                                  ) : (
+                                    <div className="qty-controls">
+                                      <button onClick={() => updateQty(item.id, "dec")}><MinusIcon size={16} color="#F08626" /></button>
+                                      <span>{qty}</span>
+                                      <button
+                                        onClick={() => updateQty(item.id, "inc")}
+                                        disabled={item.stock !== undefined && qty >= item.stock}
+                                        style={{ opacity: item.stock !== undefined && qty >= item.stock ? 0.5 : 1 }}
+                                      >
+                                        <PlusIcon size={16} color="#F08626" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            ) : filteredItems.length === 0 ? (
-                            <div className="empty-state">
-                                <span className="empty-icon"><PlateIcon size={64} color="#ccc" /></span>
-                                <p>{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category"}</p>
-                            </div>
-                            ) : (
-                                filteredItems.map((item) => {
-                                    const qty = getItemQty(item.id);
-                                    return (
-                                        <div className="food-item-card" key={item.id}>
-                                        {/* Food Image Placeholder */}
-                                        <div className="food-item-image">
-                                            {item.imageUrl ? (
-                                            <img 
-                                                src={item.imageUrl} 
-                                                alt={item.name} 
-                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
-                                            />
-                                            ) : null}
-                                            <div className="food-placeholder-img" style={{ display: item.imageUrl ? 'none' : 'flex' }}>
-                                            <PlateIcon size={40} color="#ccc" />
-                                            </div>
-                                            {/* Veg/Non-Veg Indicator */}
-                                            <span className={`food-type-badge ${item.isVeg !== false ? 'veg' : 'non-veg'}`}>
-                                            <span className="food-type-dot"></span>
-                                            </span>
-                                        </div>
-
-                                        {/* Food Details */}
-                                        <div className="food-item-details">
-                                            <h6 className="food-item-name">{item.name}</h6>
-                                            <p className="food-item-category">{item.category}</p>
-                                            <div className="food-item-footer">
-                                            <span className="food-item-price">₹{item.price}</span>
-
-                                            {qty === 0 ? (
-                                                <button 
-                                                className="add-to-cart-btn" 
-                                                onClick={() => showConfirm(
-                                                    `Add ${item.name}?`,
-                                                    `Are you sure you want to add <strong>${item.name}</strong> to the cart?`,
-                                                    () => addItem(item),
-                                                    "Yes, Add",
-                                                    "confirm",
-                                                    true
-                                                )}
-                                                >
-                                                ADD
-                                                <span className="plus-icon"><PlusIcon size={12} color="#fff" /></span>
-                                                </button>
-                                            ) : (
-                                                <div className="qty-controls">
-                                                <button onClick={() => updateQty(item.id, "dec")}><MinusIcon size={16} color="#F08626" /></button>
-                                                <span>{qty}</span>
-                                                <button onClick={() => updateQty(item.id, "inc")}><PlusIcon size={16} color="#F08626" /></button>
-                                                </div>
-                                            )}
-                                            </div>
-                                        </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
+                          );
+                        })
+                      )}
                     </div>
+                  </div>
                 </div>
 
                 {/* RIGHT SIDE: ORDER CART */}
@@ -837,9 +881,9 @@ const FoodOrder = () => {
                       </tr>
                     ) : (
                       filteredOrders.map((order, index) => {
-                         const total = Number(order.total || 0);
-                         
-                         return (
+                        const total = Number(order.total || 0);
+
+                        return (
                           <tr key={order.id}>
                             <td>
                               <span className="table-order-no">#{index + 1}</span>
@@ -860,9 +904,9 @@ const FoodOrder = () => {
                               </span>
                             </td>
                             <td>
-                                <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
-                                  {total.toFixed(2)}
-                                </span>
+                              <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
+                                {total.toFixed(2)}
+                              </span>
                             </td>
                             <td>
                               <div className="table-date-time">
@@ -872,29 +916,29 @@ const FoodOrder = () => {
                               </div>
                             </td>
                             <td>
-                               <div className="table-actions">
-                                   <button 
-                                      className="action-btn" 
-                                      title="View Details"
-                                      onClick={() => setSelectedOrder(order)}
-                                   >
-                                      <SearchIcon size={18} />
-                                   </button>
-                                   <button 
-                                      className="action-btn complete-icon" 
-                                      onClick={() => handleUpdateStatus(order.id, "completed")}
-                                      title="Mark Completed"
-                                   >
-                                      <CheckIcon size={18} color="#fff" />
-                                   </button>
-                                   <button 
-                                      className="action-btn cancel-icon"
-                                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
-                                      title="Cancel Order"
-                                   >
-                                      <CloseIcon size={18} color="#FF5252" />
-                                   </button>
-                               </div>
+                              <div className="table-actions">
+                                <button
+                                  className="action-btn"
+                                  title="View Details"
+                                  onClick={() => setSelectedOrder(order)}
+                                >
+                                  <SearchIcon size={18} />
+                                </button>
+                                <button
+                                  className="action-btn complete-icon"
+                                  onClick={() => handleUpdateStatus(order.id, "completed")}
+                                  title="Mark Completed"
+                                >
+                                  <CheckIcon size={18} color="#fff" />
+                                </button>
+                                <button
+                                  className="action-btn cancel-icon"
+                                  onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                                  title="Cancel Order"
+                                >
+                                  <CloseIcon size={18} color="#FF5252" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -914,8 +958,8 @@ const FoodOrder = () => {
           <div className="food-payment-modal" style={{ maxWidth: "600px" }}>
             <div className="payment-modal-header" style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "16px 24px" }}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                 <h5 style={{ margin: 0, color: "#1a1a2e", fontSize: "18px" }}>Order Details</h5>
-                 <span style={{ fontSize: "13px", color: "#888" }}>#{selectedOrder.id ? selectedOrder.id.toString().slice(-6) : "Unknown"} • {selectedOrder.personName}</span>
+                <h5 style={{ margin: 0, color: "#1a1a2e", fontSize: "18px" }}>Order Details</h5>
+                <span style={{ fontSize: "13px", color: "#888" }}>#{selectedOrder.id ? selectedOrder.id.toString().slice(-6) : "Unknown"} • {selectedOrder.personName}</span>
               </div>
               <button
                 className="close-btn"
@@ -925,53 +969,53 @@ const FoodOrder = () => {
                 <CloseIcon size={16} />
               </button>
             </div>
-            
+
             <div className="payment-modal-body" style={{ padding: "0" }}>
-               <div style={{ maxHeight: "400px", overflowY: "auto", padding: "0 24px" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "16px" }}>
-                    <thead>
-                      <tr style={{ borderBottom: "1px solid #eee" }}>
-                        <th style={{ textAlign: "left", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Item</th>
-                        <th style={{ textAlign: "center", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Price</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(() => {
-                        const items = selectedOrder.OrderItems || selectedOrder.orderitems || [];
-                        return items.length > 0 ? (
-                          items.map((item, idx) => (
-                            <tr key={idx} style={{ borderBottom: "1px dashed #eee" }}>
-                              <td style={{ padding: "12px 0", fontSize: "14px", fontWeight: "600", color: "#3d4152" }}>
-                                {item.MenuItem?.name || item.menu_item?.name || "Unknown Item"}
-                              </td>
-                              <td style={{ padding: "12px 0", textAlign: "center", fontSize: "14px", color: "#3d4152" }}>
-                                {item.qty}
-                              </td>
-                              <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", color: "#3d4152" }}>
-                                ₹{Number(item.priceEach || item.price_each || 0).toFixed(2)}
-                              </td>
-                              <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", fontWeight: "600", color: "#1a1a2e" }}>
-                                ₹{(Number(item.priceEach || item.price_each || 0) * (item.qty || 1)).toFixed(2)}
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr><td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No items found</td></tr>
-                        );
-                      })()}
-                    </tbody>
-                    <tfoot>
-                       <tr>
-                          <td colSpan="3" style={{ textAlign: "right", padding: "16px 0", fontWeight: "700" }}>Total Amount:</td>
-                          <td style={{ textAlign: "right", padding: "16px 0", fontWeight: "700", fontSize: "16px", color: "#F08626" }}>
-                             ₹{Number(selectedOrder.total || 0).toFixed(2)}
-                          </td>
-                       </tr>
-                    </tfoot>
-                  </table>
-               </div>
+              <div style={{ maxHeight: "400px", overflowY: "auto", padding: "0 24px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "16px" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #eee" }}>
+                      <th style={{ textAlign: "left", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Item</th>
+                      <th style={{ textAlign: "center", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Qty</th>
+                      <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Price</th>
+                      <th style={{ textAlign: "right", padding: "12px 0", fontSize: "12px", color: "#888", textTransform: "uppercase" }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const items = selectedOrder.OrderItems || selectedOrder.orderitems || [];
+                      return items.length > 0 ? (
+                        items.map((item, idx) => (
+                          <tr key={idx} style={{ borderBottom: "1px dashed #eee" }}>
+                            <td style={{ padding: "12px 0", fontSize: "14px", fontWeight: "600", color: "#3d4152" }}>
+                              {item.MenuItem?.name || item.menu_item?.name || "Unknown Item"}
+                            </td>
+                            <td style={{ padding: "12px 0", textAlign: "center", fontSize: "14px", color: "#3d4152" }}>
+                              {item.qty}
+                            </td>
+                            <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", color: "#3d4152" }}>
+                              ₹{Number(item.priceEach || item.price_each || 0).toFixed(2)}
+                            </td>
+                            <td style={{ padding: "12px 0", textAlign: "right", fontSize: "14px", fontWeight: "600", color: "#1a1a2e" }}>
+                              ₹{(Number(item.priceEach || item.price_each || 0) * (item.qty || 1)).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr><td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No items found</td></tr>
+                      );
+                    })()}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: "right", padding: "16px 0", fontWeight: "700" }}>Total Amount:</td>
+                      <td style={{ textAlign: "right", padding: "16px 0", fontWeight: "700", fontSize: "16px", color: "#F08626" }}>
+                        ₹{Number(selectedOrder.total || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1050,13 +1094,13 @@ const FoodOrder = () => {
                     <button
                       onClick={handleCheckMember}
                       disabled={submitting || walletLoading}
-                      style={{ 
-                        padding: "8px 16px", 
-                        background: "#F08626", 
-                        color: "#fff", 
-                        border: "none", 
-                        borderRadius: "6px", 
-                        cursor: "pointer", 
+                      style={{
+                        padding: "8px 16px",
+                        background: "#F08626",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
                         fontWeight: "600",
                         opacity: walletLoading ? 0.7 : 1
                       }}
@@ -1068,12 +1112,12 @@ const FoodOrder = () => {
                   {walletError && <div style={{ color: "#DC2626", fontSize: "13px", marginTop: "4px" }}>{walletError}</div>}
 
                   {memberChecked && walletBalance !== null && (
-                    <div style={{ 
-                      marginTop: "12px", 
-                      padding: "12px", 
-                      background: walletBalance >= total ? "#ECFDF5" : "#FEF2F2", 
-                      borderRadius: "6px", 
-                      border: `1px solid ${walletBalance >= total ? "#10B981" : "#EF4444"}` 
+                    <div style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      background: walletBalance >= total ? "#ECFDF5" : "#FEF2F2",
+                      borderRadius: "6px",
+                      border: `1px solid ${walletBalance >= total ? "#10B981" : "#EF4444"}`
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                         <span style={{ fontSize: "13px", color: "#666" }}>Wallet Balance:</span>
@@ -1147,7 +1191,7 @@ const FoodOrder = () => {
           </div>
         </div>
       )}
-      
+
       <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={closeModal}
