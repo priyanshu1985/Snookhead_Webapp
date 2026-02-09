@@ -459,7 +459,10 @@ const MenuItems = () => {
 
       </div>
 
-      <button className="add-btn center" onClick={openAddModal}>
+      <button className="add-btn center" onClick={() => {
+        setEditingItem({ item_type: activeType, category: activeCategory !== 'All' ? activeCategory : '' });
+        setShowModal(true);
+      }}>
         + Add New Item
       </button>
 

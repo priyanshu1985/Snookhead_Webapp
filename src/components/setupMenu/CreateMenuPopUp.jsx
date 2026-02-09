@@ -9,7 +9,7 @@ const CreateMenuPopUp = ({ onClose, onSubmit, initialData, categories }) => {
   const [formData, setFormData] = useState(() => ({
     name: initialData?.name || "",
     category: initialData?.category || "",
-    item_type: initialData?.item_type || "prepared", // Default to prepared if not specified
+    item_type: initialData?.item_type || "prepared",
     price: initialData?.price || "",
     purchasePrice: initialData?.purchasePrice || "",
     image_url: initialData?.imageUrl || initialData?.image_url || initialData?.imageurl || "",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ownerAPI } from "../../services/api";
+import { Shield, Lock, Key, AlertTriangle } from "react-feather";
 
 const OwnerSafetyPanel = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -61,13 +62,6 @@ const OwnerSafetyPanel = ({ children }) => {
     }
   };
 
-  const handleLogout = () => {
-      // Just reload page or navigate away? 
-      // For prompt, user said "after he sets the password one time the after that every time he logins the screen will apear"
-      // So verify is enough.
-      window.location.reload();
-  };
-
   if (loading) {
     return <div className="owner-safety-overlay"><p>Loading security check...</p></div>;
   }
@@ -77,49 +71,81 @@ const OwnerSafetyPanel = ({ children }) => {
     return <>{children}</>;
   }
 
-  // Use inline styles or re-use existing CSS classes
-  // Mimicking the style from OwnersPanel.jsx
   return (
-    <div className="owners-auth">
-       <h5>Owners panel</h5>
+    <div className="owner-login-container">
+      {/* Background Decorations */}
+      <div className="login-bg-pattern">
+         <Shield className="bg-icon icon-1" />
+         <Lock className="bg-icon icon-2" />
+         <div className="bg-grid"></div>
+      </div>
+
+      <div className="owner-auth-card">
+        <div className="auth-header">
+           <div className="icon-badge">
+              <Shield size={32} />
+           </div>
+           <h5>Owner Access</h5>
+           <p className="subtitle">Secure Dashboard Entry</p>
+        </div>
 
       {needsSetup ? (
-        <>
-          <p className="title">Set Owner Password</p>
-          <p className="subtitle" style={{marginBottom: '20px', fontSize: '0.9rem', color: '#666'}}>
-            Set a secure password for future access.
+        <div className="auth-form">
+          <p className="form-instruction">
+            Welcome! Please set a secure password for your owner dashboard.
           </p>
           
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{marginBottom: '10px'}}
-          />
-          <input
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-           {error && <p className="error" style={{color: 'red', marginTop: '10px'}}>{error}</p>}
-          <button onClick={handleSetup} style={{marginTop: '20px'}}>Set Password</button>
-        </>
+          <div className="input-group">
+            <Lock className="input-icon" size={18} />
+            <input
+              type="password"
+              placeholder="Create Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          <div className="input-group">
+            <Lock className="input-icon" size={18} />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+
+           {error && <div className="error-message"><AlertTriangle size={16} /> {error}</div>}
+          
+          <button onClick={handleSetup} className="auth-btn">
+             Set Password & Login
+          </button>
+        </div>
       ) : (
-        <>
-          <p className="title">Enter Owner Password</p>
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {error && <p className="error" style={{color: 'red', marginTop: '10px'}}>{error}</p>}
-          <span className="forgot">Forgot your password? Contact Admin.</span>
-          <button onClick={handleVerify}>Access Dashboard</button>
-        </>
+        <div className="auth-form">
+          <div className="input-group">
+            <Key className="input-icon" size={18} />
+            <input
+              type="password"
+              placeholder="Enter Access Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+            />
+          </div>
+
+          {error && <div className="error-message"><AlertTriangle size={16} /> {error}</div>}
+          
+          <button onClick={handleVerify} className="auth-btn">
+            Access Dashboard
+          </button>
+          
+          <div className="auth-footer">
+             <span className="forgot">Forgot password? Contact Administrator</span>
+          </div>
+        </div>
       )}
+      </div>
     </div>
   );
 };

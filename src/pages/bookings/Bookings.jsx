@@ -2,7 +2,8 @@ import { useContext, useState, useEffect } from "react";
 import Sidebar from "../../components/layout/Sidebar";
 import Navbar from "../../components/layout/Navbar";
 import { LayoutContext } from "../../context/LayoutContext";
-import { queueAPI, gamesAPI, activeTablesAPI } from "../../services/api";
+import { queueAPI, gamesAPI, activeTablesAPI, ordersAPI } from "../../services/api";
+import FoodMenuSelection from "../../components/food/FoodMenuSelection";
 import QueueModal from "../../components/queue/QueueModal";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import "../../styles/queue.css";
@@ -11,6 +12,38 @@ import { useNavigate } from "react-router-dom";
 const Bookings = () => {
   const navigate = useNavigate();
   const { isSidebarCollapsed } = useContext(LayoutContext);
+  
+  // Food Order State
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [selectedQueueItem, setSelectedQueueItem] = useState(null);
+
+  const handleAddFood = (item) => {
+    setSelectedQueueItem(item);
+    setShowFoodModal(true);
+  };
+
+  const handleFoodSubmit = async (cartItems) => {
+    try {
+      if (!selectedQueueItem) return;
+
+      const payload = {
+        personName: selectedQueueItem.customername,
+        orderTotal: cartItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+        paymentMethod: "offline", 
+        cart: cartItems,
+        order_source: "queue",
+        queue_id: selectedQueueItem.id,
+      };
+
+      await ordersAPI.create(payload);
+      setShowFoodModal(false);
+      setSelectedQueueItem(null);
+      alert("Food order added to queue!");
+    } catch (err) {
+      console.error("Failed to add food order:", err);
+      alert("Failed to add food order");
+    }
+  };
 
   // State
   const [queueList, setQueueList] = useState([]);
@@ -247,16 +280,6 @@ const Bookings = () => {
 
 
           {/* Summary Cards */}
-          <div className="queue-summary">
-            <div className="summary-card">
-              <div className="count">{summary.totalWaiting}</div>
-              <div className="label">In Queue</div>
-            </div>
-            <div className="summary-card playing">
-              <div className="count">{summary.totalPlaying}</div>
-              <div className="label">Now Playing</div>
-            </div>
-          </div>
 
           {/* Game Filter */}
           {games.length > 0 && (
@@ -279,21 +302,6 @@ const Bookings = () => {
             </div>
           )}
 
-          {/* Next Player Card */}
-          {summary.nextPlayer && (
-            <div className="next-player-card">
-              <div>
-                <div className="label">Next in Queue</div>
-                <div className="name">{summary.nextPlayer.customername}</div>
-                <div className="game">
-                  {summary.nextPlayer.Game?.gamename || "Unknown Game"}
-                </div>
-              </div>
-              <button className="seat-next-btn" onClick={handleSeatNext}>
-                Seat Now
-              </button>
-            </div>
-          )}
 
           {/* Error Message */}
           {error && <div className="alert alert-danger">{error}</div>}
@@ -340,17 +348,16 @@ const Bookings = () => {
 
               {/* Waiting Queue Section */}
               <h6 style={{ marginTop: "20px", marginBottom: "10px", color: "#F08626" }}>
-                Waiting Queue ({queueList.filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id).length})
+                Waiting Queue ({queueList.length})
               </h6>
-              {queueList.filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id).length === 0 ? (
+              {queueList.length === 0 ? (
                 <div className="empty-state">
                   <p>No one else in queue</p>
                   <span>Click the button below to add someone to the queue</span>
                 </div>
               ) : (
-                <div className="queue-list">
+                  <div className="queue-list">
                   {queueList
-                    .filter(item => !summary.nextPlayer || item.id !== summary.nextPlayer.id)
                     .map((item, index) => (
                     <div className="queue-item" key={item.id}>
                       <div className="queue-left">
@@ -369,12 +376,19 @@ const Bookings = () => {
                         <span className="queue-time">{formatTime(item.createdat)}</span>
                         <div className="queue-wait">{getEstimatedTime(item)}</div>
                       </div>
-                      <span className="queue-status waiting">Waiting</span>
-                      <div className="queue-actions">
-                        <button className="btn-cancel" onClick={() => handleCancel(item.id)}>
-                          Remove
-                        </button>
-                      </div>
+                        <span className="queue-status waiting">Waiting</span>
+                        <div className="queue-actions">
+                          <button
+                            className="btn-remove"
+                            style={{ marginRight: "10px", backgroundColor: "#F08626", color: "white", border: "none" }}
+                            onClick={() => handleAddFood(item)}
+                          >
+                            Add Food
+                          </button>
+                          <button className="btn-cancel" onClick={() => handleCancel(item.id)}>
+                            Remove
+                          </button>
+                        </div>
                     </div>
                   ))}
                 </div>
@@ -418,6 +432,31 @@ const Bookings = () => {
         cancelText={modalConfig.cancelText}
         isHtml={modalConfig.isHtml}
       />
+      {/* Food Order Modal */}
+      {showFoodModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ 
+              width: "95%", 
+              maxWidth: "1000px", 
+              height: "85vh", 
+              padding: "20px", 
+              display: "flex", 
+              flexDirection: "column",
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
+            }}>
+             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <h3 style={{ margin: 0 }}>Add Food for {selectedQueueItem?.customername}</h3>
+                <button onClick={() => setShowFoodModal(false)} style={{ background: "none", border: "none", fontSize: "2rem", cursor: "pointer", lineHeight: 1 }}>&times;</button>
+             </div>
+             <FoodMenuSelection
+                onSubmit={handleFoodSubmit}
+                onCancel={() => setShowFoodModal(false)}
+             />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

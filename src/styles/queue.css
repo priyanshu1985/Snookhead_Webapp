@@ -84,37 +84,6 @@
   color: #fff;
 }
 
-/* SUMMARY CARDS */
-.queue-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.summary-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.summary-card .count {
-  font-size: 28px;
-  font-weight: 700;
-  color: #F08626;
-}
-
-.summary-card .label {
-  font-size: 12px;
-  color: #888;
-  margin-top: 4px;
-}
-
-.summary-card.playing .count {
-  color: #28a745;
-}
 
 /* LIST */
 .queue-list {

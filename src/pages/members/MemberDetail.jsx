@@ -212,7 +212,13 @@ const MemberDetail = () => {
                   </div>
                   <div className="info-item">
                     <label>Member ID</label>
-                    <span>{member?.id || "N/A"}</span>
+                    <span className="member-id-text" title={member?.id}>
+                        {member?.member_seq ? `#${member.member_seq}` : (member?.id || "N/A")}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <label>Alias</label>
+                    <span>{member?.alias || "—"}</span>
                   </div>
                   <div className="info-item">
                     <label>Email</label>

@@ -31,28 +31,6 @@ const InventoryTracking = () => {
   const [search, setSearch] = useState("");
   const categoriesRef = useRef(null);
 
-  // Compute categories dynamically - Strict Mode
-  const computedCategories = items.reduce((acc, item) => {
-    // Skip if no category
-    if (!item.category) return acc;
-
-    const exists = acc.some(cat => cat.key === item.category);
-    if (!exists) {
-        // Use local categories config if available (for icons)
-        const defaultCat = categories.find(c => c.key === item.category);
-        if (defaultCat) {
-             acc.push(defaultCat);
-        } else {
-             acc.push({
-                key: item.category,
-                label: item.category,
-                Icon: PlateIcon
-             });
-        }
-    }
-    return acc;
-  }, []); // Seed with EMPTY array to only show active categories
-
   // Modal State
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -75,17 +53,6 @@ const InventoryTracking = () => {
   useEffect(() => {
     fetchItems();
   }, []);
-  
-  // Ensure active category is valid
-  useEffect(() => {
-    if (computedCategories.length > 0) {
-        // If current active is not in list, switch to first one
-        const currentExists = computedCategories.some(c => c.key === activeCategory);
-        if (!currentExists) {
-            setActiveCategory(computedCategories[0].key);
-        }
-    }
-  }, [computedCategories, activeCategory]);
 
   useEffect(() => {
     if (categoriesRef.current) {
@@ -295,13 +262,6 @@ const InventoryTracking = () => {
                     Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
                         <div key={categoryName} style={{ marginBottom: '30px' }}>
                             {/* Removed Header as per request */}
-                            
-                            <div className="setup-list-header">
-                              <span style={{ width: '40px' }}>#</span>
-                              <span style={{ flex: 2 }}>Item Details</span>
-                              <span style={{ width: '120px', textAlign: 'center' }}>Current Stock</span>
-                              <span style={{ width: '150px', justifyContent: 'flex-end', textAlign: 'right' }}>Actions</span>
-                            </div>
 
                             {categoryItems.map((item, index) => {
                               const isLowStock = (item.stock || 0) <= (item.threshold || 5);
