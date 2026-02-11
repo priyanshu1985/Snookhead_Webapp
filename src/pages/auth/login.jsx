@@ -369,9 +369,12 @@ const Login = () => {
                   </label>
                 </div>
 
-                <span className="text-warning small cursor-pointer">
+                <Link
+                  to="/forgot-password"
+                  className="text-warning text-decoration-none small"
+                >
                   Forgot password?
-                </span>
+                </Link>
               </div>
 
               <button
