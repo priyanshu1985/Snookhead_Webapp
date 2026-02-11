@@ -40,12 +40,12 @@ const ForgotPassword = () => {
 
     try {
       const response = await api.auth.forgotPassword(email);
-      
+
       if (response.success) {
         setSuccess(true);
         setEmail("");
         setTouched(false);
-        
+
         // Redirect to login after 5 seconds
         setTimeout(() => {
           navigate("/login");
@@ -53,23 +53,33 @@ const ForgotPassword = () => {
       }
     } catch (err) {
       console.error("Forgot password error:", err);
-      
+
       const errorMessage = err.message || "";
-      
-      if (errorMessage.includes("not found") || errorMessage.includes("No user") || errorMessage.includes("does not exist")) {
+
+      if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("No user") ||
+        errorMessage.includes("does not exist")
+      ) {
         setError({
           title: "User Not Found",
-          message: "No account found with this email address. Please check your email or create a new account.",
+          message:
+            "No account found with this email address. Please check your email or create a new account.",
         });
-      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+      } else if (
+        errorMessage.includes("network") ||
+        errorMessage.includes("fetch")
+      ) {
         setError({
           title: "Connection Error",
-          message: "Unable to connect to the server. Please check your internet connection and try again.",
+          message:
+            "Unable to connect to the server. Please check your internet connection and try again.",
         });
       } else {
         setError({
           title: "Error",
-          message: errorMessage || "Something went wrong. Please try again later.",
+          message:
+            errorMessage || "Something went wrong. Please try again later.",
         });
       }
     } finally {
@@ -129,7 +139,9 @@ const ForgotPassword = () => {
                     Reset Link Sent Successfully!
                   </strong>
                   <span style={{ fontSize: "13px" }}>
-                    We've sent a password reset link to your email address. Please check your inbox and click the link to reset your password.
+                    We've sent a password reset link to your email address.
+                    Please check your inbox and click the link to reset your
+                    password.
                   </span>
                 </div>
               </div>
@@ -182,7 +194,8 @@ const ForgotPassword = () => {
             {!success && (
               <div className="mb-4 text-center">
                 <p className="text-muted small mb-0">
-                  Enter your registered email address and we'll send you a link to reset your password.
+                  Enter your registered email address and we'll send you a link
+                  to reset your password.
                 </p>
               </div>
             )}

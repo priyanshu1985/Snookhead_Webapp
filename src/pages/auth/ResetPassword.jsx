@@ -13,7 +13,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
@@ -29,7 +29,8 @@ const ResetPassword = () => {
       setTokenValid(false);
       setError({
         title: "Invalid Link",
-        message: "This password reset link is invalid. Please request a new one.",
+        message:
+          "This password reset link is invalid. Please request a new one.",
       });
     }
   }, [token]);
@@ -42,7 +43,8 @@ const ResetPassword = () => {
       setFieldErrors((prev) => ({ ...prev, password: passwordError }));
     }
     if (field === "confirmPassword") {
-      const confirmError = password !== confirmPassword ? "Passwords do not match" : null;
+      const confirmError =
+        password !== confirmPassword ? "Passwords do not match" : null;
       setFieldErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
     }
   };
@@ -55,10 +57,14 @@ const ResetPassword = () => {
 
     // Validate
     const passwordError = validatePassword(password);
-    const confirmError = password !== confirmPassword ? "Passwords do not match" : null;
+    const confirmError =
+      password !== confirmPassword ? "Passwords do not match" : null;
 
     if (passwordError || confirmError) {
-      setFieldErrors({ password: passwordError, confirmPassword: confirmError });
+      setFieldErrors({
+        password: passwordError,
+        confirmPassword: confirmError,
+      });
       return;
     }
 
@@ -66,13 +72,13 @@ const ResetPassword = () => {
 
     try {
       const response = await api.auth.resetPassword(token, password);
-      
+
       if (response.success) {
         setSuccess(true);
         setPassword("");
         setConfirmPassword("");
         setTouched({});
-        
+
         // Redirect to login after 3 seconds
         setTimeout(() => {
           navigate("/login");
@@ -80,24 +86,33 @@ const ResetPassword = () => {
       }
     } catch (err) {
       console.error("Reset password error:", err);
-      
+
       const errorMessage = err.message || "";
-      
-      if (errorMessage.includes("expired") || errorMessage.includes("invalid token")) {
+
+      if (
+        errorMessage.includes("expired") ||
+        errorMessage.includes("invalid token")
+      ) {
         setError({
           title: "Link Expired",
-          message: "This password reset link has expired or is invalid. Please request a new one.",
+          message:
+            "This password reset link has expired or is invalid. Please request a new one.",
         });
         setTokenValid(false);
-      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+      } else if (
+        errorMessage.includes("network") ||
+        errorMessage.includes("fetch")
+      ) {
         setError({
           title: "Connection Error",
-          message: "Unable to connect to the server. Please check your internet connection and try again.",
+          message:
+            "Unable to connect to the server. Please check your internet connection and try again.",
         });
       } else {
         setError({
           title: "Error",
-          message: errorMessage || "Something went wrong. Please try again later.",
+          message:
+            errorMessage || "Something went wrong. Please try again later.",
         });
       }
     } finally {
@@ -157,7 +172,8 @@ const ResetPassword = () => {
                     Password Reset Successfully!
                   </strong>
                   <span style={{ fontSize: "13px" }}>
-                    Your password has been updated. You can now log in with your new password. Redirecting to login...
+                    Your password has been updated. You can now log in with your
+                    new password. Redirecting to login...
                   </span>
                 </div>
               </div>
@@ -263,7 +279,10 @@ const ResetPassword = () => {
                       if (touched.confirmPassword) {
                         setFieldErrors((prev) => ({
                           ...prev,
-                          confirmPassword: password !== e.target.value ? "Passwords do not match" : null,
+                          confirmPassword:
+                            password !== e.target.value
+                              ? "Passwords do not match"
+                              : null,
                         }));
                       }
                     }}
