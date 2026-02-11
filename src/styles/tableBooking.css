@@ -82,12 +82,12 @@
   margin-bottom: 0;
   padding: 0 16px;
   /* Use flex-grow to fill available space, matching "full column" feel */
-  flex: 1; 
+  flex: 1;
   max-width: 800px; /* Cap it so it doesn't look ridiculous on ultra-wide */
   height: 48px;
   background: #fff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
   border-radius: 12px;
@@ -170,7 +170,7 @@
   border-radius: 50%;
   border: none;
   background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   z-index: 20;
   display: flex;
@@ -193,8 +193,8 @@
 
 /* Urgent Alert Animation - ensure relative positioning */
 .table-card {
-    position: relative;
-    /* ... existing styles ... */
+  position: relative;
+  /* ... existing styles ... */
 }
 
 /* =========================
@@ -222,10 +222,10 @@
 
 .panel-label {
   display: block;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   color: #8898aa;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -297,14 +297,16 @@
 }
 
 /* Timer Controls - Integrated */
-.timer-input-compact, .frame-input-compact {
+.timer-input-compact,
+.frame-input-compact {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
-.timer-controls, .frame-controls {
+.timer-controls,
+.frame-controls {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -312,7 +314,8 @@
   width: 100%;
 }
 
-.timer-controls button, .frame-controls button {
+.timer-controls button,
+.frame-controls button {
   width: 44px; /* Slightly larger targets */
   height: 44px;
   border-radius: 12px;
@@ -328,14 +331,16 @@
   box-shadow: 0 2px 5px rgba(240, 134, 38, 0.1);
 }
 
-.timer-controls button:hover, .frame-controls button:hover {
+.timer-controls button:hover,
+.frame-controls button:hover {
   border-color: #f08626;
   background: #fff0e0;
   color: #d97706;
   transform: translateY(-1px);
 }
 
-.timer-controls input, .frame-controls .frame-count-val {
+.timer-controls input,
+.frame-controls .frame-count-val {
   font-size: 36px;
   font-weight: 800;
   color: #c2410c; /* Darker orange/rust for high contrast values */
@@ -346,7 +351,7 @@
   font-variant-numeric: tabular-nums;
   padding: 0;
   margin: 0;
-  text-shadow: 0 2px 0 rgba(0,0,0,0.05);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .timer-controls input:focus {
@@ -354,11 +359,11 @@
 }
 
 .unit-label {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #ea580c;
   align-self: flex-end;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   margin-left: -8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -421,7 +426,7 @@
 /* Bill Details Section */
 .bill-section {
   background: #fff;
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 
 .bill-details {
@@ -479,7 +484,7 @@
 }
 
 .bill-food-row .price {
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
   font-weight: 500;
 }
 
@@ -503,7 +508,11 @@
 .book-btn-unified {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #f08626 0%, #ea580c 100%); /* Orange Gradient */
+  background: linear-gradient(
+    135deg,
+    #f08626 0%,
+    #ea580c 100%
+  ); /* Orange Gradient */
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -661,12 +670,12 @@
   .booking-content {
     /* Stack columns on tablet if it gets too cramped, or keep side-by-side but with smaller gap */
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
   }
-  
+
   /* OPTIONAL: If we want side-by-side on larger tablets, we can play with this. 
      But creating a vertical flow is safer for "responsiveness conflicts" */
-     
+
   .radio-row {
     gap: 10px;
   }

@@ -9,77 +9,113 @@ const getErrorMessage = (error) => {
   const errorCode = error?.code || "";
 
   // Network errors - check first as it's most specific
-  if (errorMessage.includes("network") || errorMessage.includes("fetch") ||
-      errorMessage.includes("failed to fetch") || errorCode === "ERR_NETWORK" ||
-      errorMessage.includes("connection") || errorMessage.includes("offline")) {
+  if (
+    errorMessage.includes("network") ||
+    errorMessage.includes("fetch") ||
+    errorMessage.includes("failed to fetch") ||
+    errorCode === "ERR_NETWORK" ||
+    errorMessage.includes("connection") ||
+    errorMessage.includes("offline")
+  ) {
     return {
       title: "Connection Error",
-      message: "Unable to connect to the server. Please check your internet connection and try again.",
-      type: "network"
+      message:
+        "Unable to connect to the server. Please check your internet connection and try again.",
+      type: "network",
     };
   }
 
   // User not found - check before invalid credentials
-  if (errorMessage.includes("not found") || errorMessage.includes("no user") ||
-      errorMessage.includes("doesn't exist") || errorMessage.includes("does not exist") ||
-      errorMessage.includes("no account") || errorMessage.includes("user not") ||
-      errorMessage.includes("not registered") || errorMessage.includes("no such user")) {
+  if (
+    errorMessage.includes("not found") ||
+    errorMessage.includes("no user") ||
+    errorMessage.includes("doesn't exist") ||
+    errorMessage.includes("does not exist") ||
+    errorMessage.includes("no account") ||
+    errorMessage.includes("user not") ||
+    errorMessage.includes("not registered") ||
+    errorMessage.includes("no such user")
+  ) {
     return {
       title: "User Does Not Exist",
-      message: "No account found with this email address. Please check your email or create a new account.",
-      type: "not-found"
+      message:
+        "No account found with this email address. Please check your email or create a new account.",
+      type: "not-found",
     };
   }
 
   // Invalid credentials - wrong password or general auth failure
-  if (errorMessage.includes("invalid") || errorMessage.includes("incorrect") ||
-      errorMessage.includes("wrong") || errorMessage.includes("401") ||
-      errorMessage.includes("unauthorized") || errorMessage.includes("credential") ||
-      errorMessage.includes("password") || errorMessage.includes("authentication failed") ||
-      errorMessage.includes("login failed") || errorMessage.includes("mismatch")) {
+  if (
+    errorMessage.includes("invalid") ||
+    errorMessage.includes("incorrect") ||
+    errorMessage.includes("wrong") ||
+    errorMessage.includes("401") ||
+    errorMessage.includes("unauthorized") ||
+    errorMessage.includes("credential") ||
+    errorMessage.includes("password") ||
+    errorMessage.includes("authentication failed") ||
+    errorMessage.includes("login failed") ||
+    errorMessage.includes("mismatch")
+  ) {
     return {
       title: "Invalid Credentials",
-      message: "The email address or password is incorrect. Please check your details and try again.",
-      type: "credentials"
+      message:
+        "The email address or password is incorrect. Please check your details and try again.",
+      type: "credentials",
     };
   }
 
   // Account locked/disabled
-  if (errorMessage.includes("locked") || errorMessage.includes("disabled") ||
-      errorMessage.includes("blocked") || errorMessage.includes("suspended") ||
-      errorMessage.includes("deactivated")) {
+  if (
+    errorMessage.includes("locked") ||
+    errorMessage.includes("disabled") ||
+    errorMessage.includes("blocked") ||
+    errorMessage.includes("suspended") ||
+    errorMessage.includes("deactivated")
+  ) {
     return {
       title: "Account Locked",
-      message: "Your account has been temporarily locked. Please contact support or try again later.",
-      type: "locked"
+      message:
+        "Your account has been temporarily locked. Please contact support or try again later.",
+      type: "locked",
     };
   }
 
   // Too many attempts
-  if (errorMessage.includes("too many") || errorMessage.includes("rate limit") ||
-      errorMessage.includes("try again later") || errorMessage.includes("attempts")) {
+  if (
+    errorMessage.includes("too many") ||
+    errorMessage.includes("rate limit") ||
+    errorMessage.includes("try again later") ||
+    errorMessage.includes("attempts")
+  ) {
     return {
       title: "Too Many Attempts",
-      message: "Too many login attempts. Please wait a few minutes before trying again.",
-      type: "rate-limit"
+      message:
+        "Too many login attempts. Please wait a few minutes before trying again.",
+      type: "rate-limit",
     };
   }
 
   // Server error
-  if (errorMessage.includes("500") || errorMessage.includes("server error") ||
-      errorMessage.includes("internal")) {
+  if (
+    errorMessage.includes("500") ||
+    errorMessage.includes("server error") ||
+    errorMessage.includes("internal")
+  ) {
     return {
       title: "Server Error",
-      message: "Something went wrong on our end. Please try again in a few moments.",
-      type: "server"
+      message:
+        "Something went wrong on our end. Please try again in a few moments.",
+      type: "server",
     };
   }
 
   // Default error - show as invalid credentials
   return {
     title: "Invalid Credentials",
-    message: "The email address or password is incorrect. Please check your details and try again.",
-    type: "credentials"
+    message:
+      "The email address or password is incorrect. Please check your details and try again.",
+    type: "credentials",
   };
 };
 
@@ -120,16 +156,16 @@ const Login = () => {
   };
 
   const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
 
     // Validate individual field on blur
     if (field === "email") {
       const emailError = validateEmail(email);
-      setFieldErrors(prev => ({ ...prev, email: emailError }));
+      setFieldErrors((prev) => ({ ...prev, email: emailError }));
     }
     if (field === "password") {
       const passwordError = validatePassword(password);
-      setFieldErrors(prev => ({ ...prev, password: passwordError }));
+      setFieldErrors((prev) => ({ ...prev, password: passwordError }));
     }
   };
 
@@ -150,7 +186,23 @@ const Login = () => {
       // Force a re-render by navigating to current location
       window.location.href = "/";
     } catch (err) {
-      // Set error state to display on UI
+      console.error("Login error details:", err);
+
+      // Check if it's an email verification error
+      if (
+        (err.message && err.message.includes("verify your email")) ||
+        (err.emailNotVerified && err.email)
+      ) {
+        // Redirect to OTP verification page
+        navigate("/verify-otp", {
+          state: {
+            email: err.email || email,
+          },
+        });
+        return;
+      }
+
+      // Set normal error state to display on UI
       const errorInfo = getErrorMessage(err);
       setError(errorInfo);
     } finally {
@@ -166,10 +218,15 @@ const Login = () => {
           <div className="login-card shadow-sm">
             {/* Brand */}
             <div className="text-center mb-4">
-              <img 
-                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : ''}/static/app-logo/logo.jpg`} 
-                alt="Logo" 
-                style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }}
+              <img
+                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace("/api", "") : ""}/static/app-logo/logo.jpg`}
+                alt="Logo"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  objectFit: "contain",
+                  marginBottom: "10px",
+                }}
               />
               <h4 className="fw-bold brand-title">SNOOKHEAD</h4>
               <p className="text-muted small">Sign in to continue</p>
@@ -179,26 +236,43 @@ const Login = () => {
             <form onSubmit={handleSubmit} noValidate>
               {/* Main Error Alert - Simple Bootstrap Alert */}
               {error && (
-                <div className="alert alert-danger d-flex align-items-center mb-3" role="alert" style={{
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  backgroundColor: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  color: '#991b1b'
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-2" style={{ flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                <div
+                  className="alert alert-danger d-flex align-items-center mb-3"
+                  role="alert"
+                  style={{
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                    backgroundColor: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#991b1b",
+                  }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="me-2"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                   <div style={{ flex: 1 }}>
-                    <strong style={{ display: 'block', fontSize: '14px' }}>{error.title}</strong>
-                    <span style={{ fontSize: '13px' }}>{error.message}</span>
+                    <strong style={{ display: "block", fontSize: "14px" }}>
+                      {error.title}
+                    </strong>
+                    <span style={{ fontSize: "13px" }}>{error.message}</span>
                   </div>
                   <button
                     type="button"
                     className="btn-close"
                     onClick={() => setError(null)}
                     aria-label="Close"
-                    style={{ marginLeft: '8px' }}
+                    style={{ marginLeft: "8px" }}
                   ></button>
                 </div>
               )}
@@ -214,7 +288,10 @@ const Login = () => {
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (touched.email) {
-                      setFieldErrors(prev => ({ ...prev, email: validateEmail(e.target.value) }));
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        email: validateEmail(e.target.value),
+                      }));
                     }
                   }}
                   onBlur={() => handleBlur("email")}
@@ -223,8 +300,17 @@ const Login = () => {
                 />
                 {touched.email && fieldErrors.email && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.email}
                   </div>
@@ -242,7 +328,10 @@ const Login = () => {
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (touched.password) {
-                      setFieldErrors(prev => ({ ...prev, password: validatePassword(e.target.value) }));
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        password: validatePassword(e.target.value),
+                      }));
                     }
                   }}
                   onBlur={() => handleBlur("password")}
@@ -251,8 +340,17 @@ const Login = () => {
                 />
                 {touched.password && fieldErrors.password && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.password}
                   </div>
@@ -287,7 +385,10 @@ const Login = () => {
 
             <p className="text-center mt-3 small">
               Don't have an account?{" "}
-              <Link to="/register" className="text-warning text-decoration-none">
+              <Link
+                to="/register"
+                className="text-warning text-decoration-none"
+              >
                 Sign up
               </Link>
             </p>

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/login";
 import Register from "../pages/auth/Register";
+import VerifyOTP from "../pages/auth/VerifyOTP";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Layout from "./Layout";
 import Bookings from "../pages/bookings/Bookings";
@@ -54,6 +55,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -92,10 +94,7 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/add-queue" element={<AddQueue />} />
-        <Route
-          path="/reservations"
-          element={<UpcomingReservation />}
-        />
+        <Route path="/reservations" element={<UpcomingReservation />} />
         <Route path="/billing" element={<Billing />} />
         <Route path="/food-orders" element={<FoodOrder />} />
 

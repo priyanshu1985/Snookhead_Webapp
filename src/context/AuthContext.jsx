@@ -59,6 +59,16 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
+
+      // Check if it's a 403 email verification error
+      if (error.message && error.message.includes("verify your email")) {
+        // Create a special error object with email info for redirect
+        const verificationError = new Error(error.message);
+        verificationError.emailNotVerified = true;
+        verificationError.email = email;
+        throw verificationError;
+      }
+
       throw error; // Re-throw the original error to preserve the message
     }
   };
@@ -69,22 +79,39 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
 
-      // Store tokens
+      // For the new flow, register just returns success without logging in
+      // The user will be redirected to OTP verification
+      return {
+        success: true,
+        email: userData.email,
+        message: response.message,
+      };
+    } catch (error) {
+      console.error("Register error:", error);
+      throw error; // Re-throw original error to preserve the message
+    }
+  };
+
+  const verifyOTP = async (email, code) => {
+    try {
+      const response = await authAPI.verifyOTP(email, code);
+
+      // Store tokens after successful OTP verification
       localStorage.setItem("authToken", response.accessToken);
       if (response.refreshToken) {
         localStorage.setItem("refreshToken", response.refreshToken);
       }
 
       // Store user data from response
-      const user = response.user || { name: userData.name, email: userData.email, role: userData.role };
-      localStorage.setItem("userData", JSON.stringify(user));
+      const userData = response.user || { email };
+      localStorage.setItem("userData", JSON.stringify(userData));
 
-      setUser(user);
+      setUser(userData);
       setIsAuthenticated(true);
 
-      return { success: true, user };
+      return { success: true, user: userData };
     } catch (error) {
-      console.error("Register error:", error);
+      console.error("OTP verification error:", error);
       throw error; // Re-throw original error to preserve the message
     }
   };
@@ -113,6 +140,7 @@ export const AuthProvider = ({ children }) => {
     loading: isLoading,
     login,
     register,
+    verifyOTP,
     logout,
     updateUser,
     getAuthToken,

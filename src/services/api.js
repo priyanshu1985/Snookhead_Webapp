@@ -72,7 +72,7 @@ const ENDPOINTS = {
   // Wallets
   WALLETS: "/wallets",
   WALLET_BY_ID: (id) => `/wallets/${id}`,
-  
+
   // Inventory
   INVENTORY: "/inventory",
   INVENTORY_BY_ID: (id) => `/inventory/${id}`,
@@ -104,7 +104,7 @@ const ENDPOINTS = {
   OWNER_SETUP_PASSWORD: "/owner/panel/setup-password",
   OWNER_VERIFY_PASSWORD: "/owner/panel/verify-password",
   OWNER_CHANGE_PASSWORD: "/owner/panel/change-password",
-  
+
   // Owner Dashboard Data
   OWNER_DASHBOARD_STATS: "/owner/dashboard/stats",
   OWNER_DASHBOARD_GAME_UTILIZATION: "/owner/dashboard/game-utilization",
@@ -116,7 +116,7 @@ const ENDPOINTS = {
 };
 
 // Image base URL for constructing full image URLs
-export const IMAGE_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '');
+export const IMAGE_BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "");
 
 // Request interceptor to add auth token
 const getAuthToken = () => {
@@ -137,9 +137,9 @@ const handleAuthError = () => {
 
 // Auth endpoints that should NOT trigger redirect on 401
 const AUTH_ENDPOINTS = [
-  ENDPOINTS.LOGIN, 
+  ENDPOINTS.LOGIN,
   ENDPOINTS.REGISTER,
-  ENDPOINTS.OWNER_VERIFY_PASSWORD
+  ENDPOINTS.OWNER_VERIFY_PASSWORD,
 ];
 
 // Generic request handler
@@ -172,7 +172,7 @@ const apiRequest = async (endpoint, options = {}) => {
       if (AUTH_ENDPOINTS.includes(endpoint)) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || errorData.message || "Invalid credentials"
+          errorData.error || errorData.message || "Invalid credentials",
         );
       }
       // For other endpoints, token is invalid or expired - redirect to login
@@ -184,7 +184,9 @@ const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.message || errorData.error || `HTTP error! status: ${response.status}`
+        errorData.message ||
+          errorData.error ||
+          `HTTP error! status: ${response.status}`,
       );
     }
 
@@ -212,6 +214,18 @@ export const authAPI = {
     apiRequest(ENDPOINTS.REGISTER, {
       method: "POST",
       body: JSON.stringify(userData),
+    }),
+
+  verifyOTP: (email, code) =>
+    apiRequest("/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    }),
+
+  resendOTP: (email) =>
+    apiRequest("/auth/resend-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
     }),
 
   logout: () => apiRequest(ENDPOINTS.LOGOUT, { method: "POST" }),
@@ -279,7 +293,9 @@ export const gamesAPI = {
 export const reservationsAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.RESERVATIONS}?${queryString}` : ENDPOINTS.RESERVATIONS;
+    const url = queryString
+      ? `${ENDPOINTS.RESERVATIONS}?${queryString}`
+      : ENDPOINTS.RESERVATIONS;
     return apiRequest(url);
   },
 
@@ -297,7 +313,8 @@ export const reservationsAPI = {
       body: JSON.stringify(reservationData),
     }),
 
-  delete: (id) => apiRequest(ENDPOINTS.RESERVATION_BY_ID(id), { method: "DELETE" }),
+  delete: (id) =>
+    apiRequest(ENDPOINTS.RESERVATION_BY_ID(id), { method: "DELETE" }),
 
   cancel: (id) =>
     apiRequest(`${ENDPOINTS.RESERVATIONS}/${id}/cancel`, {
@@ -315,7 +332,9 @@ export const reservationsAPI = {
 export const activeTablesAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.ACTIVE_TABLES}?${queryString}` : ENDPOINTS.ACTIVE_TABLES;
+    const url = queryString
+      ? `${ENDPOINTS.ACTIVE_TABLES}?${queryString}`
+      : ENDPOINTS.ACTIVE_TABLES;
     return apiRequest(url);
   },
 
@@ -351,7 +370,9 @@ export const queueAPI = {
   // Get queue list (optional filters: gameid, status)
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.QUEUE}?${queryString}` : ENDPOINTS.QUEUE;
+    const url = queryString
+      ? `${ENDPOINTS.QUEUE}?${queryString}`
+      : ENDPOINTS.QUEUE;
     return apiRequest(url);
   },
 
@@ -387,12 +408,10 @@ export const queueAPI = {
     apiRequest(ENDPOINTS.QUEUE_COMPLETE(id), { method: "POST" }),
 
   // Cancel queue entry
-  cancel: (id) =>
-    apiRequest(ENDPOINTS.QUEUE_CANCEL(id), { method: "POST" }),
+  cancel: (id) => apiRequest(ENDPOINTS.QUEUE_CANCEL(id), { method: "POST" }),
 
   // Mark as no-show
-  noshow: (id) =>
-    apiRequest(ENDPOINTS.QUEUE_NOSHOW(id), { method: "POST" }),
+  noshow: (id) => apiRequest(ENDPOINTS.QUEUE_NOSHOW(id), { method: "POST" }),
 
   // Clear all waiting entries
   clear: () => apiRequest(ENDPOINTS.QUEUE_CLEAR, { method: "POST" }),
@@ -405,7 +424,9 @@ export const queueAPI = {
 export const menuAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.MENU}?${queryString}` : ENDPOINTS.MENU;
+    const url = queryString
+      ? `${ENDPOINTS.MENU}?${queryString}`
+      : ENDPOINTS.MENU;
     return apiRequest(url);
   },
 
@@ -425,7 +446,7 @@ export const menuAPI = {
 
   delete: (id) => apiRequest(ENDPOINTS.MENU_BY_ID(id), { method: "DELETE" }),
 
-  updateStock: (id, quantity) => 
+  updateStock: (id, quantity) =>
     apiRequest(ENDPOINTS.UPDATE_STOCK(id), {
       method: "PATCH",
       body: JSON.stringify({ quantity }),
@@ -456,13 +477,15 @@ export const foodAPI = {
 // Orders API
 export const ordersAPI = {
   getAll: (source = null) => {
-    const url = source && source !== "all"
-      ? `${ENDPOINTS.ORDERS}?source=${source}`
-      : ENDPOINTS.ORDERS;
+    const url =
+      source && source !== "all"
+        ? `${ENDPOINTS.ORDERS}?source=${source}`
+        : ENDPOINTS.ORDERS;
     return apiRequest(url);
   },
 
-  getBySession: (sessionId) => apiRequest(`${ENDPOINTS.ORDERS}/by-session/${sessionId}`),
+  getBySession: (sessionId) =>
+    apiRequest(`${ENDPOINTS.ORDERS}/by-session/${sessionId}`),
 
   getById: (id) => apiRequest(ENDPOINTS.ORDER_BY_ID(id)),
 
@@ -538,7 +561,11 @@ export const usersAPI = {
 
   delete: (id) => apiRequest(`${ENDPOINTS.USERS}/${id}`, { method: "DELETE" }),
 
-  changeRole: (id, role) => apiRequest(`${ENDPOINTS.USERS}/${id}/role`, { method: "POST", body: JSON.stringify({ role }) }),
+  changeRole: (id, role) =>
+    apiRequest(`${ENDPOINTS.USERS}/${id}/role`, {
+      method: "POST",
+      body: JSON.stringify({ role }),
+    }),
 };
 
 // Customers API
@@ -559,7 +586,8 @@ export const customersAPI = {
       body: JSON.stringify(customerData),
     }),
 
-  delete: (id) => apiRequest(ENDPOINTS.CUSTOMER_BY_ID(id), { method: "DELETE" }),
+  delete: (id) =>
+    apiRequest(ENDPOINTS.CUSTOMER_BY_ID(id), { method: "DELETE" }),
 };
 
 // Wallets API
@@ -568,7 +596,8 @@ export const walletsAPI = {
 
   getById: (id) => apiRequest(ENDPOINTS.WALLET_BY_ID(id)),
 
-  getByCustomerId: (customerId) => apiRequest(`${ENDPOINTS.WALLETS}/customer/${customerId}`),
+  getByCustomerId: (customerId) =>
+    apiRequest(`${ENDPOINTS.WALLETS}/customer/${customerId}`),
 
   create: (walletData) =>
     apiRequest(`${ENDPOINTS.WALLETS}/create`, {
@@ -599,7 +628,9 @@ export const walletsAPI = {
 export const inventoryAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.INVENTORY}?${queryString}` : ENDPOINTS.INVENTORY;
+    const url = queryString
+      ? `${ENDPOINTS.INVENTORY}?${queryString}`
+      : ENDPOINTS.INVENTORY;
     return apiRequest(url);
   },
 
@@ -623,9 +654,9 @@ export const inventoryAPI = {
       body: JSON.stringify(changeData),
     }),
 
-  delete: (id, permanent = false) => 
-    apiRequest(`${ENDPOINTS.INVENTORY_BY_ID(id)}?permanent=${permanent}`, { 
-      method: "DELETE" 
+  delete: (id, permanent = false) =>
+    apiRequest(`${ENDPOINTS.INVENTORY_BY_ID(id)}?permanent=${permanent}`, {
+      method: "DELETE",
     }),
 
   getLowStock: () => apiRequest(ENDPOINTS.INVENTORY_LOW_STOCK),
@@ -646,7 +677,9 @@ export const stockImagesAPI = {
 export const bugsAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.BUGS}?${queryString}` : ENDPOINTS.BUGS;
+    const url = queryString
+      ? `${ENDPOINTS.BUGS}?${queryString}`
+      : ENDPOINTS.BUGS;
     return apiRequest(url);
   },
 
@@ -677,7 +710,8 @@ export const bugsAPI = {
 
 // Owner Security API
 export const ownerAPI = {
-  checkSetupStatus: () => apiRequest(ENDPOINTS.OWNER_CHECK_SETUP, { method: "POST" }),
+  checkSetupStatus: () =>
+    apiRequest(ENDPOINTS.OWNER_CHECK_SETUP, { method: "POST" }),
 
   setupPassword: (password, confirmPassword) =>
     apiRequest(ENDPOINTS.OWNER_SETUP_PASSWORD, {
@@ -697,34 +731,56 @@ export const ownerAPI = {
       body: JSON.stringify(data),
     }),
 
-  getStats: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_STATS}?period=${period}`),
-  
-  getGameUtilization: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_GAME_UTILIZATION}?period=${period}`),
-  
-  getRevenue: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
-  
-  getRevenue: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
-  
-  getSummary: (period = "week") => apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_SUMMARY}?period=${period}`),
+  getStats: (period = "week") =>
+    apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_STATS}?period=${period}`),
+
+  getGameUtilization: (period = "week") =>
+    apiRequest(
+      `${ENDPOINTS.OWNER_DASHBOARD_GAME_UTILIZATION}?period=${period}`,
+    ),
+
+  getRevenue: (period = "week") =>
+    apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
+
+  getRevenue: (period = "week") =>
+    apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_REVENUE}?period=${period}`),
+
+  getSummary: (period = "week") =>
+    apiRequest(`${ENDPOINTS.OWNER_DASHBOARD_SUMMARY}?period=${period}`),
 
   getEmployeeActivity: (id, startDate, endDate) => {
-      const params = new URLSearchParams();
-      if(startDate) params.append('startDate', startDate);
-      if(endDate) params.append('endDate', endDate);
-      // Assuming route is mounted at /owner/dashboard
-      return apiRequest(`/owner/dashboard/employees/${id}/activity?${params.toString()}`);
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    // Assuming route is mounted at /owner/dashboard
+    return apiRequest(
+      `/owner/dashboard/employees/${id}/activity?${params.toString()}`,
+    );
   },
 };
 
 export const expensesAPI = {
   getAll: () => apiRequest(`${ENDPOINTS.EXPENSES}`),
-  create: (data) => apiRequest(`${ENDPOINTS.EXPENSES}`, { method: "POST", body: JSON.stringify(data) }),
-  delete: (id) => apiRequest(`${ENDPOINTS.EXPENSES}/${id}`, { method: "DELETE" }),
+  create: (data) =>
+    apiRequest(`${ENDPOINTS.EXPENSES}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id) =>
+    apiRequest(`${ENDPOINTS.EXPENSES}/${id}`, { method: "DELETE" }),
 };
 
 export const attendanceAPI = {
-  checkIn: (user_id) => apiRequest(`/attendance/check-in`, { method: "POST", body: JSON.stringify({ user_id }) }),
-  checkOut: (user_id, attendance_id) => apiRequest(`/attendance/check-out`, { method: "POST", body: JSON.stringify({ user_id, attendance_id }) }),
+  checkIn: (user_id) =>
+    apiRequest(`/attendance/check-in`, {
+      method: "POST",
+      body: JSON.stringify({ user_id }),
+    }),
+  checkOut: (user_id, attendance_id) =>
+    apiRequest(`/attendance/check-out`, {
+      method: "POST",
+      body: JSON.stringify({ user_id, attendance_id }),
+    }),
   getActive: (user_id) => apiRequest(`/attendance/active/${user_id}`),
   getHistory: (user_id) => apiRequest(`/attendance/user/${user_id}`),
 };
@@ -733,7 +789,9 @@ export const attendanceAPI = {
 export const adminStationsAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${ENDPOINTS.ADMIN_STATIONS}?${queryString}` : ENDPOINTS.ADMIN_STATIONS;
+    const url = queryString
+      ? `${ENDPOINTS.ADMIN_STATIONS}?${queryString}`
+      : ENDPOINTS.ADMIN_STATIONS;
     return apiRequest(url);
   },
 

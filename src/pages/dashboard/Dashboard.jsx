@@ -448,9 +448,9 @@ const Dashboard = () => {
              // Diff in minutes: Positive = Now is AFTER reservation time
              const diffMinutes = (now - rTime) / 60000;
              
-             // Trigger if time has arrived (within last 30 mins) or is about to (1 min before)
-             // This gives a prompt "as schedule time arrive"
-             if (diffMinutes >= -1 && diffMinutes < 30) {
+             // Trigger if time has arrived (within last 30 mins)
+             // STRICT: Only prompt if time has actually passed or matched (diffMinutes >= 0)
+             if (diffMinutes >= 0 && diffMinutes < 30) {
                  const tableId = res.tableId || res.table_id;
                  const table = tables.find(t => String(t.id) === String(tableId));
                  
@@ -667,7 +667,7 @@ const Dashboard = () => {
       
       showConfirm("Start Reservation Session", confirmMessage, async () => {
           try {
-              await activeTablesAPI.start({
+              const response = await activeTablesAPI.start({
                   table_id: table.id,
                   game_id: table.game_id || table.gameid || selectedGame.gameid || selectedGame.game_id,
                   duration_minutes: Number(reservation.durationMinutes ?? reservation.duration_minutes ?? reservation.durationminutes ?? 60),
@@ -689,6 +689,20 @@ const Dashboard = () => {
               showAlert("Success", `Session started for ${customerName}`);
               fetchData(true); 
               
+              // Navigate to active session
+              const gameName = (selectedGame?.game_name || selectedGame?.gamename || "game").toLowerCase();
+              const newSessionId = response?.session?.activeid || response?.session?.active_id;
+              
+              if (newSessionId) {
+                  // Small delay to allow alert to be seen/closed or just navigate immediately?
+                  // User prefers immediate action usually.
+                  // But we use a custom modal for alert. closing it might trigger something?
+                  // Let's just navigate. The alert might close or persist on new page if global?
+                  // Actually `showAlert` sets state. Navigate unmounts Dashboard.
+                  // So alert will vanish. That's fine.
+                   navigate(`/session/${gameName}/${table.id}/${newSessionId}`);
+              }
+
           } catch (err) {
               console.error("Failed to start reserved session", err);
               showAlert("Error", "Failed to start session: " + err.message);
@@ -702,15 +716,21 @@ const Dashboard = () => {
   const handleTableClick = async (table) => {
     const gameName = (selectedGame?.game_name || selectedGame?.gamename || "game").toLowerCase();
     
-    // Check occupied status (reserved/occupied)
+    // 1. Check for Active Session FIRST (Source of Truth for "Playing")
+    const session = getActiveSession(table.id);
+    
+    if (session) {
+       // Table is Playing/Active - go to active session screen
+       const sessionId = session.activeid || session.active_id;
+       navigate(`/session/${gameName}/${table.id}${sessionId ? `/${sessionId}` : ""}`);
+       return;
+    }
+
+    // 2. Check occupied status (reserved/occupied) fallback
     if (table.status === "reserved" || table.status === "occupied") {
-      // Table is reserved/occupied - go to active session screen
-      const session = getActiveSession(table.id);
-      
-      // If we have a running session, pass its ID to ensure correct loading
-      const sessionId = session ? (session.activeid || session.active_id) : "";
-      
-      navigate(`/session/${gameName}/${table.id}${sessionId ? `/${sessionId}` : ""}`);
+      // Table is reserved/occupied but maybe no active session found active locally?
+      // Still try to go to session screen or handle as reserved
+      navigate(`/session/${gameName}/${table.id}`);
     } else if (table.status === "available") {
       
       // Check if there is an upcoming reservation that is "due" (Time has arrived or past)

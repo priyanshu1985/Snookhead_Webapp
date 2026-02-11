@@ -9,57 +9,84 @@ const getErrorMessage = (error) => {
   const errorCode = error?.code || "";
 
   // Network errors - check first as it's most specific
-  if (errorMessage.includes("network") || errorMessage.includes("fetch") ||
-      errorMessage.includes("failed to fetch") || errorCode === "ERR_NETWORK" ||
-      errorMessage.includes("connection") || errorMessage.includes("offline")) {
+  if (
+    errorMessage.includes("network") ||
+    errorMessage.includes("fetch") ||
+    errorMessage.includes("failed to fetch") ||
+    errorCode === "ERR_NETWORK" ||
+    errorMessage.includes("connection") ||
+    errorMessage.includes("offline")
+  ) {
     return {
       title: "Connection Error",
-      message: "Unable to connect to the server. Please check your internet connection and try again.",
-      type: "network"
+      message:
+        "Unable to connect to the server. Please check your internet connection and try again.",
+      type: "network",
     };
   }
 
   // Email/User already exists - most common registration error
-  if (errorMessage.includes("already") || errorMessage.includes("exists") ||
-      errorMessage.includes("duplicate") || errorMessage.includes("taken") ||
-      errorMessage.includes("409") || errorMessage.includes("conflict") ||
-      errorMessage.includes("registered") || errorMessage.includes("in use") ||
-      errorMessage.includes("email is already") || errorMessage.includes("user already") ||
-      errorMessage.includes("account already") || errorMessage.includes("unique")) {
+  if (
+    errorMessage.includes("already") ||
+    errorMessage.includes("exists") ||
+    errorMessage.includes("duplicate") ||
+    errorMessage.includes("taken") ||
+    errorMessage.includes("409") ||
+    errorMessage.includes("conflict") ||
+    errorMessage.includes("registered") ||
+    errorMessage.includes("in use") ||
+    errorMessage.includes("email is already") ||
+    errorMessage.includes("user already") ||
+    errorMessage.includes("account already") ||
+    errorMessage.includes("unique")
+  ) {
     return {
       title: "User Already Exists",
-      message: "An account with this email already exists. Please sign in instead or use a different email address.",
-      type: "duplicate"
+      message:
+        "An account with this email already exists. Please sign in instead or use a different email address.",
+      type: "duplicate",
     };
   }
 
   // Invalid email format
-  if (errorMessage.includes("invalid email") || errorMessage.includes("email format") ||
-      errorMessage.includes("valid email")) {
+  if (
+    errorMessage.includes("invalid email") ||
+    errorMessage.includes("email format") ||
+    errorMessage.includes("valid email")
+  ) {
     return {
       title: "Invalid Email",
       message: "Please enter a valid email address.",
-      type: "validation"
+      type: "validation",
     };
   }
 
   // Password too weak
-  if (errorMessage.includes("password") && (errorMessage.includes("weak") ||
-      errorMessage.includes("strong") || errorMessage.includes("requirement"))) {
+  if (
+    errorMessage.includes("password") &&
+    (errorMessage.includes("weak") ||
+      errorMessage.includes("strong") ||
+      errorMessage.includes("requirement"))
+  ) {
     return {
       title: "Weak Password",
-      message: "Please choose a stronger password with at least 8 characters, including letters and numbers.",
-      type: "validation"
+      message:
+        "Please choose a stronger password with at least 8 characters, including letters and numbers.",
+      type: "validation",
     };
   }
 
   // Server error
-  if (errorMessage.includes("500") || errorMessage.includes("server error") ||
-      errorMessage.includes("internal")) {
+  if (
+    errorMessage.includes("500") ||
+    errorMessage.includes("server error") ||
+    errorMessage.includes("internal")
+  ) {
     return {
       title: "Server Error",
-      message: "Something went wrong on our end. Please try again in a few moments.",
-      type: "server"
+      message:
+        "Something went wrong on our end. Please try again in a few moments.",
+      type: "server",
     };
   }
 
@@ -67,16 +94,19 @@ const getErrorMessage = (error) => {
   if (errorMessage.includes("email") || errorMessage.includes("user")) {
     return {
       title: "User Already Exists",
-      message: "An account with this email may already exist. Please try signing in or use a different email.",
-      type: "duplicate"
+      message:
+        "An account with this email may already exist. Please try signing in or use a different email.",
+      type: "duplicate",
     };
   }
 
   // Generic default error
   return {
     title: "Registration Failed",
-    message: error?.message || "Unable to create your account. Please check your details and try again.",
-    type: "general"
+    message:
+      error?.message ||
+      "Unable to create your account. Please check your details and try again.",
+    type: "general",
   };
 };
 
@@ -105,8 +135,10 @@ const validatePhone = (phone) => {
 const validatePassword = (password) => {
   if (!password) return "Please enter a password";
   if (password.length < 8) return "Password must be at least 8 characters";
-  if (!/[a-zA-Z]/.test(password)) return "Password must contain at least one letter";
-  if (!/[0-9]/.test(password)) return "Password must contain at least one number";
+  if (!/[a-zA-Z]/.test(password))
+    return "Password must contain at least one letter";
+  if (!/[0-9]/.test(password))
+    return "Password must contain at least one number";
   return null;
 };
 
@@ -143,7 +175,7 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     phone: "",
-    role: "staff",
+    role: "owner", // Always owner for new registrations
   });
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -176,8 +208,14 @@ const Register = () => {
         error = validatePassword(value);
         // Also revalidate confirm password when password changes
         if (touched.confirmPassword) {
-          const confirmError = validateConfirmPassword(value, formData.confirmPassword);
-          setFieldErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+          const confirmError = validateConfirmPassword(
+            value,
+            formData.confirmPassword,
+          );
+          setFieldErrors((prev) => ({
+            ...prev,
+            confirmPassword: confirmError,
+          }));
         }
         break;
       case "confirmPassword":
@@ -186,11 +224,11 @@ const Register = () => {
       default:
         break;
     }
-    setFieldErrors(prev => ({ ...prev, [name]: error }));
+    setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
     validateField(field, formData[field]);
   };
 
@@ -201,7 +239,10 @@ const Register = () => {
     const emailError = validateEmail(formData.email);
     const phoneError = validatePhone(formData.phone);
     const passwordError = validatePassword(formData.password);
-    const confirmError = validateConfirmPassword(formData.password, formData.confirmPassword);
+    const confirmError = validateConfirmPassword(
+      formData.password,
+      formData.confirmPassword,
+    );
 
     if (nameError) errors.name = nameError;
     if (emailError) errors.email = emailError;
@@ -234,10 +275,15 @@ const Register = () => {
 
     try {
       // Pass all form data to register (excluding confirmPassword)
-      const { confirmPassword, ...registerData } = formData;
+      const { confirmPassword: _, ...registerData } = formData;
       await register(registerData);
-      // Force page reload to trigger AppRoutes role-based routing
-      window.location.href = "/";
+
+      // Redirect to OTP verification page with email
+      navigate("/verify-otp", {
+        state: {
+          email: formData.email,
+        },
+      });
     } catch (err) {
       const errorInfo = getErrorMessage(err);
       setError(errorInfo);
@@ -255,10 +301,15 @@ const Register = () => {
           <div className="login-card shadow-sm">
             {/* Brand */}
             <div className="text-center mb-4">
-               <img 
-                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : ''}/static/app-logo/logo.jpg`} 
-                alt="Logo" 
-                style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }}
+              <img
+                src={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace("/api", "") : ""}/static/app-logo/logo.jpg`}
+                alt="Logo"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  objectFit: "contain",
+                  marginBottom: "10px",
+                }}
               />
               <h4 className="fw-bold brand-title">SNOOKHEAD</h4>
               <p className="text-muted small">Create your account</p>
@@ -268,27 +319,63 @@ const Register = () => {
             <form onSubmit={handleSubmit} noValidate>
               {/* Main Error Alert */}
               {error && (
-                <div className={`auth-error-box error-${error.type}`} role="alert">
+                <div
+                  className={`auth-error-box error-${error.type}`}
+                  role="alert"
+                >
                   <div className="error-icon">
                     {error.type === "network" && (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 1l22 22M9 9a3 3 0 014.24 4.24M5.64 5.64A9 9 0 0012 21a9 9 0 006.36-2.64M12 3a9 9 0 00-6.36 2.64"/>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M1 1l22 22M9 9a3 3 0 014.24 4.24M5.64 5.64A9 9 0 0012 21a9 9 0 006.36-2.64M12 3a9 9 0 00-6.36 2.64" />
                       </svg>
                     )}
                     {error.type === "duplicate" && (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/><path d="M16 12H8"/><path d="M12 16V8"/>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M16 12H8" />
+                        <path d="M12 16V8" />
                       </svg>
                     )}
                     {error.type === "validation" && (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
                       </svg>
                     )}
                     {(error.type === "server" || error.type === "general") && (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
                     )}
                   </div>
@@ -302,8 +389,16 @@ const Register = () => {
                     onClick={() => setError(null)}
                     aria-label="Dismiss"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
@@ -325,8 +420,17 @@ const Register = () => {
                 />
                 {touched.name && fieldErrors.name && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.name}
                   </div>
@@ -349,8 +453,17 @@ const Register = () => {
                 />
                 {touched.email && fieldErrors.email && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.email}
                   </div>
@@ -375,8 +488,17 @@ const Register = () => {
                 />
                 {touched.phone && fieldErrors.phone && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.phone}
                   </div>
@@ -420,19 +542,36 @@ const Register = () => {
                         <div
                           key={level}
                           className={`strength-bar ${passwordStrength.level >= level ? "active" : ""}`}
-                          style={{ backgroundColor: passwordStrength.level >= level ? passwordStrength.color : "#e9ecef" }}
+                          style={{
+                            backgroundColor:
+                              passwordStrength.level >= level
+                                ? passwordStrength.color
+                                : "#e9ecef",
+                          }}
                         />
                       ))}
                     </div>
-                    <span className="strength-label" style={{ color: passwordStrength.color }}>
+                    <span
+                      className="strength-label"
+                      style={{ color: passwordStrength.color }}
+                    >
                       {passwordStrength.label}
                     </span>
                   </div>
                 )}
                 {touched.password && fieldErrors.password && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.password}
                   </div>
@@ -455,21 +594,39 @@ const Register = () => {
                 />
                 {touched.confirmPassword && fieldErrors.confirmPassword && (
                   <div className="field-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {fieldErrors.confirmPassword}
                   </div>
                 )}
                 {/* Password Match Indicator */}
-                {touched.confirmPassword && !fieldErrors.confirmPassword && formData.confirmPassword && (
-                  <div className="field-success">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 6L9 17l-5-5"/>
-                    </svg>
-                    Passwords match
-                  </div>
-                )}
+                {touched.confirmPassword &&
+                  !fieldErrors.confirmPassword &&
+                  formData.confirmPassword && (
+                    <div className="field-success">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                      Passwords match
+                    </div>
+                  )}
               </div>
 
               <button
